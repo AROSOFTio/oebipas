@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import { APP_BRAND, homePathByRole } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
 import LoadingState from '../common/LoadingState';
+import AppIcon from '../common/AppIcon';
 
 function publicLinkClass({ isActive }) {
   return isActive ? 'active' : '';
@@ -10,6 +12,34 @@ function publicLinkClass({ isActive }) {
 
 export default function PublicLayout() {
   const { authLoading, isAuthenticated, user } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
 
   if (authLoading) {
     return <LoadingState message="Loading portal..." />;
@@ -26,25 +56,52 @@ export default function PublicLayout() {
           <NavLink className="brand-lockup" to="/" aria-label={APP_BRAND}>
             <img className="brand-logo" src={logo} alt="UEDCL logo" />
           </NavLink>
-          <nav className="public-nav">
-            <NavLink className={publicLinkClass} end to="/">
-              Home
-            </NavLink>
-            <NavLink className={publicLinkClass} to="/about">
-              About
-            </NavLink>
-            <NavLink className={publicLinkClass} to="/contact">
-              Contact
-            </NavLink>
-            <NavLink className={publicLinkClass} to="/login">
-              Login
-            </NavLink>
-            <NavLink className={publicLinkClass} to="/register">
-              Register
-            </NavLink>
-          </nav>
+
+          <button
+            className="mobile-nav-toggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(true)}
+          >
+            <AppIcon name="menu" />
+          </button>
+
+          <div className={`public-nav-panel${menuOpen ? ' open' : ''}`}>
+            <div className="public-nav-panel-head">
+              <NavLink className="brand-lockup brand-lockup-panel" to="/" aria-label={APP_BRAND} onClick={() => setMenuOpen(false)}>
+                <img className="brand-logo" src={logo} alt="UEDCL logo" />
+              </NavLink>
+              <button className="public-nav-close" type="button" aria-label="Close navigation menu" onClick={() => setMenuOpen(false)}>
+                <AppIcon name="close" />
+              </button>
+            </div>
+            <nav className="public-nav">
+              <NavLink className={publicLinkClass} end to="/" onClick={() => setMenuOpen(false)}>
+                Home
+              </NavLink>
+              <NavLink className={publicLinkClass} to="/about" onClick={() => setMenuOpen(false)}>
+                About
+              </NavLink>
+              <NavLink className={publicLinkClass} to="/contact" onClick={() => setMenuOpen(false)}>
+                Contact
+              </NavLink>
+              <NavLink className={publicLinkClass} to="/login" onClick={() => setMenuOpen(false)}>
+                Login
+              </NavLink>
+              <NavLink className={publicLinkClass} to="/register" onClick={() => setMenuOpen(false)}>
+                Register
+              </NavLink>
+            </nav>
+          </div>
         </div>
       </header>
+      <button
+        className={`offcanvas-backdrop${menuOpen ? ' open' : ''}`}
+        type="button"
+        aria-label="Close navigation menu"
+        onClick={() => setMenuOpen(false)}
+      />
       <main className="public-main">
         <Outlet />
       </main>

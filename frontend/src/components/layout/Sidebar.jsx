@@ -4,7 +4,7 @@ import { homePathByRole, navigationByRole } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
 import AppIcon from '../common/AppIcon';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose = () => {} }) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ export default function Sidebar() {
 
   async function handleLogout() {
     await logout();
+    onClose();
     navigate('/login', { replace: true });
   }
 
@@ -25,12 +26,17 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sidebar">
-      <NavLink className="sidebar-brand-panel" to={homePathByRole[user?.role] || '/'} aria-label="Workspace home">
-        <div className="sidebar-brand-mark">
-          <img className="sidebar-logo" src={logo} alt="UEDCL logo" />
-        </div>
-      </NavLink>
+    <aside className={`sidebar${isOpen ? ' open' : ''}`}>
+      <div className="sidebar-head">
+        <NavLink className="sidebar-brand-panel" to={homePathByRole[user?.role] || '/'} aria-label="Workspace home" onClick={onClose}>
+          <div className="sidebar-brand-mark">
+            <img className="sidebar-logo" src={logo} alt="UEDCL logo" />
+          </div>
+        </NavLink>
+        <button className="sidebar-close" type="button" aria-label="Close workspace menu" onClick={onClose}>
+          <AppIcon name="close" />
+        </button>
+      </div>
 
       <nav className="sidebar-nav">
         {items.map((item) => (
@@ -38,6 +44,7 @@ export default function Sidebar() {
             key={item.path}
             className={`sidebar-nav-link${isItemActive(item.path) ? ' active' : ''}`}
             to={item.path}
+            onClick={onClose}
           >
             <span className="nav-icon-wrap">
               <AppIcon name={item.icon} />

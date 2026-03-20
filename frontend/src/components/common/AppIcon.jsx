@@ -1,5 +1,20 @@
 function iconPaths(name) {
   switch (name) {
+    case 'menu':
+      return (
+        <>
+          <path d="M4 7h16" />
+          <path d="M4 12h16" />
+          <path d="M4 17h16" />
+        </>
+      );
+    case 'close':
+      return (
+        <>
+          <path d="M6 6l12 12" />
+          <path d="M18 6L6 18" />
+        </>
+      );
     case 'dashboard':
       return (
         <>
