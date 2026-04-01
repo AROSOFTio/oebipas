@@ -93,21 +93,25 @@ export default function DashboardPage() {
           label="Current Bill"
           value={currentBill ? formatCurrency(currentBill.total_amount) : formatCurrency(0)}
           helper={currentBill ? `Due ${formatDate(currentBill.due_date)}` : 'No current bill available'}
+          icon="receipt"
         />
         <StatCard
           label="Outstanding Bills"
           value={formatNumber(outstandingBills)}
           helper="Bills still awaiting payment"
+          icon="warning"
         />
         <StatCard
           label="Active Meters"
           value={formatNumber(activeMeters)}
           helper="Meters linked to your account"
+          icon="speed"
         />
         <StatCard
           label="Open Complaints"
           value={formatNumber(openComplaints)}
           helper={`${summary.notifications.length} notification records received`}
+          icon="support_agent"
         />
       </div>
       <section className="table-card">

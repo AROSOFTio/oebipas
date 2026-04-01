@@ -50,10 +50,10 @@ export default function DashboardPage() {
       <AlertMessage tone="error">{error}</AlertMessage>
       {summary ? (
         <div className="card-grid compact-dashboard-grid">
-          <StatCard label="Customers" value={formatNumber(summary.total_customers)} helper="Accounts" />
-          <StatCard label="Meters" value={formatNumber(summary.total_meters)} helper="Installed" />
-          <StatCard label="Unpaid Bills" value={formatNumber(summary.total_unpaid_bills)} helper="Due" />
-          <StatCard label="Open Complaints" value={formatNumber(summary.unresolved_complaints)} helper="Cases" />
+          <StatCard label="Customers" value={formatNumber(summary.total_customers)} helper="Accounts" icon="people" />
+          <StatCard label="Meters" value={formatNumber(summary.total_meters)} helper="Installed" icon="electric_meter" />
+          <StatCard label="Unpaid Bills" value={formatNumber(summary.total_unpaid_bills)} helper="Due" icon="receipt_long" />
+          <StatCard label="Open Complaints" value={formatNumber(summary.unresolved_complaints)} helper="Cases" icon="report_problem" />
         </div>
       ) : null}
       <section className="table-card">

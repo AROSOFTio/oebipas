@@ -60,9 +60,9 @@ export default function DashboardPage() {
       />
       <AlertMessage tone="error">{error}</AlertMessage>
       <div className="card-grid">
-        <StatCard label="Open Complaints" value={formatNumber(complaints.filter((item) => item.status !== 'resolved').length)} helper="Pending and in-progress cases" />
-        <StatCard label="Resolved Complaints" value={formatNumber(complaints.filter((item) => item.status === 'resolved').length)} helper="Closed service cases" />
-        <StatCard label="Pending Review" value={formatNumber(complaints.filter((item) => item.status === 'pending').length)} helper="Awaiting first helpdesk action" />
+        <StatCard label="Open Complaints" value={formatNumber(complaints.filter((item) => item.status !== 'resolved').length)} helper="Pending and in-progress cases" icon="support_agent" />
+        <StatCard label="Resolved Complaints" value={formatNumber(complaints.filter((item) => item.status === 'resolved').length)} helper="Closed service cases" icon="check_circle" />
+        <StatCard label="Pending Review" value={formatNumber(complaints.filter((item) => item.status === 'pending').length)} helper="Awaiting first helpdesk action" icon="pending_actions" />
       </div>
       <section className="table-card">
         <PageHeader title="Recent Complaints" subtitle="Latest complaint queue for helpdesk triage and response." />

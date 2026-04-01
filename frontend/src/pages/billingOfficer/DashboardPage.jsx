@@ -63,10 +63,10 @@ export default function DashboardPage() {
       />
       <AlertMessage tone="error">{error}</AlertMessage>
       <div className="card-grid">
-        <StatCard label="Customers" value={formatNumber(summary.customers.length)} helper="Registered customer accounts" />
-        <StatCard label="Active Meters" value={formatNumber(summary.meters.filter((meter) => meter.status === 'active').length)} helper="Meters in service" />
-        <StatCard label="Unpaid Bills" value={formatNumber(summary.bills.filter((bill) => bill.status !== 'paid').length)} helper="Bills needing follow-up" />
-        <StatCard label="Payments Today" value={formatCurrency(todayPayments)} helper="Posted across all payment methods" />
+        <StatCard label="Customers" value={formatNumber(summary.customers.length)} helper="Registered customer accounts" icon="people" />
+        <StatCard label="Active Meters" value={formatNumber(summary.meters.filter((meter) => meter.status === 'active').length)} helper="Meters in service" icon="speed" />
+        <StatCard label="Unpaid Bills" value={formatNumber(summary.bills.filter((bill) => bill.status !== 'paid').length)} helper="Bills needing follow-up" icon="receipt_long" />
+        <StatCard label="Payments Today" value={formatCurrency(todayPayments)} helper="Posted across all payment methods" icon="payments" />
       </div>
       <section className="table-card">
         <PageHeader title="Recent Bills" subtitle="Latest generated bills visible to the billing operations team." />

@@ -20,9 +20,17 @@ export default function Topbar({ onMenuToggle }) {
           </button>
           <strong className="topbar-title">{workspaceTitles[user?.role] || 'Workspace'}</strong>
         </div>
-        <div className="topbar-user-meta">
-          <strong>{user?.email}</strong>
-          <span>{user?.roleLabel}</span>
+        <div className="topbar-user-meta" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            <strong style={{ color: 'var(--color-text)', fontSize: '0.95rem' }}>{user?.email}</strong>
+            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{user?.roleLabel}</span>
+          </div>
+          <div style={{
+            width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-primary-soft), var(--color-primary))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(74, 58, 255, 0.2)'
+          }}>
+            {user?.email?.[0]?.toUpperCase() || 'U'}
+          </div>
         </div>
       </div>
     </div>
