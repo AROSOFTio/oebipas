@@ -276,7 +276,7 @@ button {
    ================================== */
 .public-main {
   flex: 1;
-  padding: 24px 0 60px;
+  padding: 0;
   animation: fadeIn 0.5s ease-out forwards;
 }
 
@@ -826,7 +826,7 @@ button {
   flex: 1;
   width: var(--dashboard-width);
   margin: 0 auto;
-  padding: 24px 24px 60px;
+  padding: 0 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -875,7 +875,8 @@ button {
   }
 
   .public-main, .dashboard-content {
-    padding-top: 16px;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 }
 
