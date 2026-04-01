@@ -808,6 +808,20 @@ button {
   gap: 16px;
 }
 
+.topbar-user-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.topbar-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
 .dashboard-content {
   flex: 1;
   width: var(--dashboard-width);
@@ -853,9 +867,9 @@ button {
   .form-grid { grid-template-columns: 1fr; }
   .hero-panel { padding: 40px 24px; }
   .section-card { padding: 24px; }
-  .topbar-user-meta > div:first-child { display: none; }
+  .topbar-user-info { display: none; }
   
-  .public-header-inner, .topbar-inner, .footer-inner {
+  .public-header-inner, .topbar-inner, .footer-inner, .public-main, .dashboard-content {
     width: 100%;
     border-radius: 0;
   }
