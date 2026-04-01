@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;

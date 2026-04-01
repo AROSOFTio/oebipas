@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     'enabled' => env('SMS_ENABLED', true),

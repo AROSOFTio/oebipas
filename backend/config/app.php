@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     'name' => env('APP_NAME', 'Online Electricity Billing and Payment System for UEDCL'),

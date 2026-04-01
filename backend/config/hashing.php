@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     'driver' => env('HASH_DRIVER', 'bcrypt'),
