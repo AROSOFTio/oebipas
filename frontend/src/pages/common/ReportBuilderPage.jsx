@@ -3,9 +3,9 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchCustomReport } from '../../services/reportService';
 import { exportDynamicReportPdf } from '../../utils/exporters';
 import { formatCurrency, formatDateTime, formatNumber, titleCase } from '../../utils/formatters';
-import AlertMessage from '../common/AlertMessage';
-import DataTable from '../common/DataTable';
-import PageHeader from '../common/PageHeader';
+import AlertMessage from '../../components/common/AlertMessage';
+import DataTable from '../../components/common/DataTable';
+import PageHeader from '../../components/common/PageHeader';
 
 export default function ReportBuilderPage() {
   const { user } = useAuth();
