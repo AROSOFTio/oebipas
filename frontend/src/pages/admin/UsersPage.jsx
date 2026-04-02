@@ -47,7 +47,6 @@ export default function UsersPage() {
         title="Users"
         subtitle="Administrative user registry for billing, helpdesk, and customer-linked accounts."
       />
-      <AlertMessage tone="info">Role assignments and statuses are loaded live from the backend user registry.</AlertMessage>
       <AlertMessage tone="error">{error}</AlertMessage>
       <DataTable columns={columns} rows={users.map((user) => ({ ...user, status: titleCase(user.status) }))} />
     </section>
