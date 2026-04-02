@@ -5,7 +5,7 @@ import DataTable from '../../components/common/DataTable';
 import DetailGrid from '../../components/common/DetailGrid';
 import LoadingState from '../../components/common/LoadingState';
 import PageHeader from '../../components/common/PageHeader';
-import { fetchBill } from '../../services/billingService';
+import { fetchBill, initiatePesapalPayment } from '../../services/billingService';
 import { formatCurrency, formatDate, formatDateTime, formatNumber, titleCase } from '../../utils/formatters';
 
 const columns = [
@@ -33,6 +33,7 @@ export default function BillDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [bill, setBill] = useState(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     async function loadBill() {
@@ -56,11 +57,39 @@ export default function BillDetailsPage() {
     return <LoadingState message="Loading bill details..." />;
   }
 
+  async function handlePaymentInitiation() {
+    setProcessing(true);
+    setError('');
+    
+    try {
+      const response = await initiatePesapalPayment(billId);
+      if (response.redirect_url) {
+        window.location.href = response.redirect_url;
+      } else {
+        throw new Error("Invalid payment gateway response. Missing redirect URL.");
+      }
+    } catch (paymentError) {
+      setError(paymentError.message || "Failed to initiate payment. Ensure your settings are configured.");
+      setProcessing(false);
+    }
+  }
+
   return (
     <div className="list-stack">
       <PageHeader
         title="Bill Details"
         subtitle="Full breakdown of the generated customer bill and linked payment activity."
+        action={
+          bill?.status !== 'paid' && (
+            <button
+              className="button"
+              onClick={handlePaymentInitiation}
+              disabled={processing}
+            >
+              {processing ? 'Connecting to Pesapal...' : 'Pay Online via Pesapal'}
+            </button>
+          )
+        }
       />
       <AlertMessage tone="error">{error}</AlertMessage>
       {bill ? (

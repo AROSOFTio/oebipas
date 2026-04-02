@@ -16,3 +16,9 @@ export function generateBills(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function initiatePesapalPayment(billId) {
+  return apiRequest(`/bills/${billId}/pay/pesapal`, {
+    method: 'POST',
+  });
+}

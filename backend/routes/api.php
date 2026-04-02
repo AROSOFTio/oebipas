@@ -13,7 +13,11 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TariffController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\PesapalController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
+
+Route::match(['get', 'post'], 'pesapal/ipn', [PesapalController::class, 'ipnCallback'])->name('pesapal.ipn');
 
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
@@ -28,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('bills', [BillController::class, 'index']);
     Route::get('bills/{bill}', [BillController::class, 'show']);
+    Route::post('bills/{bill}/pay/pesapal', [PesapalController::class, 'initiate']);
     Route::get('meters', [MeterController::class, 'index']);
     Route::get('meters/{meter}', [MeterController::class, 'show']);
     Route::get('payments', [PaymentController::class, 'index']);

@@ -36,6 +36,7 @@ import UsersPage from '../pages/admin/UsersPage';
 import AddUserPage from '../pages/admin/AddUserPage';
 import TariffsPage from '../pages/admin/TariffsPage';
 import SmsSettingsPage from '../pages/admin/SmsSettingsPage';
+import PesapalSettingsPage from '../pages/admin/PesapalSettingsPage';
 import ReportsPage from '../pages/admin/ReportsPage';
 import SettingsPage from '../pages/admin/SettingsPage';
 import ReportBuilderPage from '../pages/common/ReportBuilderPage';
@@ -99,6 +100,7 @@ export default function AppRoutes() {
           <Route path="admin/users/new" element={<AddUserPage />} />
           <Route path="admin/tariffs" element={<TariffsPage />} />
           <Route path="admin/sms-settings" element={<SmsSettingsPage />} />
+          <Route path="admin/pesapal-settings" element={<PesapalSettingsPage />} />
           <Route path="admin/reports" element={<ReportsPage />} />
           <Route path="admin/reports-builder" element={<ReportBuilderPage />} />
           <Route path="admin/settings" element={<SettingsPage />} />
