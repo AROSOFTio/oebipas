@@ -77,17 +77,17 @@ export default function PublicLayout() {
               </button>
             </div>
             <nav className="public-nav">
-              <NavLink className={publicLinkClass} end to="/" onClick={() => setMenuOpen(false)}>
-                Home
+              <NavLink className={publicLinkClass} end to="/" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AppIcon name="home" /> Home
               </NavLink>
-              <NavLink className={publicLinkClass} to="/about" onClick={() => setMenuOpen(false)}>
-                About
+              <NavLink className={publicLinkClass} to="/about" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AppIcon name="info" /> About
               </NavLink>
-              <NavLink className={publicLinkClass} to="/contact" onClick={() => setMenuOpen(false)}>
-                Contact
+              <NavLink className={publicLinkClass} to="/contact" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AppIcon name="phone" /> Contact
               </NavLink>
-              <NavLink className={publicLinkClass} to="/login" onClick={() => setMenuOpen(false)}>
-                Login
+              <NavLink className={publicLinkClass} to="/login" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '42px', height: '42px', padding: 0, borderRadius: '50%' }} aria-label="User Account Login" title="Login">
+                <AppIcon name="profile" />
               </NavLink>
             </nav>
           </div>
