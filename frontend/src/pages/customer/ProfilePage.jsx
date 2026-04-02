@@ -3,6 +3,7 @@ import AlertMessage from '../../components/common/AlertMessage';
 import DetailGrid from '../../components/common/DetailGrid';
 import LoadingState from '../../components/common/LoadingState';
 import PageHeader from '../../components/common/PageHeader';
+import StatCard from '../../components/common/StatCard';
 import { useAuth } from '../../context/AuthContext';
 import { fetchBills } from '../../services/billingService';
 import { fetchComplaints } from '../../services/complaintService';
@@ -53,34 +54,40 @@ export default function ProfilePage() {
         subtitle="Review the customer account and service details linked to your authenticated login."
       />
       <AlertMessage tone="error">{error}</AlertMessage>
-      <section className="section-card list-stack">
-        <DetailGrid
-          items={[
-            { label: 'Customer Name', value: user?.customer?.name || user?.name },
-            { label: 'Account Number', value: user?.customer?.account_number },
-            { label: 'Email', value: user?.email },
-            { label: 'Phone', value: user?.customer?.phone || user?.phone },
-            { label: 'National ID', value: user?.customer?.national_id },
-            { label: 'Address', value: user?.customer?.address },
-            { label: 'Status', value: titleCase(user?.customer?.status || user?.status) },
-            { label: 'Role', value: user?.roleLabel },
-          ]}
+
+      <div className="card-grid" style={{ marginBottom: '32px' }}>
+        <StatCard
+          label="Registered Meters"
+          value={formatNumber(counts.meters)}
+          helper="Total active physical assets tracked"
+          icon="meter"
         />
-        <div className="metric-strip">
-          <div className="metric-box">
-            <span style={{ marginRight: '6px', color: 'var(--color-text-muted)' }}>Meters:</span>
-            <strong>{formatNumber(counts.meters)}</strong>
-          </div>
-          <div className="metric-box">
-            <span style={{ marginRight: '6px', color: 'var(--color-text-muted)' }}>Bills:</span>
-            <strong>{formatNumber(counts.bills)}</strong>
-          </div>
-          <div className="metric-box">
-            <span style={{ marginRight: '6px', color: 'var(--color-text-muted)' }}>Complaints:</span>
-            <strong>{formatNumber(counts.complaints)}</strong>
-          </div>
-        </div>
-      </section>
+        <StatCard
+          label="Billing Records"
+          value={formatNumber(counts.bills)}
+          helper="Generated payment histories"
+          icon="bills"
+        />
+        <StatCard
+          label="Service Complaints"
+          value={formatNumber(counts.complaints)}
+          helper="Total tickets associated with account"
+          icon="complaints"
+        />
+      </div>
+
+      <DetailGrid
+        items={[
+          { label: 'Customer Name', value: user?.customer?.name || user?.name },
+          { label: 'Account Number', value: user?.customer?.account_number },
+          { label: 'Email', value: user?.email },
+          { label: 'Phone', value: user?.customer?.phone || user?.phone },
+          { label: 'National ID', value: user?.customer?.national_id },
+          { label: 'Address', value: user?.customer?.address },
+          { label: 'Status', value: titleCase(user?.customer?.status || user?.status) },
+          { label: 'Security Role', value: user?.roleLabel },
+        ]}
+      />
     </>
   );
 }
