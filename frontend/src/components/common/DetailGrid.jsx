@@ -3,7 +3,7 @@ export default function DetailGrid({ items }) {
     <div className="detail-grid">
       {items.map((item) => (
         <div key={item.label} className="detail-card">
-          <span>{item.label}</span>
+          <span style={{ color: 'var(--color-text-muted)', marginRight: '6px' }}>{item.label}:</span>
           <strong>{item.value || '-'}</strong>
         </div>
       ))}

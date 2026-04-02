@@ -68,15 +68,15 @@ export default function ProfilePage() {
         />
         <div className="metric-strip">
           <div className="metric-box">
-            <span>Meters</span>
+            <span style={{ marginRight: '6px', color: 'var(--color-text-muted)' }}>Meters:</span>
             <strong>{formatNumber(counts.meters)}</strong>
           </div>
           <div className="metric-box">
-            <span>Bills</span>
+            <span style={{ marginRight: '6px', color: 'var(--color-text-muted)' }}>Bills:</span>
             <strong>{formatNumber(counts.bills)}</strong>
           </div>
           <div className="metric-box">
-            <span>Complaints</span>
+            <span style={{ marginRight: '6px', color: 'var(--color-text-muted)' }}>Complaints:</span>
             <strong>{formatNumber(counts.complaints)}</strong>
           </div>
         </div>
