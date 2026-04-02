@@ -170,6 +170,20 @@ function iconPaths(name) {
           <path d="M8.5 17h7" />
         </>
       );
+    case 'expand_more':
+      return <path d="M6 9l6 6 6-6" />;
+    case 'expand_less':
+      return <path d="M18 15l-6-6-6 6" />;
+    case 'filter_list':
+      return <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />;
+    case 'download':
+      return (
+        <>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <path d="M7 10l5 5 5-5" />
+          <path d="M12 15V3" />
+        </>
+      );
     default:
       return (
         <>
@@ -184,6 +198,8 @@ export default function AppIcon({ name, className = '' }) {
   return (
     <svg
       viewBox="0 0 24 24"
+      width={24}
+      height={24}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
