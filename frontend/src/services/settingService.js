@@ -1,11 +1,12 @@
-import api from './api';
+import { apiRequest } from './api';
 
 export async function fetchSettings() {
-  const response = await api.get('/settings');
-  return response.data;
+  return await apiRequest('/settings', { method: 'GET' });
 }
 
 export async function saveSettings(settings) {
-  const response = await api.post('/settings', { settings });
-  return response.data;
+  return await apiRequest('/settings', {
+    method: 'POST',
+    body: JSON.stringify({ settings }),
+  });
 }
