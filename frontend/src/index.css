@@ -864,19 +864,37 @@ button {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --page-width: 100%;
+    --dashboard-width: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
   .form-grid { grid-template-columns: 1fr; }
-  .hero-panel { padding: 40px 24px; }
-  .section-card { padding: 24px; }
+  
+  .hero-panel { padding: 32px 16px !important; border-radius: 0 !important; }
+  .section-card, .table-card, .form-card, .auth-panel { padding: 24px 16px !important; }
+  .detail-card, .quick-link-card, .stat-card, .metric-box { padding: 16px !important; }
+
   .topbar-user-info { display: none; }
   
-  .public-header-inner, .topbar-inner, .footer-inner, .public-main, .dashboard-content {
-    width: 100%;
-    border-radius: 0;
+  .public-header-inner, .topbar-inner, .footer-inner {
+    width: 100% !important;
+    border-radius: 0 !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
 
   .public-main, .dashboard-content {
-    padding-top: 0;
-    padding-bottom: 0;
+    width: 100% !important;
+    padding: 16px !important;
+  }
+  
+  .auth-page {
+    padding: 24px 16px !important;
   }
 }
 
