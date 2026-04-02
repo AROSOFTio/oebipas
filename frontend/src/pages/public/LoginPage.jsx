@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import AlertMessage from '../../components/common/AlertMessage';
 import { useAuth } from '../../context/AuthContext';
 import { demoCredentials, homePathByRole } from '../../utils/constants';
@@ -114,6 +114,10 @@ export default function LoginPage() {
             <AlertMessage tone="error">{error}</AlertMessage>
           </div>
         )}
+
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.95rem', color: 'var(--color-text-muted)' }}>
+          Don't have an account? <Link to="/register" style={{ color: 'var(--color-primary)', fontWeight: '600', textDecoration: 'none' }} onMouseOver={(e) => e.target.style.textDecoration = 'underline'} onMouseOut={(e) => e.target.style.textDecoration = 'none'}>Signup or register</Link>
+        </div>
 
         <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--color-border)' }}>
           <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.25rem', textAlign: 'center', color: 'var(--color-text-muted)', fontWeight: '600' }}>Demo Quick Access</h4>
