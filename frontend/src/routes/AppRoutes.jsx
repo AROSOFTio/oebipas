@@ -61,7 +61,7 @@ export default function AppRoutes() {
           <Route path="customer/receipts" element={<CustomerReceiptsPage />} />
           <Route path="customer/notifications" element={<CustomerNotificationsPage />} />
           <Route path="customer/complaints" element={<CustomerComplaintsPage />} />
-          <Route path="customer/report-builder" element={<ReportBuilderPage />} />
+          <Route path="customer/reports-builder" element={<ReportBuilderPage />} />
         </Route>
       </Route>
 
@@ -76,7 +76,7 @@ export default function AppRoutes() {
           <Route path="billing/generate-bills" element={<GenerateBillsPage />} />
           <Route path="billing/bills" element={<BillingBillsPage />} />
           <Route path="billing/payments" element={<BillingPaymentsPage />} />
-          <Route path="billing/report-builder" element={<ReportBuilderPage />} />
+          <Route path="billing/reports-builder" element={<ReportBuilderPage />} />
         </Route>
       </Route>
 
@@ -86,7 +86,7 @@ export default function AppRoutes() {
           <Route path="helpdesk/complaints" element={<ComplaintsListPage />} />
           <Route path="helpdesk/complaints/:complaintId" element={<ComplaintDetailsPage />} />
           <Route path="helpdesk/resolved" element={<ResolvedComplaintsPage />} />
-          <Route path="helpdesk/report-builder" element={<ReportBuilderPage />} />
+          <Route path="helpdesk/reports-builder" element={<ReportBuilderPage />} />
         </Route>
       </Route>
 
@@ -98,7 +98,7 @@ export default function AppRoutes() {
           <Route path="admin/tariffs" element={<TariffsPage />} />
           <Route path="admin/sms-settings" element={<SmsSettingsPage />} />
           <Route path="admin/reports" element={<ReportsPage />} />
-          <Route path="admin/report-builder" element={<ReportBuilderPage />} />
+          <Route path="admin/reports-builder" element={<ReportBuilderPage />} />
           <Route path="admin/settings" element={<SettingsPage />} />
         </Route>
       </Route>

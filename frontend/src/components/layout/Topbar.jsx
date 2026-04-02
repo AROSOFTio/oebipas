@@ -18,7 +18,7 @@ export default function Topbar({ onMenuToggle }) {
           <button className="topbar-menu" type="button" aria-label="Open workspace menu" onClick={onMenuToggle}>
             <AppIcon name="menu" />
           </button>
-          <strong className="topbar-title">{workspaceTitles[user?.role] || 'Workspace'}</strong>
+          <strong className="topbar-title">Welcome {user?.name ? user.name.split(' ')[0] : 'Guest'}!</strong>
         </div>
         <div className="topbar-user-meta">
           <div className="topbar-user-info">

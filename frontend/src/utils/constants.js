@@ -53,7 +53,15 @@ export const navigationByRole = {
     { label: 'Receipts', path: '/customer/receipts', icon: 'receipts' },
     { label: 'Notifications', path: '/customer/notifications', icon: 'notifications' },
     { label: 'Complaints', path: '/customer/complaints', icon: 'complaints' },
-    { label: 'Report Builder', path: '/customer/report-builder', icon: 'reports' },
+    {
+      label: 'Reports',
+      icon: 'reports',
+      children: [
+        { label: 'Billing History', path: '/customer/reports-builder?type=billing_history' },
+        { label: 'Payment Ledger', path: '/customer/reports-builder?type=payment_history' },
+        { label: 'Complaint Log', path: '/customer/reports-builder?type=complaint_log' },
+      ],
+    },
   ],
   billing_officer: [
     { label: 'Dashboard', path: '/billing/dashboard', icon: 'dashboard' },
@@ -65,13 +73,26 @@ export const navigationByRole = {
     { label: 'Generate Bills', path: '/billing/generate-bills', icon: 'generate' },
     { label: 'Bills', path: '/billing/bills', icon: 'bills' },
     { label: 'Payments', path: '/billing/payments', icon: 'payments' },
-    { label: 'Report Builder', path: '/billing/report-builder', icon: 'reports' },
+    {
+      label: 'Reports',
+      icon: 'reports',
+      children: [
+        { label: 'Billing Run History', path: '/billing/reports-builder?type=billing_history' },
+        { label: 'Collections Ledger', path: '/billing/reports-builder?type=payment_history' },
+      ],
+    },
   ],
   helpdesk_officer: [
     { label: 'Dashboard', path: '/helpdesk/dashboard', icon: 'dashboard' },
     { label: 'Complaints List', path: '/helpdesk/complaints', icon: 'complaints' },
     { label: 'Resolved Complaints', path: '/helpdesk/resolved', icon: 'resolved' },
-    { label: 'Report Builder', path: '/helpdesk/report-builder', icon: 'reports' },
+    {
+      label: 'Reports',
+      icon: 'reports',
+      children: [
+        { label: 'Service Complaint Log', path: '/helpdesk/reports-builder?type=complaint_log' },
+      ],
+    },
   ],
   administrator: [
     { label: 'Dashboard', path: '/admin/dashboard', icon: 'dashboard' },
@@ -80,7 +101,16 @@ export const navigationByRole = {
     { label: 'Tariffs', path: '/admin/tariffs', icon: 'tariffs' },
     { label: 'SMS Settings', path: '/admin/sms-settings', icon: 'sms' },
     { label: 'Executive Reports', path: '/admin/reports', icon: 'dashboard' },
-    { label: 'Report Builder', path: '/admin/report-builder', icon: 'reports' },
+    {
+      label: 'Reports',
+      icon: 'reports',
+      children: [
+        { label: 'Revenue Summary', path: '/admin/reports-builder?type=revenue_summary' },
+        { label: 'Billing History', path: '/admin/reports-builder?type=billing_history' },
+        { label: 'Payment Ledger', path: '/admin/reports-builder?type=payment_history' },
+        { label: 'Complaint Log', path: '/admin/reports-builder?type=complaint_log' },
+      ],
+    },
     { label: 'Settings', path: '/admin/settings', icon: 'settings' },
   ],
 };

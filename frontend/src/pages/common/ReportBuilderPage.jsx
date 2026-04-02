@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { fetchCustomReport } from '../../services/reportService';
 import { exportDynamicReportPdf } from '../../utils/exporters';
@@ -6,48 +7,28 @@ import { formatCurrency, formatDateTime, formatNumber, titleCase } from '../../u
 import AlertMessage from '../../components/common/AlertMessage';
 import DataTable from '../../components/common/DataTable';
 import PageHeader from '../../components/common/PageHeader';
+import AppIcon from '../../components/common/AppIcon';
 
 export default function ReportBuilderPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const reportTypeFromUrl = searchParams.get('type') || 'billing_history';
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [reportData, setReportData] = useState(null);
   
   const [filters, setFilters] = useState({
-    report_type: 'billing_history',
+    report_type: reportTypeFromUrl,
     start_date: '',
     end_date: '',
     status: 'all',
   });
 
-  const getAvailableReportTypes = () => {
-    switch (user?.role) {
-      case 'administrator':
-        return [
-          { value: 'revenue_summary', label: 'Revenue Summary' },
-          { value: 'billing_history', label: 'Billing History' },
-          { value: 'payment_history', label: 'Payment Ledger' },
-          { value: 'complaint_log', label: 'Complaint Log' },
-        ];
-      case 'billing_officer':
-        return [
-          { value: 'billing_history', label: 'Billing Run History' },
-          { value: 'payment_history', label: 'Collections Ledger' },
-        ];
-      case 'helpdesk_officer':
-        return [
-          { value: 'complaint_log', label: 'Service Complaint Log' },
-        ];
-      case 'customer':
-        return [
-          { value: 'billing_history', label: 'My Billing History' },
-          { value: 'payment_history', label: 'My Payment Ledger' },
-          { value: 'complaint_log', label: 'My Complaint Log' },
-        ];
-      default:
-        return [];
-    }
-  };
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, report_type: reportTypeFromUrl }));
+    setReportData(null); // Reset when navigating between reports
+  }, [reportTypeFromUrl]);
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
@@ -119,86 +100,85 @@ export default function ReportBuilderPage() {
     }
   }
 
+  const humanReadableTitle = filters.report_type.split('_').map(titleCase).join(' ');
+
   return (
     <div className="list-stack">
-      <section className="form-card">
-        <PageHeader 
-          title="Custom Report Builder" 
-          subtitle="Generate parameterized PDF exports." 
-          actions={
-            reportData ? (
-              <button type="button" className="button" onClick={downloadPdf}>
-                Download Professional PDF
-              </button>
-            ) : null
-          }
-        />
-        
-        <form onSubmit={generateReport} className="form-grid" style={{ marginTop: '24px' }}>
-          <div className="field">
-            <label>Report Type</label>
-            <select 
-              value={filters.report_type} 
-              onChange={(e) => handleFilterChange('report_type', e.target.value)}
-              required
-            >
-              {getAvailableReportTypes().map(type => (
-                <option key={type.value} value={type.value}>{type.label}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="field">
-            <label>Status</label>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid var(--color-border)', paddingBottom: '16px', marginBottom: '8px' }}>
+        <div>
+          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', margin: 0, color: 'var(--color-text)' }}>{humanReadableTitle}</h1>
+          <p style={{ margin: '8px 0 0', color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>Parametrize and extract real-time records.</p>
+        </div>
+        {reportData && (
+          <button type="button" className="button" onClick={downloadPdf} style={{ display: 'inline-flex', gap: '8px' }}>
+            <AppIcon name="download" /> Export to PDF
+          </button>
+        )}
+      </div>
+
+      <section className="form-card" style={{ padding: '24px', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--color-text)', fontWeight: '600' }}>
+          <AppIcon name="filter_list" />
+          <span>Active Filters</span>
+        </div>
+
+        <form onSubmit={generateReport} style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'flex-end' }}>
+          <div className="field" style={{ flex: '1 1 200px' }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '6px' }}>Status Constraint</label>
             <select 
               value={filters.status} 
               onChange={(e) => handleFilterChange('status', e.target.value)}
+              style={{ height: '44px', background: 'var(--color-surface-hover)' }}
             >
-              <option value="all">All Statuses</option>
+              <option value="all">Any Status</option>
               {['active', 'inactive', 'paid', 'unpaid', 'overdue', 'resolved', 'pending', 'success', 'failed'].map(s => (
                 <option key={s} value={s}>{titleCase(s)}</option>
               ))}
             </select>
           </div>
 
-          <div className="field">
-            <label>Start Date</label>
+          <div className="field" style={{ flex: '1 1 200px' }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '6px' }}>Date From</label>
             <input 
               type="date" 
               value={filters.start_date} 
               onChange={(e) => handleFilterChange('start_date', e.target.value)} 
+              style={{ height: '44px', background: 'var(--color-surface-hover)' }}
             />
           </div>
 
-          <div className="field">
-            <label>End Date</label>
+          <div className="field" style={{ flex: '1 1 200px' }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '6px' }}>Date To</label>
             <input 
               type="date" 
               value={filters.end_date} 
               onChange={(e) => handleFilterChange('end_date', e.target.value)} 
+              style={{ height: '44px', background: 'var(--color-surface-hover)' }}
             />
           </div>
 
-          <div className="field" style={{ gridColumn: '1 / -1' }}>
-            <button type="submit" className="button-outline" disabled={loading} style={{ width: 'fit-content' }}>
-              {loading ? 'Executing Query...' : 'Preview Data Extract'}
+          <div style={{ flex: '0 0 auto' }}>
+            <button type="submit" className="button" disabled={loading} style={{ height: '44px', minWidth: '160px' }}>
+              {loading ? 'Querying...' : 'Run Extraction'}
             </button>
           </div>
         </form>
 
-        {error && <AlertMessage tone="error">{error}</AlertMessage>}
+        {error && <div style={{ marginTop: '20px' }}><AlertMessage tone="error">{error}</AlertMessage></div>}
       </section>
 
       {reportData !== null && (
-        <section className="table-card">
-          <PageHeader title="Extract Preview" subtitle={`Found ${reportData.length} records matching parameters.`} />
-          {reportData.length > 0 ? (
-            <DataTable columns={columns} rows={reportData} />
-          ) : (
-            <div className="empty-state">
-              <p>No data found for the given parameters.</p>
-            </div>
-          )}
+        <section className="table-card" style={{ marginTop: '32px' }}>
+          <PageHeader title="Result Data" subtitle={`Discovered ${reportData.length} records matching your parameters.`} />
+          <div style={{ marginTop: '20px' }}>
+            {reportData.length > 0 ? (
+              <DataTable columns={columns} rows={reportData} />
+            ) : (
+              <div className="empty-state" style={{ padding: '40px', textAlign: 'center', background: 'var(--color-surface)', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '1rem', margin: 0 }}>No matching records found for the selected extract window.</p>
+              </div>
+            )}
+          </div>
         </section>
       )}
     </div>

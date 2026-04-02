@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import AlertMessage from '../../components/common/AlertMessage';
 import DataTable from '../../components/common/DataTable';
 import LoadingState from '../../components/common/LoadingState';
@@ -37,6 +38,7 @@ const columns = [
 ];
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [summary, setSummary] = useState({
@@ -84,7 +86,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Customer Dashboard"
+        title={`Welcome ${user?.name?.split(' ')[0]}!`}
         subtitle="Track bills, receipts, complaints, and notifications from one secure workspace."
       />
       <AlertMessage tone="error">{error}</AlertMessage>
