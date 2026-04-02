@@ -44,18 +44,18 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="auth-page" style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
+    <section className="auth-page" style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
       padding: '4rem 2rem',
       background: 'var(--color-background)',
       minHeight: 'calc(100vh - 84px)',
       margin: '20px 0'
     }}>
-      <div className="auth-panel" style={{ 
-        maxWidth: '480px', 
-        width: '100%', 
+      <div className="auth-panel" style={{
+        maxWidth: '480px',
+        width: '100%',
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         boxShadow: 'var(--shadow-lg)',
@@ -72,12 +72,12 @@ export default function LoginPage() {
         <form className="form-grid" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div className="field">
             <label htmlFor="email" style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--color-text-muted)' }}>Email Address</label>
-            <input 
-              id="email" 
-              name="email" 
-              type="email" 
-              value={form.email} 
-              onChange={handleChange} 
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
               placeholder="Enter your email"
               required
             />
@@ -99,9 +99,9 @@ export default function LoginPage() {
           </div>
 
           <div className="form-actions" style={{ marginTop: '0.5rem' }}>
-            <button 
-              className="button" 
-              type="submit" 
+            <button
+              className="button"
+              type="submit"
               disabled={submitting}
               style={{ width: '100%', padding: '0.875rem', fontSize: '1rem', fontWeight: '600', transition: 'transform 0.2s ease' }}
               onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
@@ -119,38 +119,38 @@ export default function LoginPage() {
         )}
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.95rem', color: 'var(--color-text-muted)' }}>
-          Don't have an account? <Link to="/register" style={{ color: 'var(--color-primary)', fontWeight: '600', textDecoration: 'none' }} onMouseOver={(e) => e.target.style.textDecoration = 'underline'} onMouseOut={(e) => e.target.style.textDecoration = 'none'}>Signup or register</Link>
+          Don't have an account? <Link to="/register" style={{ color: 'var(--color-primary)', fontWeight: '600', textDecoration: 'none' }} onMouseOver={(e) => e.target.style.textDecoration = 'underline'} onMouseOut={(e) => e.target.style.textDecoration = 'none'}>Register Her</Link>
         </div>
 
         <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--color-border)' }}>
           <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.25rem', textAlign: 'center', color: 'var(--color-text-muted)', fontWeight: '600' }}>Demo Quick Access</h4>
-          
+
           <div style={{ minHeight: '24px', marginBottom: '0.75rem' }}>
             {copyFeedback && <div style={{ color: 'var(--color-success)', textAlign: 'center', fontSize: '0.85rem', fontWeight: '500', background: 'var(--color-success-soft)', padding: '0.25rem', borderRadius: '6px' }}>{copyFeedback}</div>}
           </div>
-          
+
           <div style={{ display: 'grid', gap: '0.75rem' }}>
             {demoCredentials.map((creds, index) => (
-              <div key={index} style={{ 
-                background: 'var(--color-surface)', 
-                padding: '1rem', 
-                borderRadius: '12px', 
-                display: 'flex', 
+              <div key={index} style={{
+                background: 'var(--color-surface)',
+                padding: '1rem',
+                borderRadius: '12px',
+                display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 border: '1px solid var(--color-border-strong)',
                 transition: 'border-color 0.2s, box-shadow 0.2s',
                 boxShadow: 'var(--shadow-sm)'
               }}
-              onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
-              onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--color-border-strong)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
+                onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+                onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--color-border-strong)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                   <div style={{ color: 'var(--color-text)', fontWeight: '600', fontSize: '0.9rem' }}>{creds.name}</div>
                   <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>{creds.email}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="button-outline"
                     onClick={() => handleCopy(creds.email, 'Email')}
                     title={`Copy Email: ${creds.email}`}
@@ -158,8 +158,8 @@ export default function LoginPage() {
                   >
                     Copy Email
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="button-outline"
                     onClick={() => handleCopy(creds.password, 'Password')}
                     title="Copy Password"
