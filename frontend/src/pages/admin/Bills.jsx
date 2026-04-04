@@ -16,11 +16,11 @@ function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-border">
-        <div className="flex justify-between items-center p-8 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex justify-between items-center p-6 border-b border-gray-50 bg-white">
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 transition-colors"><X size={20}/></button>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"><X size={20}/></button>
         </div>
-        <div className="p-8">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );
@@ -214,16 +214,16 @@ export default function Bills() {
 
             <div className="grid grid-cols-1 gap-6">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Target Consumer Entity</label>
-                <select required value={form.customer_id} onChange={e => setForm({...form, customer_id: e.target.value})} className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-black text-gray-900 transition-all text-xs">
+                <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Target Consumer Entity</label>
+                <select required value={form.customer_id} onChange={e => setForm({...form, customer_id: e.target.value})} className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-semibold text-gray-900 transition-all text-sm">
                   <option value="">Select consumer from ledger...</option>
                   {customers.map(c => <option key={c.id} value={c.id}>{c.full_name} ({c.customer_number})</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Allocated Meter Hardware</label>
-                <select required value={form.meter_id} onChange={e => setForm({...form, meter_id: e.target.value})} className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-black text-gray-900 transition-all text-xs">
+                <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Allocated Meter Hardware</label>
+                <select required value={form.meter_id} onChange={e => setForm({...form, meter_id: e.target.value})} className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-semibold text-gray-900 transition-all text-sm">
                   <option value="">Select registered hardware...</option>
                   {meters.map(m => <option key={m.id} value={m.id}>{m.meter_number} — {m.customer_name}</option>)}
                 </select>
@@ -231,14 +231,14 @@ export default function Bills() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Fiscal Month</label>
-                  <select required value={form.billing_month} onChange={e => setForm({...form, billing_month: e.target.value})} className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-black text-gray-900 transition-all text-xs uppercase tracking-widest">
+                  <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Fiscal Month</label>
+                  <select required value={form.billing_month} onChange={e => setForm({...form, billing_month: e.target.value})} className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-semibold text-gray-900 transition-all text-sm uppercase tracking-wider">
                     {MONTHS.slice(1).map((m, i) => <option key={i+1} value={i+1}>{m}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Fiscal Year</label>
-                  <input type="number" required value={form.billing_year} onChange={e => setForm({...form, billing_year: e.target.value})} className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-black text-gray-900 transition-all text-xs" placeholder="e.g. 2026"/>
+                  <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Fiscal Year</label>
+                  <input type="number" required value={form.billing_year} onChange={e => setForm({...form, billing_year: e.target.value})} className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-semibold text-gray-900 transition-all text-sm" placeholder="e.g. 2026"/>
                 </div>
               </div>
             </div>

@@ -7,11 +7,11 @@ function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-border">
-        <div className="flex justify-between items-center p-8 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex justify-between items-center p-6 border-b border-gray-50 bg-white">
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 transition-colors"><X size={20}/></button>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"><X size={20}/></button>
         </div>
-        <div className="p-8">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );
@@ -208,19 +208,26 @@ export default function Consumption() {
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Energy Utilization (Units / kWh)</label>
-                <div className="relative">
-                  <Zap className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                  <input required type="number" step="0.01" value={form.units_consumed} onChange={e => setForm({...form, units_consumed: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-black text-lg text-primary transition-all pr-12" placeholder="0.00"/>
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 uppercase tracking-widest">kWh</span>
+                <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Meter ID / Ref</label>
+                <div className="relative group">
+                  <Zap className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18}/>
+                  <input required value={form.meter_id} onChange={e => setForm({...form, meter_id: e.target.value})} type="text" className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-medium text-gray-900 transition-all placeholder:text-gray-400" placeholder="e.g. MTR-77281"/>
                 </div>
               </div>
-
+              
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Reading Audit Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                  <input required type="date" value={form.reading_date} onChange={e => setForm({...form, reading_date: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-bold text-gray-900 transition-all text-xs"/>
+                <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Consumption Reading (kWh)</label>
+                <div className="relative group">
+                  <Activity className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18}/>
+                  <input required value={form.units_consumed} onChange={e => setForm({...form, units_consumed: e.target.value})} type="number" step="0.01" className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-medium text-gray-900 transition-all placeholder:text-gray-400" placeholder="0.00"/>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Reading Date</label>
+                <div className="relative group">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18}/>
+                  <input required value={form.reading_date} onChange={e => setForm({...form, reading_date: e.target.value})} type="date" className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-medium text-gray-900 transition-all"/>
                 </div>
               </div>
             </div>

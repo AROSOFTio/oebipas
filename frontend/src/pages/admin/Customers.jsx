@@ -7,11 +7,11 @@ function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-border">
-        <div className="flex justify-between items-center p-8 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex justify-between items-center p-6 border-b border-gray-50 bg-white">
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 transition-colors"><X size={20}/></button>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"><X size={20}/></button>
         </div>
-        <div className="p-8">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );
@@ -192,42 +192,42 @@ export default function Customers() {
             
             <div className="grid grid-cols-1 gap-6">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Full Identity Name</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                  <input required value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} type="text" className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-bold text-gray-900 transition-all" placeholder="Enter full legal name..."/>
+                <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Full Identity Name</label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18}/>
+                  <input required value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} type="text" className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-medium text-gray-900 transition-all placeholder:text-gray-400" placeholder="Enter full legal name..."/>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Electronic Mail</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                    <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} type="email" className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-bold text-gray-900 transition-all text-xs" placeholder="name@domain.com"/>
+                  <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Electronic Mail</label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18}/>
+                    <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} type="email" className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-medium text-gray-900 transition-all text-sm placeholder:text-gray-400" placeholder="name@domain.com"/>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Cellular Contact</label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                    <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} type="text" className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-bold text-gray-900 transition-all text-xs" placeholder="+256..."/>
+                  <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Cellular Contact</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18}/>
+                    <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} type="text" className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-medium text-gray-900 transition-all text-sm placeholder:text-gray-400" placeholder="+256..."/>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Physical Installation Address</label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                  <input value={form.address} onChange={e => setForm({...form, address: e.target.value})} type="text" className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-bold text-gray-900 transition-all" placeholder="Plot, Street, City..."/>
+                <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Physical Installation Address</label>
+                <div className="relative group">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18}/>
+                  <input value={form.address} onChange={e => setForm({...form, address: e.target.value})} type="text" className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-medium text-gray-900 transition-all placeholder:text-gray-400" placeholder="Plot, Street, City..."/>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Plan Classification</label>
-                  <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-black text-gray-900 transition-all uppercase tracking-widest text-[10px]">
+                  <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Plan Classification</label>
+                  <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-semibold text-gray-900 transition-all text-sm">
                     <option value="residential">Residential</option>
                     <option value="commercial">Commercial</option>
                     <option value="industrial">Industrial</option>
@@ -235,8 +235,8 @@ export default function Customers() {
                 </div>
                 {showAdd && (
                   <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Account Ref (Optional)</label>
-                    <input value={form.customer_number} onChange={e => setForm({...form, customer_number: e.target.value})} type="text" className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 font-bold text-gray-900 transition-all text-xs" placeholder="Leave blank to auto-gen"/>
+                    <label className="text-xs font-semibold text-gray-700 block mb-2 ml-1">Account Ref (Optional)</label>
+                    <input value={form.customer_number} onChange={e => setForm({...form, customer_number: e.target.value})} type="text" className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 font-medium text-gray-900 transition-all text-sm placeholder:text-gray-400" placeholder="Leave blank to auto-gen"/>
                   </div>
                 )}
               </div>
