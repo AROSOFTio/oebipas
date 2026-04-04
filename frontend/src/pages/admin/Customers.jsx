@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import { Plus, Eye, CheckCircle, XCircle, X, Save, Edit, Search, User, Mail, Phone, MapPin } from 'lucide-react';
+import { Plus, Eye, CheckCircle, XCircle, X, Save, Edit, Trash2, Search, User, Mail, Phone, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function Modal({ title, onClose, children }) {
@@ -89,6 +89,16 @@ export default function Customers() {
     } catch (err) { alert('Failed to update status'); }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to completely delete this customer? This will erase their user account and all related history.")) return;
+    try {
+      await axiosInstance.delete(`/customers/${id}`);
+      fetchCustomers();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete customer');
+    }
+  };
+
   const filtered = customers.filter(c => 
     c.full_name.toLowerCase().includes(search.toLowerCase()) ||
     c.customer_number.toLowerCase().includes(search.toLowerCase())
@@ -164,6 +174,7 @@ export default function Customers() {
                 </td>
                 <td className="p-4 pr-8 text-right space-x-2">
                    <button onClick={() => openEdit(c)} className="p-2 text-gray-400 hover:text-primary transition-colors"><Edit size={18}/></button>
+                   <button onClick={() => handleDelete(c.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors rounded"><Trash2 size={18}/></button>
                    <button onClick={() => toggleStatus(c.id, c.status)} className={`p-2 transition-colors ${c.status === 'active' ? 'text-red-500 hover:bg-red-50' : 'text-green-500 hover:bg-green-50'} rounded`}>{c.status === 'active' ? <User size={18}/> : <User size={18}/>}</button>
                    <Link to={`/admin/customers/${c.id}`} className="p-2 text-primary hover:text-primary-dark transition-colors inline-block"><Eye size={18}/></Link>
                 </td>

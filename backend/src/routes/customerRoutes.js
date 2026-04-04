@@ -16,6 +16,7 @@ router.get('/', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer'),
 router.post('/', restrictTo('Super Admin', 'Billing Officer'), customerController.createCustomer);
 router.put('/:id', restrictTo('Super Admin', 'Billing Officer'), customerController.updateCustomer);
 router.patch('/:id/status', restrictTo('Super Admin', 'Billing Officer'), customerController.updateCustomerStatus);
+router.delete('/:id', restrictTo('Super Admin', 'Billing Officer'), customerController.deleteCustomer);
 
 // Required specific nested endpoints
 router.get('/:id/payments', paymentController.getCustomerPayments);

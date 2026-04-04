@@ -116,3 +116,29 @@ exports.updateCustomerStatus = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+exports.deleteCustomer = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [cust] = await pool.query('SELECT user_id FROM customers WHERE id = ?', [id]);
+    if (cust.length === 0) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Delete customer
+    await pool.query('DELETE FROM customers WHERE id = ?', [id]);
+    
+    // Delete user
+    if (cust[0].user_id) {
+       await pool.query('DELETE FROM users WHERE id = ?', [cust[0].user_id]);
+    }
+
+    await logAudit(req.user.id, 'DELETE_CUSTOMER', 'Customers', id, 'Deleted customer and their user account');
+
+    res.status(200).json({ success: true, message: 'Customer completely deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
