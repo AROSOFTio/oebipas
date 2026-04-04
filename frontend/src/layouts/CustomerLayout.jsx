@@ -34,8 +34,11 @@ export default function CustomerLayout() {
         }`}
       >
          <div className="flex items-center justify-between p-6 border-b border-sidebar-light/20">
-          <div className="text-2xl font-bold tracking-wide">
-            OEBIPAS <span className="block text-xs font-medium text-blue-300 mt-1 uppercase tracking-widest hidden md:block">Customer Portal</span>
+          <div className="flex items-center space-x-3">
+            <img src="/logo.png" alt="OEBIPAS Logo" className="h-10 w-auto object-contain bg-white rounded-full p-1" />
+            <div className="text-xl font-bold tracking-wide">
+              OEBIPAS <span className="block text-[10px] font-medium text-blue-300 mt-0.5 uppercase tracking-widest hidden md:block">Customer Portal</span>
+            </div>
           </div>
           <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setIsMobileOpen(false)}>
             <X size={24} />

@@ -28,9 +28,10 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8 space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
-          <p className="text-gray-500 mt-2">Sign up to access the customer portal</p>
+        <div className="text-center mb-8">
+          <img src="/logo.png" alt="OEBIPAS Logo" className="mx-auto h-20 w-auto object-contain mb-4" />
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Create Account</h1>
+          <p className="text-gray-500 mt-2">Sign up for OEBIPAS</p>
         </div>
 
         {error && <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm text-center">{error}</div>}
