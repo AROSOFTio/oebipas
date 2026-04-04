@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const { logAudit } = require('../services/auditLogger');
+const bcrypt = require('bcrypt');
 
 // Customer looks up their own profile via their user_id (JWT)
 exports.getMyProfile = async (req, res) => {
@@ -36,23 +37,42 @@ exports.getCustomers = async (req, res) => {
 
 exports.createCustomer = async (req, res) => {
   const { customer_number, full_name, email, phone, address, category } = req.body;
-  if (!customer_number || !full_name) {
-    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  if (!customer_number || !full_name || !email) {
+    return res.status(400).json({ success: false, message: 'Missing required fields (Name, Number, Email)' });
   }
 
   try {
+    let userId = null;
+    // Check if user already exists
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      userId = existing[0].id;
+    } else {
+      // Create user account so they can log in
+      const defaultPassword = await bcrypt.hash('Oebipas@123', 10);
+      const baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+      const username = baseUsername + Math.floor(100 + Math.random() * 900);
+      
+      const [userResult] = await pool.query(
+        'INSERT INTO users (full_name, username, email, password, phone, status) VALUES (?, ?, ?, ?, ?, ?)',
+        [full_name, username, email, defaultPassword, phone, 'active']
+      );
+      userId = userResult.insertId;
+      await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, 4]); // Customer role
+    }
+
     const [result] = await pool.query(
-      'INSERT INTO customers (customer_number, full_name, email, phone, address, category, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [customer_number, full_name, email, phone, address, category || 'residential', 'active']
+      'INSERT INTO customers (user_id, customer_number, full_name, email, phone, address, category, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, customer_number, full_name, email, phone, address, category || 'residential', 'active']
     );
 
-    await logAudit(req.user.id, 'CREATE_CUSTOMER', 'Customers', result.insertId, `Created customer ${customer_number}`);
+    await logAudit(req.user.id, 'CREATE_CUSTOMER', 'Customers', result.insertId, `Created customer ${customer_number} and user account if missing`);
 
-    res.status(201).json({ success: true, message: 'Customer created successfully', data: { id: result.insertId } });
+    res.status(201).json({ success: true, message: 'Customer created successfully. Default password is Oebipas@123', data: { id: result.insertId } });
   } catch (error) {
     console.error(error);
     if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ success: false, message: 'Customer number already exists' });
+      return res.status(400).json({ success: false, message: 'Customer number or Email already exists' });
     }
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
