@@ -33,19 +33,18 @@ export default function AdminLayout() {
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-sidebar-light/20">
-          <div className="flex items-center space-x-2.5">
-            {/* Cropped circular logo - scale up to remove white padding */}
-            <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-white/10">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-sidebar-light/20">
+          <div className="flex items-center space-x-2">
+            {/* Full logo - no crop, white bg for transparency */}
+            <div className="w-14 h-14 rounded-full bg-white shrink-0 flex items-center justify-center p-0.5">
               <img
                 src="/logo.png"
                 alt="OEBIPAS"
-                className="w-full h-full object-cover scale-125"
-                style={{ objectPosition: 'center 40%' }}
+                className="w-full h-full object-contain"
               />
             </div>
             <div>
-              <div className="text-lg font-bold tracking-wide leading-tight">OEBIPAS</div>
+              <div className="text-base font-bold tracking-wide leading-tight">OEBIPAS</div>
               <div className="text-[10px] font-medium text-blue-300 uppercase tracking-widest leading-tight">{user?.role}</div>
             </div>
           </div>
