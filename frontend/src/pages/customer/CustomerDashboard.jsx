@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import { useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
+import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CreditCard, Bell, Activity, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export default function CustomerDashboard() {
-  const { user } = useAuth();
+  const { user } = useContext(AuthContext);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

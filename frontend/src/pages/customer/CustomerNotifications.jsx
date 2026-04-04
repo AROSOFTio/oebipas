@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import { useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
+import { useContext } from 'react';
 import { Bell, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function CustomerNotifications() {
-  const { user } = useAuth();
+  const { user } = useContext(AuthContext);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);

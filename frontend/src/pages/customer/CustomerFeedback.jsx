@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import { useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
+import { useContext } from 'react';
 import { Send, FileText } from 'lucide-react';
 
 export default function CustomerFeedback() {
-  const { user } = useAuth();
+  const { user } = useContext(AuthContext);
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ subject: '', message: '' });
