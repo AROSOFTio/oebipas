@@ -129,6 +129,12 @@ exports.processPayment = async (req, res) => {
       [receiptNumber, paymentId, customer_id, amount, today, req.user ? req.user.id : null]
     );
 
+    // 5. Build Notification
+    await conn.query(
+      'INSERT INTO notifications (customer_id, type, title, message, status, sent_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [customer_id, 'payment_received', 'Payment Successful', `We have received your payment of UGX ${amount}. Thank you.`, 'pending', new Date()]
+    );
+
     await conn.commit();
 
     if (req.user) {

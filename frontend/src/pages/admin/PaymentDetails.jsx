@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
-import { ArrowLeft, Print, CheckCircle, FileText } from 'lucide-react';
+import { ArrowLeft, Printer, CheckCircle, FileText } from 'lucide-react';
 
 export default function PaymentDetails() {
   const { id } = useParams();
@@ -75,7 +75,7 @@ export default function PaymentDetails() {
               </div>
             </div>
             <button className="flex items-center space-x-2 bg-white border border-border px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-              <Print size={18}/><span>Print Receipt</span>
+              <Printer size={18}/><span>Print Receipt</span>
             </button>
           </div>
         )}

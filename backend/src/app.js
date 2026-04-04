@@ -15,6 +15,9 @@ const tariffRoutes = require('./routes/tariffRoutes');
 const billRoutes = require('./routes/billRoutes');
 const penaltyRoutes = require('./routes/penaltyRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
 
 const app = express();
 
@@ -46,6 +49,9 @@ app.use('/api/v1/tariffs', tariffRoutes);
 app.use('/api/v1/bills', billRoutes);
 app.use('/api/v1/penalties', penaltyRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/feedback', feedbackRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {

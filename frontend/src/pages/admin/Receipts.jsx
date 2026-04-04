@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import { Print } from 'lucide-react';
+import { Printer } from 'lucide-react';
 
 export default function Receipts() {
   const [receipts, setReceipts] = useState([]);
@@ -53,7 +53,7 @@ export default function Receipts() {
                 <td className="p-4 text-gray-500">{new Date(r.issued_at).toLocaleString()}</td>
                 <td className="p-4 text-right">
                   <button className="inline-flex items-center text-primary hover:text-primary-dark font-medium" onClick={() => window.print()}>
-                    <Print size={16} className="mr-1"/> Print
+                    <Printer size={16} className="mr-1"/> Print
                   </button>
                 </td>
               </tr>

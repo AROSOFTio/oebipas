@@ -24,6 +24,12 @@ import Penalties from './pages/admin/Penalties';
 import Payments from './pages/admin/Payments';
 import PaymentDetails from './pages/admin/PaymentDetails';
 import Receipts from './pages/admin/Receipts';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminFeedback from './pages/admin/AdminFeedback';
+
+import CustomerDashboard from './pages/customer/CustomerDashboard';
+import CustomerNotifications from './pages/customer/CustomerNotifications';
+import CustomerFeedback from './pages/customer/CustomerFeedback';
 
 import CustomerConsumption from './pages/customer/CustomerConsumption';
 import CustomerBills from './pages/customer/CustomerBills';
@@ -45,7 +51,9 @@ function App() {
           {/* Customer Routes */}
           <Route element={<ProtectedRoute allowedRoles={['Customer']} />}>
             <Route path="/customer" element={<CustomerLayout />}>
-              <Route index element={<div className="p-6 text-xl font-medium text-gray-700">Customer Dashboard Placeholder</div>} />
+              <Route index element={<CustomerDashboard />} />
+              <Route path="notifications" element={<CustomerNotifications />} />
+              <Route path="feedback" element={<CustomerFeedback />} />
               <Route path="consumption" element={<CustomerConsumption />} />
               <Route path="bills" element={<CustomerBills />} />
               <Route path="pay" element={<MakePayment />} />
@@ -56,8 +64,9 @@ function App() {
           {/* Admin Routes */}
           <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Billing Officer', 'Finance Officer']} />}>
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<div className="p-6 text-xl font-medium text-gray-700">Admin Dashboard Placeholder</div>} />
+              <Route index element={<AdminDashboard />} />
               <Route path="users" element={<Users />} />
+              <Route path="feedback" element={<AdminFeedback />} />
               <Route path="customers" element={<Customers />} />
               <Route path="customers/:id" element={<CustomerDetails />} />
               <Route path="connections" element={<Connections />} />

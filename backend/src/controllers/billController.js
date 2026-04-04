@@ -120,6 +120,12 @@ exports.generateBill = async (req, res) => {
       await conn.query('INSERT INTO bill_items (bill_id, item_name, item_type, amount) VALUES (?, ?, ?, ?)', item);
     }
 
+    // 13. Insert Notification for Bill
+    await conn.query(
+      'INSERT INTO notifications (customer_id, type, title, message, status, sent_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [customer_id, 'bill_generated', 'New Bill Generated', `Your new bill ${billNumber} for UGX ${totalAmount} has been generated. Due on ${dueDate.toISOString().split('T')[0]}.`, 'pending', new Date()]
+    );
+
     await conn.commit();
     await logAudit(req.user.id, 'GENERATE_BILL', 'Bills', billId, `Generated ${billNumber} - UGX ${totalAmount}`);
 

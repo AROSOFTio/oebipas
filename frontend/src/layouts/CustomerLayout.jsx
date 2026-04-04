@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useContext, useState } from 'react';
-import { LayoutDashboard, FileText, Settings, LogOut, Menu, X, Activity, CreditCard, Clock } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, LogOut, Menu, X, Activity, CreditCard, Clock, Bell, MessageSquare } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 export default function CustomerLayout() {
@@ -60,6 +60,14 @@ export default function CustomerLayout() {
           <Link to="/customer/bills" onClick={() => setIsMobileOpen(false)} className={navItemClass('/customer/bills')}>
             <FileText size={20} />
             <span>My Bills</span>
+          </Link>
+          <Link to="/customer/notifications" onClick={() => setIsMobileOpen(false)} className={navItemClass('/customer/notifications')}>
+            <Bell size={20} />
+            <span>Notifications</span>
+          </Link>
+          <Link to="/customer/feedback" onClick={() => setIsMobileOpen(false)} className={navItemClass('/customer/feedback')}>
+            <MessageSquare size={20} />
+            <span>Support</span>
           </Link>
           <Link to="/customer/consumption" onClick={() => setIsMobileOpen(false)} className={navItemClass('/customer/consumption')}>
             <Activity size={20} />
