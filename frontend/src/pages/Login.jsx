@@ -16,7 +16,7 @@ export default function Login() {
     try {
       const res = await axiosInstance.post('/auth/login', { email, password });
       login(res.data.token, res.data.user);
-      
+
       if (res.data.user.role === 'Customer') {
         navigate('/customer');
       } else {
@@ -30,16 +30,17 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8 space-y-6">
-        <div className="text-center mb-8">
-          {/* Cropped logo - scale 140% to cut white borders, reveal just the crest */}
-          <div className="mx-auto mb-2 w-28 h-28 rounded-full overflow-hidden flex items-center justify-center">
+        
+        {/* Logo — full image, no crop, white bg for transparency */}
+        <div className="text-center">
+          <div className="mx-auto mb-2 w-36 h-36 bg-white rounded-full flex items-center justify-center">
             <img
               src="/logo.png"
               alt="OEBIPAS Logo"
-              className="w-full h-full object-cover scale-125"
-              style={{ objectPosition: 'center 40%' }}
+              className="w-full h-full object-contain"
             />
           </div>
+          <p className="text-gray-500 text-sm">Sign in to your account</p>
         </div>
 
         {error && <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm text-center">{error}</div>}
@@ -47,12 +48,12 @@ export default function Login() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Email / Username</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary outline-none transition-colors" 
+              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary outline-none transition-colors"
               placeholder="admin@oebipas.local"
             />
           </div>
@@ -61,23 +62,23 @@ export default function Login() {
               <label className="block text-sm font-medium text-gray-700">Password</label>
               <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
             </div>
-            <input 
-              type="password" 
+            <input
+              type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary outline-none transition-colors" 
+              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary outline-none transition-colors"
               placeholder="••••••••"
             />
           </div>
-          <button 
+          <button
             type="submit"
             className="w-full py-2.5 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
           >
             Sign In
           </button>
         </form>
-        
+
         <div className="text-center text-sm">
           <span className="text-gray-500">Don't have an account? </span>
           <Link to="/register" className="text-primary hover:underline">Register</Link>
