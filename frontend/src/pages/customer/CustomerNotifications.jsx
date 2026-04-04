@@ -5,39 +5,40 @@ import { useContext } from 'react';
 import { Bell, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function CustomerNotifications() {
-  const { user } = useContext(AuthContext);
+  const [customerId, setCustomerId] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
 
   useEffect(() => {
-    fetchNotifications();
+    fetchProfile();
   }, []);
 
-  const fetchNotifications = async () => {
+  const fetchProfile = async () => {
     try {
-      const custRes = await axiosInstance.get('/customers');
-      const myProfile = custRes.data.data.find(c => c.user_id === user.id);
-      
-      if (myProfile) {
-        const res = await axiosInstance.get(`/notifications?customer_id=${myProfile.id}`);
-        setNotifications(res.data.data);
-      }
+      const profileRes = await axiosInstance.get('/customers/my-profile');
+      const cid = profileRes.data.data.id;
+      setCustomerId(cid);
+      fetchNotifications(cid);
+    } catch (err) { console.error(err); setLoading(false); }
+  };
+
+  const fetchNotifications = async (cid) => {
+    try {
+      const res = await axiosInstance.get(`/notifications?customer_id=${cid}`);
+      setNotifications(res.data.data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
   const handleMarkAllRead = async () => {
+    if (!customerId) return;
     try {
       setMarking(true);
-      const custRes = await axiosInstance.get('/customers');
-      const myProfile = custRes.data.data.find(c => c.user_id === user.id);
-      if (myProfile) {
-        await axiosInstance.post('/notifications/mark-read', { customer_id: myProfile.id });
-        fetchNotifications();
-      }
+      await axiosInstance.post('/notifications/mark-read', { customer_id: customerId });
+      fetchNotifications(customerId);
     } catch (err) {
-      alert("Failed to mark as read");
+      alert('Failed to mark as read');
     } finally {
       setMarking(false);
     }

@@ -14,16 +14,25 @@ const STATUS_COLORS = {
 };
 
 export default function CustomerBills() {
-  const { user } = useContext(AuthContext);
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axiosInstance.get(`/bills/customer/${user.id}`)
-      .then(res => setBills(res.data.data || []))
-      .catch(err => { console.error(err); setBills([]); })
-      .finally(() => setLoading(false));
-  }, [user]);
+    const fetchBills = async () => {
+      try {
+        const profileRes = await axiosInstance.get('/customers/my-profile');
+        const customerId = profileRes.data.data.id;
+        const res = await axiosInstance.get(`/bills/customer/${customerId}`);
+        setBills(res.data.data || []);
+      } catch (err) {
+        console.error(err);
+        setBills([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBills();
+  }, []);
 
   const currentBill = bills[0];
 

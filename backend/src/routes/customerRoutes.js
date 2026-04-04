@@ -8,6 +8,9 @@ const penaltyController = require('../controllers/penaltyController');
 
 router.use(authenticateToken);
 
+// Customer can get their own profile
+router.get('/my-profile', customerController.getMyProfile);
+
 // Admins & Billing Officers can manage customers
 router.get('/', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer'), customerController.getCustomers);
 router.post('/', restrictTo('Super Admin', 'Billing Officer'), customerController.createCustomer);

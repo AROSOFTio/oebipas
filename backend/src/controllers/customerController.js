@@ -1,6 +1,24 @@
 const pool = require('../config/db');
 const { logAudit } = require('../services/auditLogger');
 
+// Customer looks up their own profile via their user_id (JWT)
+exports.getMyProfile = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT c.* FROM customers c WHERE c.user_id = ? LIMIT 1`,
+      [req.user.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'No customer profile linked to this account.' });
+    }
+    res.status(200).json({ success: true, data: rows[0] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
 exports.getCustomers = async (req, res) => {
   try {
     const [customers] = await pool.query(`

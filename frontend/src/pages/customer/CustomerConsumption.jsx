@@ -4,26 +4,19 @@ import { AuthContext } from '../../context/AuthContext';
 import { Activity, Zap } from 'lucide-react';
 
 export default function CustomerConsumption() {
-  const { user } = useContext(AuthContext);
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Note: The `user.id` is the user ID, not the customer profile ID directly.
-    // In our architecture, the backend endpoint can look up the customer_id based on req.user.id via DB join if needed.
-    // For Phase 3, we'll pass user.id to the route, and the backend routes might need tweaking if customer_id diverges.
-    // However, given our schema, users(customer) map 1:1, so we'll simulate fetching for the current user ID.
-    fetchHistory();
-  }, [user]);
+  useEffect(() => { fetchHistory(); }, []);
 
   const fetchHistory = async () => {
     try {
-      // In reality, we'd fetch the specific customer's ID tied to this logged-in auth user.
-      const res = await axiosInstance.get(`/consumption/customer/${user.id}`);
+      const profileRes = await axiosInstance.get('/customers/my-profile');
+      const customerId = profileRes.data.data.id;
+      const res = await axiosInstance.get(`/consumption/customer/${customerId}`);
       setRecords(res.data.data || []);
     } catch (err) {
       console.error(err);
-      // Fallback empty array if the user doesn't have a linked customer profile yet.
       setRecords([]);
     } finally {
       setLoading(false);

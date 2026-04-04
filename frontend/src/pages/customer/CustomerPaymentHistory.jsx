@@ -5,23 +5,16 @@ import { useContext } from 'react';
 import { CheckCircle, Clock } from 'lucide-react';
 
 export default function CustomerPaymentHistory() {
-  const { user } = useContext(AuthContext);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
+  useEffect(() => { fetchHistory(); }, []);
 
   const fetchHistory = async () => {
     try {
-      const custRes = await axiosInstance.get('/customers');
-      const myProfile = custRes.data.data.find(c => c.user_id === user.id);
-      
-      if (myProfile) {
-        const pRes = await axiosInstance.get(`/customers/${myProfile.id}/payments`);
-        setPayments(pRes.data.data);
-      }
+      const profileRes = await axiosInstance.get('/customers/my-profile');
+      const pRes = await axiosInstance.get(`/customers/${profileRes.data.data.id}/payments`);
+      setPayments(pRes.data.data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };

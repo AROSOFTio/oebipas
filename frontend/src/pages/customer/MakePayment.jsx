@@ -25,17 +25,11 @@ export default function MakePayment() {
 
   const fetchUnpaidBills = async () => {
     try {
-      // In a real scenario we'd query by logged in customer ID
-      // Assuming user has a customer profile linked. 
-      // We will fetch customer info first. For simplicity, assume customer profile is fetched
-      const res = await axiosInstance.get('/customers');
-      const myProfile = res.data.data.find(c => c.user_id === user.id);
-      
-      if (myProfile) {
-        const billsRes = await axiosInstance.get(`/customers/${myProfile.id}/bills`);
-        const unpaid = billsRes.data.data.filter(b => b.balance_due > 0);
-        setBills(unpaid);
-      }
+      const profileRes = await axiosInstance.get('/customers/my-profile');
+      const myProfile = profileRes.data.data;
+      const billsRes = await axiosInstance.get(`/customers/${myProfile.id}/bills`);
+      const unpaid = billsRes.data.data.filter(b => b.balance_due > 0);
+      setBills(unpaid);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -48,21 +42,14 @@ export default function MakePayment() {
 
     try {
       setProcessing(true); setError('');
-      
-      // Get customer id
-      const res = await axiosInstance.get('/customers');
-      const myProfile = res.data.data.find(c => c.user_id === user.id);
-      
-      if (!myProfile) throw new Error("Customer profile not found");
-
+      const profileRes = await axiosInstance.get('/customers/my-profile');
+      const myProfile = profileRes.data.data;
       await axiosInstance.post('/payments', {
         customer_id: myProfile.id,
         bill_id: selectedBill,
         amount: amount,
         payment_method: method
       });
-
-      // Redirect to history after success
       navigate('/customer/payments');
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Payment failed');
