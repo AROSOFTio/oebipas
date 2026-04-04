@@ -20,9 +20,15 @@ import ConsumptionDetails from './pages/admin/ConsumptionDetails';
 import Tariffs from './pages/admin/Tariffs';
 import Bills from './pages/admin/Bills';
 import BillDetails from './pages/admin/BillDetails';
+import Penalties from './pages/admin/Penalties';
+import Payments from './pages/admin/Payments';
+import PaymentDetails from './pages/admin/PaymentDetails';
+import Receipts from './pages/admin/Receipts';
 
 import CustomerConsumption from './pages/customer/CustomerConsumption';
 import CustomerBills from './pages/customer/CustomerBills';
+import MakePayment from './pages/customer/MakePayment';
+import CustomerPaymentHistory from './pages/customer/CustomerPaymentHistory';
 
 function App() {
   return (
@@ -42,6 +48,8 @@ function App() {
               <Route index element={<div className="p-6 text-xl font-medium text-gray-700">Customer Dashboard Placeholder</div>} />
               <Route path="consumption" element={<CustomerConsumption />} />
               <Route path="bills" element={<CustomerBills />} />
+              <Route path="pay" element={<MakePayment />} />
+              <Route path="payments" element={<CustomerPaymentHistory />} />
             </Route>
           </Route>
 
@@ -59,6 +67,10 @@ function App() {
               <Route path="tariffs" element={<Tariffs />} />
               <Route path="bills" element={<Bills />} />
               <Route path="bills/:id" element={<BillDetails />} />
+              <Route path="penalties" element={<Penalties />} />
+              <Route path="payments" element={<Payments />} />
+              <Route path="payments/:id" element={<PaymentDetails />} />
+              <Route path="receipts" element={<Receipts />} />
             </Route>
           </Route>
 

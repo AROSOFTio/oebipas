@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useContext, useState } from 'react';
-import { LayoutDashboard, Users, FileText, Settings, LogOut, Briefcase, Zap, Activity, Menu, X, Receipt, Tag } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, LogOut, Briefcase, Zap, Activity, Menu, X, Receipt, Tag, ShieldAlert, CreditCard, FileCheck } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 export default function AdminLayout() {
@@ -81,6 +81,18 @@ export default function AdminLayout() {
           <Link to="/admin/bills" onClick={() => setIsMobileOpen(false)} className={navItemClass('/admin/bills')}>
             <Receipt size={20} />
             <span>Bills</span>
+          </Link>
+          <Link to="/admin/penalties" onClick={() => setIsMobileOpen(false)} className={navItemClass('/admin/penalties')}>
+            <ShieldAlert size={20} />
+            <span>Penalties</span>
+          </Link>
+          <Link to="/admin/payments" onClick={() => setIsMobileOpen(false)} className={navItemClass('/admin/payments')}>
+            <CreditCard size={20} />
+            <span>Payments</span>
+          </Link>
+          <Link to="/admin/receipts" onClick={() => setIsMobileOpen(false)} className={navItemClass('/admin/receipts')}>
+            <FileCheck size={20} />
+            <span>Receipts</span>
           </Link>
           {user?.role === 'Super Admin' && (
             <Link to="/admin/users" onClick={() => setIsMobileOpen(false)} className={navItemClass('/admin/users')}>
