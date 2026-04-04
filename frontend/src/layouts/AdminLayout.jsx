@@ -33,11 +33,20 @@ export default function AdminLayout() {
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="flex items-center justify-between p-6 border-b border-sidebar-light/20">
-          <div className="flex items-center space-x-3">
-            <img src="/logo.png" alt="OEBIPAS Logo" className="h-10 w-auto object-contain bg-white rounded-full p-1" />
-            <div className="text-xl font-bold tracking-wide">
-              OEBIPAS <span className="block text-[10px] font-medium text-blue-300 mt-0.5 uppercase tracking-widest">{user?.role}</span>
+        <div className="flex items-center justify-between p-4 border-b border-sidebar-light/20">
+          <div className="flex items-center space-x-2.5">
+            {/* Cropped circular logo - scale up to remove white padding */}
+            <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-white/10">
+              <img
+                src="/logo.png"
+                alt="OEBIPAS"
+                className="w-full h-full object-cover scale-125"
+                style={{ objectPosition: 'center 40%' }}
+              />
+            </div>
+            <div>
+              <div className="text-lg font-bold tracking-wide leading-tight">OEBIPAS</div>
+              <div className="text-[10px] font-medium text-blue-300 uppercase tracking-widest leading-tight">{user?.role}</div>
             </div>
           </div>
           <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setIsMobileOpen(false)}>
