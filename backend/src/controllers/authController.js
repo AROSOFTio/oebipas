@@ -26,9 +26,23 @@ exports.register = async (req, res) => {
     // Assign generic "Customer" role (ID 4 based on seed)
     await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, 4]);
 
-    await logAudit(userId, 'REGISTER', 'Auth', userId, 'New user registered');
+    // Auto-create customer profile so they are immediately linked
+    const customerNumber = 'CUST-' + Math.floor(100000 + Math.random() * 900000);
+    const [custResult] = await pool.query(
+      'INSERT INTO customers (user_id, customer_number, full_name, email, phone, category, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, customerNumber, full_name, email, phone, 'residential', 'active']
+    );
+    const customerId = custResult.insertId;
 
-    res.status(201).json({ success: true, message: 'Registration successful' });
+    // Create a welcome notification email (simulated)
+    await pool.query(
+      'INSERT INTO notifications (customer_id, type, title, message, channel, status, sent_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+      [customerId, 'Registration', 'Welcome to OEBIPAS', 'Thank you for registering. Your profile is automatically linked. Please contact support or wait for an administrator to assign a meter to your account.', 'email', 'sent']
+    );
+
+    await logAudit(userId, 'REGISTER', 'Auth', userId, 'New user registered and customer profile linked');
+
+    res.status(201).json({ success: true, message: 'Registration successful. Welcome email sent.' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Internal server error' });
