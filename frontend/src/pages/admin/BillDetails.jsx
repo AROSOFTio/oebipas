@@ -78,7 +78,7 @@ export default function BillDetails() {
       </div>
 
       {/* Bill Breakdown */}
-      <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-border overflow-x-auto">
         <div className="p-5 border-b border-border bg-gray-50">
           <h2 className="font-semibold text-gray-800">Bill Breakdown</h2>
         </div>

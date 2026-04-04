@@ -60,7 +60,7 @@ export default function CustomerBills() {
       )}
 
       {/* Bill History */}
-      <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-border overflow-x-auto">
         <div className="p-4 border-b border-border bg-gray-50 flex items-center space-x-2">
           <FileText size={16} className="text-gray-400"/>
           <h2 className="font-semibold text-gray-800">Billing History</h2>

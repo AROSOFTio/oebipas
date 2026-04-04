@@ -93,7 +93,7 @@ export default function Tariffs() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-border overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-border text-gray-500 text-sm">

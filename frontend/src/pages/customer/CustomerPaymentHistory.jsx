@@ -31,7 +31,7 @@ export default function CustomerPaymentHistory() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Payment History</h1>
       
-      <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-border overflow-x-auto">
         {payments.length === 0 ? (
           <div className="p-8 text-center text-gray-500">You haven't made any payments yet.</div>
         ) : (
