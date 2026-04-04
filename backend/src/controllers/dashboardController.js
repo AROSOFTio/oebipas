@@ -91,12 +91,12 @@ exports.getCustomerSummary = async (req, res) => {
       success: true,
       data: {
         kpis: {
-          total_due,
+          total_due: total_due || 0,
           current_bill: openBills[0] || null,
         },
-        recent_payments,
-        recent_notifications,
-        consumption_trend
+        recent_payments: recent_payments || [],
+        recent_notifications: recent_notifications || [],
+        consumption_trend: consumption_trend || []
       }
     });
 

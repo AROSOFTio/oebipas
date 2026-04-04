@@ -9,9 +9,9 @@ exports.getMyProfile = async (req, res) => {
       [req.user.id]
     );
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'No customer profile linked to this account.' });
+      return res.status(200).json({ success: true, linked: false, message: 'No customer profile linked to this account.' });
     }
-    res.status(200).json({ success: true, data: rows[0] });
+    res.status(200).json({ success: true, linked: true, data: rows[0] });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Internal server error' });

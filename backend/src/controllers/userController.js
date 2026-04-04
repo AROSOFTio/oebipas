@@ -34,7 +34,16 @@ exports.createUser = async (req, res) => {
     const userId = result.insertId;
     await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, role_id]);
 
-    await logAudit(req.user.id, 'CREATE_USER', 'Users', userId, `Created user ${email}`);
+    // If role is Customer (ID 4), auto-create customer profile
+    if (Number(role_id) === 4) {
+      const customerNumber = `CUST-${Math.floor(100000 + Math.random() * 900000)}`;
+      await pool.query(
+        'INSERT INTO customers (user_id, customer_number, full_name, email, phone, status) VALUES (?, ?, ?, ?, ?, ?)',
+        [userId, customerNumber, full_name, email, phone, 'active']
+      );
+    }
+
+    await logAudit(req.user.id, 'CREATE_USER', 'Users', userId, `Created user ${email} ${Number(role_id) === 4 ? 'with customer profile' : ''}`);
 
     res.status(201).json({ success: true, message: 'User created successfully', data: { id: userId } });
   } catch (error) {
