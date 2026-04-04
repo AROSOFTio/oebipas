@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axiosInstance from '../../../utils/axiosInstance';
+import axiosInstance from '../../utils/axiosInstance';
 import { Shield, UserPlus, MoreVertical } from 'lucide-react';
 
 export default function Users() {

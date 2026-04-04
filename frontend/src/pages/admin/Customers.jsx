@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../../utils/axiosInstance';
+import axiosInstance from '../../utils/axiosInstance';
 import { Plus, Eye, CheckCircle, XCircle } from 'lucide-react';
 
 export default function Customers() {
