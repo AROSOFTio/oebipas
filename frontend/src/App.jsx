@@ -13,6 +13,12 @@ import ResetPassword from './pages/ResetPassword';
 import Users from './pages/admin/Users';
 import Customers from './pages/admin/Customers';
 import CustomerDetails from './pages/admin/CustomerDetails';
+import Connections from './pages/admin/Connections';
+import Meters from './pages/admin/Meters';
+import Consumption from './pages/admin/Consumption';
+import ConsumptionDetails from './pages/admin/ConsumptionDetails';
+
+import CustomerConsumption from './pages/customer/CustomerConsumption';
 
 function App() {
   return (
@@ -29,17 +35,22 @@ function App() {
           {/* Customer Routes */}
           <Route element={<ProtectedRoute allowedRoles={['Customer']} />}>
             <Route path="/customer" element={<CustomerLayout />}>
-              <Route index element={<div>Customer Dashboard Placeholder</div>} />
+              <Route index element={<div className="p-6 text-xl font-medium text-gray-700">Customer Dashboard Placeholder</div>} />
+              <Route path="consumption" element={<CustomerConsumption />} />
             </Route>
           </Route>
 
           {/* Admin Routes */}
           <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Billing Officer', 'Finance Officer']} />}>
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<div>Admin Dashboard Placeholder</div>} />
+              <Route index element={<div className="p-6 text-xl font-medium text-gray-700">Admin Dashboard Placeholder</div>} />
               <Route path="users" element={<Users />} />
               <Route path="customers" element={<Customers />} />
               <Route path="customers/:id" element={<CustomerDetails />} />
+              <Route path="connections" element={<Connections />} />
+              <Route path="meters" element={<Meters />} />
+              <Route path="consumption" element={<Consumption />} />
+              <Route path="consumption/:id" element={<ConsumptionDetails />} />
             </Route>
           </Route>
 

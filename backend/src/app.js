@@ -8,6 +8,9 @@ const healthRoutes = require('./routes/healthRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const customerRoutes = require('./routes/customerRoutes');
+const serviceConnectionRoutes = require('./routes/serviceConnectionRoutes');
+const meterRoutes = require('./routes/meterRoutes');
+const consumptionRoutes = require('./routes/consumptionRoutes');
 
 const app = express();
 
@@ -32,6 +35,9 @@ app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/customers', customerRoutes);
+app.use('/api/v1/service-connections', serviceConnectionRoutes);
+app.use('/api/v1/meters', meterRoutes);
+app.use('/api/v1/consumption', consumptionRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {
