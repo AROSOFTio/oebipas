@@ -26,7 +26,9 @@ import PaymentDetails from './pages/admin/PaymentDetails';
 import Receipts from './pages/admin/Receipts';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminFeedback from './pages/admin/AdminFeedback';
-
+import Reports from './pages/admin/Reports';
+import AuditLogs from './pages/admin/AuditLogs';
+import Settings from './pages/admin/Settings';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import CustomerNotifications from './pages/customer/CustomerNotifications';
 import CustomerFeedback from './pages/customer/CustomerFeedback';
@@ -67,7 +69,9 @@ function App() {
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<Users />} />
               <Route path="feedback" element={<AdminFeedback />} />
-              <Route path="customers" element={<Customers />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="audit-logs" element={<AuditLogs />} />
+            <Route path="settings" element={<Settings />} />              <Route path="customers" element={<Customers />} />
               <Route path="customers/:id" element={<CustomerDetails />} />
               <Route path="connections" element={<Connections />} />
               <Route path="meters" element={<Meters />} />

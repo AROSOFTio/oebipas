@@ -18,7 +18,9 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
-
+const reportRoutes = require('./routes/reportRoutes');
+const auditLogRoutes = require('./routes/auditLogRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 const app = express();
 
 // Security Middlewares
@@ -52,7 +54,9 @@ app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/feedback', feedbackRoutes);
-
+app.use('/api/v1/reports', reportRoutes);
+app.use('/api/v1/audit-logs', auditLogRoutes);
+app.use('/api/v1/settings', settingsRoutes);
 // 404 Handler
 app.use((req, res, next) => {
   res.status(404).json({ success: false, message: 'Resource not found' });

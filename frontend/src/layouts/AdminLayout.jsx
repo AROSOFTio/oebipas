@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useContext, useState } from 'react';
-import { LayoutDashboard, Users, FileText, Settings, LogOut, Briefcase, Zap, Activity, Menu, X, Receipt, Tag, ShieldAlert, CreditCard, FileCheck, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, LogOut, Briefcase, Zap, Activity, Menu, X, Receipt, Tag, ShieldAlert, CreditCard, FileCheck, MessageSquare, BarChart2, History } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 export default function AdminLayout() {
@@ -104,6 +104,14 @@ export default function AdminLayout() {
               <span>System Users</span>
             </Link>
           )}
+          <Link to="/admin/reports" onClick={() => setIsMobileOpen(false)} className={navItemClass('/admin/reports')}>
+            <BarChart2 size={20} />
+            <span>Reports</span>
+          </Link>
+          <Link to="/admin/audit-logs" onClick={() => setIsMobileOpen(false)} className={navItemClass('/admin/audit-logs')}>
+            <History size={20} />
+            <span>Audit Logs</span>
+          </Link>
           <Link to="/admin/settings" onClick={() => setIsMobileOpen(false)} className={navItemClass('/admin/settings')}>
             <Settings size={20} />
             <span>Settings</span>
