@@ -81,10 +81,6 @@ export default function CustomerLayout() {
             <Clock size={20} />
             <span>Payment History</span>
           </Link>
-          <Link to="/customer/settings" onClick={() => setIsMobileOpen(false)} className={navItemClass('/customer/settings')}>
-            <Settings size={20} />
-            <span>Settings</span>
-          </Link>
         </nav>
         <div className="p-4 border-t border-sidebar-light/20">
           <button onClick={handleLogout} className="w-full flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-accent-red hover:text-white transition-colors">

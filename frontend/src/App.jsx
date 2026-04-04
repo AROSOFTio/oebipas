@@ -69,9 +69,10 @@ function App() {
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<Users />} />
               <Route path="feedback" element={<AdminFeedback />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="audit-logs" element={<AuditLogs />} />
-            <Route path="settings" element={<Settings />} />              <Route path="customers" element={<Customers />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="audit-logs" element={<AuditLogs />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="customers" element={<Customers />} />
               <Route path="customers/:id" element={<CustomerDetails />} />
               <Route path="connections" element={<Connections />} />
               <Route path="meters" element={<Meters />} />
