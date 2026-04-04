@@ -8,8 +8,8 @@ function Modal({ title, onClose, children }) {
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-border">
         <div className="flex justify-between items-center p-8 border-b border-gray-100 bg-gray-50/50">
-          <h2 className="text-xl font-black text-gray-900 tracking-tight">{title}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-white rounded-xl transition-all shadow-none hover:shadow-sm"><X size={20}/></button>
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 transition-colors"><X size={20}/></button>
         </div>
         <div className="p-8">{children}</div>
       </div>
@@ -105,10 +105,10 @@ export default function Customers() {
         </div>
         <button 
           onClick={() => { setShowAdd(true); setError(''); setForm({ full_name: '', email: '', phone: '', address: '', category: 'residential', customer_number: '' }); }}
-          className="flex items-center space-x-3 bg-primary text-white px-8 py-4 rounded-[1.2rem] hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 font-black tracking-tight"
+          className="flex items-center space-x-2 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-dark transition-all shadow-md font-bold"
         >
-          <Plus size={22} strokeWidth={3}/>
-          <span>NEW CUSTOMER</span>
+          <Plus size={20} />
+          <span>New Customer</span>
         </button>
       </div>
 
@@ -123,53 +123,49 @@ export default function Customers() {
             className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-gray-900 font-medium transition-all"
           />
         </div>
-        <div className="px-5 py-2.5 bg-primary/5 rounded-xl text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-           {filtered.length} RECORDS FOUND
+        <div className="px-4 py-2 bg-primary/5 rounded-lg text-xs font-bold text-primary uppercase tracking-wider">
+           {filtered.length} Customers Found
         </div>
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-border overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50/50 border-b border-border text-gray-900">
-              <th className="p-6 font-black text-xs uppercase tracking-widest pl-10">Account Ref</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest">Consumer Identity</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest">Plan Category</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest">Service Status</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest text-right pr-10">Command</th>
+            <tr className="bg-gray-50/50 border-b border-border text-gray-500 text-xs">
+              <th className="p-4 font-bold uppercase tracking-wider pl-8">Customer #</th>
+              <th className="p-4 font-bold uppercase tracking-wider">Name & Contact</th>
+              <th className="p-4 font-bold uppercase tracking-wider">Category</th>
+              <th className="p-4 font-bold uppercase tracking-wider">Status</th>
+              <th className="p-4 font-bold uppercase tracking-wider text-right pr-8">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filtered.map((c) => (
               <tr key={c.id} className="group hover:bg-gray-50/30 transition-colors">
-                <td className="p-6 pl-10">
-                   <div className="bg-gray-100 px-3 py-1.5 rounded-lg inline-block text-xs font-black text-gray-600 font-mono tracking-tighter">
-                      {c.customer_number}
-                   </div>
+                <td className="p-4 pl-8">
+                   <div className="font-bold text-sidebar">{c.customer_number}</div>
+                </td>
+                <td className="p-4">
+                   <div className="font-bold text-gray-900">{c.full_name}</div>
+                   <div className="text-xs text-gray-500">{c.email || 'No email'}</div>
                 </td>
                 <td className="p-6">
-                   <div className="font-black text-gray-900 group-hover:text-primary transition-colors">{c.full_name}</div>
-                   <div className="text-xs text-gray-400 font-medium mt-0.5">{c.email || 'No email registered'}</div>
-                </td>
-                <td className="p-6">
-                  <span className="px-3 py-1 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest rounded-lg border border-primary/10">
+                  <span className="px-3 py-1 bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-widest rounded-lg border border-primary/10">
                     {c.category}
                   </span>
                 </td>
-                <td className="p-6">
-                  <span className={`inline-flex items-center space-x-2 text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full ${
-                    c.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                <td className="p-4">
+                  <span className={`inline-flex items-center space-x-1.5 text-xs font-bold uppercase px-3 py-1 rounded-full ${
+                    c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                   }`}>
-                    {c.status === 'active' ? <CheckCircle size={12} strokeWidth={3}/> : <XCircle size={12} strokeWidth={3}/>}
+                    {c.status === 'active' ? <CheckCircle size={14}/> : <XCircle size={14}/>}
                     <span>{c.status}</span>
                   </span>
                 </td>
-                <td className="p-6 pr-10 text-right">
-                  <div className="flex items-center justify-end space-x-3 opacity-30 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openEdit(c)} className="p-2.5 bg-white border border-border text-gray-500 hover:text-primary hover:border-primary/20 rounded-xl transition-all shadow-sm"><Edit size={18}/></button>
-                    <button onClick={() => toggleStatus(c.id, c.status)} className={`p-2.5 bg-white border border-border transition-all shadow-sm rounded-xl ${c.status === 'active' ? 'text-red-500 hover:bg-red-50 hover:border-red-100' : 'text-green-500 hover:bg-green-50 hover:border-green-100'}`}><User size={18}/></button>
-                    <Link to={`/admin/customers/${c.id}`} className="p-2.5 bg-[#0F172A] text-white hover:bg-black rounded-xl transition-all shadow-lg active:scale-95"><Eye size={18}/></Link>
-                  </div>
+                <td className="p-4 pr-8 text-right space-x-2">
+                   <button onClick={() => openEdit(c)} className="p-2 text-gray-400 hover:text-primary transition-colors"><Edit size={18}/></button>
+                   <button onClick={() => toggleStatus(c.id, c.status)} className={`p-2 transition-colors ${c.status === 'active' ? 'text-red-500 hover:bg-red-50' : 'text-green-500 hover:bg-green-50'} rounded`}>{c.status === 'active' ? <User size={18}/> : <User size={18}/>}</button>
+                   <Link to={`/admin/customers/${c.id}`} className="p-2 text-primary hover:text-primary-dark transition-colors inline-block"><Eye size={18}/></Link>
                 </td>
               </tr>
             ))}
@@ -250,21 +246,21 @@ export default function Customers() {
               <button 
                 type="button" 
                 onClick={() => { setShowAdd(false); setEditCust(null); }}
-                className="flex-1 py-4 bg-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-500 hover:bg-gray-200 transition-all"
+                className="flex-1 py-3 bg-gray-100 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-all"
               >
-                ABORT MISSION
+                Cancel
               </button>
               <button 
                 type="submit" 
                 disabled={saving}
-                className="flex-1 py-4 bg-[#0F172A] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center space-x-2 shadow-xl shadow-black/20 hover:bg-black transition-all disabled:opacity-50 active:scale-95"
+                className="flex-1 py-3 bg-primary text-white rounded-lg font-bold flex items-center justify-center space-x-2 shadow-md hover:bg-primary-dark transition-all disabled:opacity-50"
               >
                 {saving ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <Save size={14}/>
-                    <span>COMMIT INTEL</span>
+                    <Save size={18}/>
+                    <span>Save Customer</span>
                   </>
                 )}
               </button>

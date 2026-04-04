@@ -17,8 +17,8 @@ function Modal({ title, onClose, children }) {
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-border">
         <div className="flex justify-between items-center p-8 border-b border-gray-100 bg-gray-50/50">
-          <h2 className="text-xl font-black text-gray-900 tracking-tight">{title}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-white rounded-xl transition-all shadow-none hover:shadow-sm"><X size={20}/></button>
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 transition-colors"><X size={20}/></button>
         </div>
         <div className="p-8">{children}</div>
       </div>
@@ -109,10 +109,10 @@ export default function Bills() {
         </div>
         <button 
           onClick={() => { setShowGenerate(true); setGenError(''); setGenSuccess(''); }}
-          className="flex items-center space-x-3 bg-primary text-white px-8 py-4 rounded-[1.2rem] hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 font-black tracking-tight"
+          className="flex items-center space-x-2 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-dark transition-all shadow-md font-bold"
         >
-          <Plus size={22} strokeWidth={3}/>
-          <span>GENERATE INVOICE</span>
+          <Plus size={20} />
+          <span>Generate Invoice</span>
         </button>
       </div>
 
@@ -127,22 +127,22 @@ export default function Bills() {
             className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-gray-900 font-medium transition-all"
           />
         </div>
-        <div className="px-5 py-2.5 bg-primary/5 rounded-xl text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-           {filtered.length} INVOICES AUDITED
+        <div className="px-4 py-2 bg-primary/5 rounded-lg text-xs font-bold text-primary uppercase tracking-wider">
+           {filtered.length} Invoices Found
         </div>
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-border overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50/50 border-b border-border text-gray-900">
-              <th className="p-6 font-black text-xs uppercase tracking-widest pl-10">Invoice Ref</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest">Debtor Identity</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest">Period</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest">Total Asset</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest">Outstanding</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest">Service Status</th>
-              <th className="p-6 font-black text-xs uppercase tracking-widest text-right pr-10">Command</th>
+            <tr className="bg-gray-50/50 border-b border-border text-gray-500 text-xs">
+              <th className="p-4 font-bold uppercase tracking-wider pl-8">Invoice #</th>
+              <th className="p-4 font-bold uppercase tracking-wider">Customer</th>
+              <th className="p-4 font-bold uppercase tracking-wider">Period</th>
+              <th className="p-4 font-bold uppercase tracking-wider">Total (UGX)</th>
+              <th className="p-4 font-bold uppercase tracking-wider">Balance</th>
+              <th className="p-4 font-bold uppercase tracking-wider">Status</th>
+              <th className="p-4 font-bold uppercase tracking-wider text-right pr-8">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
@@ -177,10 +177,10 @@ export default function Bills() {
                       {b.status.replace('_', ' ')}
                    </span>
                 </td>
-                <td className="p-6 pr-10 text-right">
-                  <Link to={`/admin/bills/${b.id}`} className="p-2.5 bg-[#0F172A] text-white hover:bg-black rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center w-fit ml-auto space-x-2 text-[10px] font-black uppercase tracking-widest px-4 group">
-                    <Eye size={16} className="group-hover:scale-110 transition-transform"/>
-                    <span>Audit Bill</span>
+                <td className="p-4 pr-8 text-right">
+                  <Link to={`/admin/bills/${b.id}`} className="p-2 bg-sidebar text-white hover:bg-sidebar-dark rounded transition-all shadow text-xs font-bold flex items-center space-x-1.5 px-3 w-fit ml-auto">
+                    <Eye size={14}/>
+                    <span>View Bill</span>
                   </Link>
                 </td>
               </tr>
@@ -247,21 +247,21 @@ export default function Bills() {
               <button 
                 type="button" 
                 onClick={() => setShowGenerate(false)}
-                className="flex-1 py-4 bg-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-500 hover:bg-gray-200 transition-all"
+                className="flex-1 py-3 bg-gray-100 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-all"
               >
-                ABORT PROCEDURE
+                Cancel
               </button>
               <button 
                 type="submit" 
                 disabled={generating}
-                className="flex-1 py-4 bg-[#0F172A] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center space-x-2 shadow-xl shadow-black/20 hover:bg-black transition-all disabled:opacity-50 active:scale-95"
+                className="flex-1 py-3 bg-primary text-white rounded-lg font-bold flex items-center justify-center space-x-2 shadow-md hover:bg-primary-dark transition-all disabled:opacity-50"
               >
                 {generating ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <FileText size={14}/>
-                    <span>EXECUTE GENERATION</span>
+                    <FileText size={18}/>
+                    <span>Generate Invoice</span>
                   </>
                 )}
               </button>

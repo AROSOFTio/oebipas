@@ -19,10 +19,10 @@ export default function AdminLayout() {
 
   const close = () => setIsMobileOpen(false);
 
-  const navItemClass = (path) => `flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 ${
+  const navItemClass = (path) => `flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
     isActive(path) 
-    ? 'bg-white/10 text-white shadow-lg shadow-black/20 font-bold' 
-    : 'text-gray-400 hover:bg-white/5 hover:text-white font-medium'
+    ? 'bg-primary text-white shadow-md font-bold' 
+    : 'text-blue-100/70 hover:bg-white/10 hover:text-white font-medium'
   }`;
 
   // --- SERIOUS ACCESS CONTROL RULES ---
@@ -48,20 +48,16 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 w-72 bg-[#0F172A] text-white flex flex-col shadow-2xl z-50 transform transition-transform duration-500 ease-in-out border-r border-white/5 ${
+        className={`fixed md:static inset-y-0 left-0 w-72 bg-sidebar text-white flex flex-col shadow-2xl z-50 transform transition-transform duration-500 ease-in-out border-r border-white/5 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="p-8 border-b border-white/5 bg-gradient-to-br from-[#1E293B] to-[#0F172A]">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-white shrink-0 flex items-center justify-center p-1.5 shadow-xl shadow-primary/20 rotate-3">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain"/>
-            </div>
-            <div>
-              <div className="text-xl font-black tracking-tight leading-none text-white">OEBIPAS</div>
-              <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1.5 flex items-center">
-                <Shield size={10} className="mr-1"/> {role}
-              </div>
+        <div className="p-8 flex flex-col items-center border-b border-white/5">
+          <div className="w-full bg-white rounded-xl p-3 shadow-lg flex flex-col items-center space-y-2">
+            <img src="/logo.png" alt="Logo" className="h-10 object-contain"/>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">OEBIPAS SYSTEM</div>
+            <div className="px-3 py-1 bg-sidebar text-white text-[10px] font-bold rounded-full uppercase tracking-widest border border-white/10">
+              {role.split(' ')[0]}
             </div>
           </div>
         </div>
@@ -74,8 +70,8 @@ export default function AdminLayout() {
 
           {/* --- Field Operations (Billing/Super) --- */}
           {canShowFieldOps && (
-            <div className="pt-6 animate-in slide-in-from-left duration-300">
-              <div className="pb-3 px-3 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-black">Enterprise Ops</div>
+            <div className="pt-6">
+              <div className="pb-2 px-3 text-[10px] uppercase tracking-widest text-blue-200/40 font-bold">Field Operations</div>
               <div className="space-y-1">
                 <Link to="/admin/customers" onClick={close} className={navItemClass('/admin/customers')}>
                   <Users size={20}/><span>Customers</span>
@@ -95,8 +91,8 @@ export default function AdminLayout() {
 
           {/* --- Billing & Finance --- */}
           {canShowBilling && (
-            <div className="pt-6 animate-in slide-in-from-left duration-400">
-              <div className="pb-3 px-3 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-black">Financial Engine</div>
+            <div className="pt-6">
+              <div className="pb-2 px-3 text-[10px] uppercase tracking-widest text-blue-200/40 font-bold">Financial Engine</div>
               <div className="space-y-1">
                 <Link to="/admin/tariffs" onClick={close} className={navItemClass('/admin/tariffs')}>
                   <Tag size={20}/><span>Tariff Rules</span>
@@ -122,8 +118,8 @@ export default function AdminLayout() {
           )}
 
           {/* --- Analytics & Support --- */}
-          <div className="pt-6 animate-in slide-in-from-left duration-500">
-            <div className="pb-3 px-3 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-black">Support & Intel</div>
+          <div className="pt-6">
+            <div className="pb-2 px-3 text-[10px] uppercase tracking-widest text-blue-200/40 font-bold">Analytics & Support</div>
             <div className="space-y-1">
               <Link to="/admin/feedback" onClick={close} className={navItemClass('/admin/feedback')}>
                 <MessageSquare size={20}/><span>Support Tickets</span>
@@ -155,8 +151,8 @@ export default function AdminLayout() {
 
           {/* --- Administration (Strict Super Admin) --- */}
           {canShowAdmin && (
-            <div className="pt-6 animate-in slide-in-from-left duration-600">
-              <div className="pb-3 px-3 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-black">System Core</div>
+            <div className="pt-6">
+              <div className="pb-2 px-3 text-[10px] uppercase tracking-widest text-blue-200/40 font-bold">Administration</div>
               <div className="space-y-1">
                 <Link to="/admin/users" onClick={close} className={navItemClass('/admin/users')}>
                   <Briefcase size={20}/><span>System Users</span>
@@ -172,15 +168,15 @@ export default function AdminLayout() {
           )}
         </nav>
 
-        <div className="p-8 border-t border-white/5 bg-[#0F172A]">
-          <button onClick={handleLogout} className="w-full flex items-center space-x-3 p-4 rounded-2xl text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-all font-bold">
-            <LogOut size={20}/><span>Security Sign Out</span>
+        <div className="p-6 border-t border-white/5">
+          <button onClick={handleLogout} className="w-full flex items-center space-x-3 p-3 rounded-lg text-blue-100/60 hover:bg-red-500/10 hover:text-red-400 transition-all font-bold text-sm">
+            <LogOut size={18}/><span>Security Sign Out</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50">
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-background">
         {/* Topbar */}
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-10 z-10 shrink-0 sticky top-0">
           <div className="flex items-center">
@@ -188,17 +184,17 @@ export default function AdminLayout() {
               <Menu size={24}/>
             </button>
             <div className="hidden sm:block">
-               <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Command Center</h3>
-               <p className="text-xs text-gray-500 font-medium">Monitoring OEBIPAS Operations</p>
+               <h3 className="text-lg font-bold text-gray-900">System Monitor</h3>
+               <p className="text-xs text-gray-400 font-medium">Monitoring OEBIPAS Operations</p>
             </div>
           </div>
 
           <div className="flex items-center space-x-6">
             <div className="text-right flex flex-col justify-center">
-              <span className="font-black text-gray-900 text-sm tracking-tight">{user?.full_name}</span>
-              <span className="text-[10px] font-black text-primary uppercase tracking-widest mt-0.5">{role}</span>
+              <span className="font-bold text-gray-900 text-sm">{user?.full_name}</span>
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">{role}</span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#0F172A] text-white flex items-center justify-center font-black text-lg shadow-xl shadow-black/10 ring-4 ring-gray-100 ring-offset-0">
+            <div className="w-12 h-12 rounded-2xl bg-sidebar text-white flex items-center justify-center font-bold text-lg shadow-xl shadow-sidebar/20 ring-4 ring-gray-100 ring-offset-0">
               {user?.full_name ? user.full_name.charAt(0) : 'A'}
             </div>
           </div>
