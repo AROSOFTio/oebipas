@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import { useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
+import { useContext } from 'react';
 import { CheckCircle, Clock } from 'lucide-react';
 
 export default function CustomerPaymentHistory() {
-  const { user } = useAuth();
+  const { user } = useContext(AuthContext);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 

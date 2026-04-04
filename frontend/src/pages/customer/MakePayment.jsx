@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { CreditCard, Wallet, Smartphone, ShieldCheck, AlertCircle } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function MakePayment() {
-  const { user } = useAuth();
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [bills, setBills] = useState([]);
   const [selectedBill, setSelectedBill] = useState('');
