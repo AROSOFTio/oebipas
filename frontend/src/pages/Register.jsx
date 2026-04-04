@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 
 export default function Register() {
-  const [formData, setFormData] = useState({ full_name: '', email: '', phone: '', password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ full_name: '', username: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
@@ -44,6 +44,15 @@ export default function Register() {
               value={formData.full_name} onChange={(e) => setFormData({...formData, full_name: e.target.value})}
               className="mt-1 block w-full px-4 py-2 border border-border rounded-lg outline-none focus:border-primary" 
               placeholder="John Doe"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Username</label>
+            <input 
+              type="text" required
+              value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})}
+              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg outline-none focus:border-primary" 
+              placeholder="johndoe123"
             />
           </div>
           <div>

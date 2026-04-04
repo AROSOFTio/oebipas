@@ -5,7 +5,7 @@ const { logAudit } = require('../services/auditLogger');
 exports.getUsers = async (req, res) => {
   try {
     const [users] = await pool.query(`
-      SELECT u.id, u.full_name, u.email, u.phone, u.status, u.created_at, r.name as role
+      SELECT u.id, u.full_name, u.username, u.email, u.phone, u.status, u.created_at, r.name as role
       FROM users u
       LEFT JOIN user_roles ur ON u.id = ur.user_id
       LEFT JOIN roles r ON ur.role_id = r.id
@@ -19,16 +19,16 @@ exports.getUsers = async (req, res) => {
 };
 
 exports.createUser = async (req, res) => {
-  const { full_name, email, password, phone, role_id } = req.body;
-  if (!full_name || !email || !password || !role_id) {
+  const { full_name, username, email, password, phone, role_id } = req.body;
+  if (!full_name || !email || !password || !role_id || !username) {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
   }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
-      'INSERT INTO users (full_name, email, password, phone, status) VALUES (?, ?, ?, ?, ?)',
-      [full_name, email, hashedPassword, phone, 'active']
+      'INSERT INTO users (full_name, username, email, password, phone, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [full_name, username, email, hashedPassword, phone, 'active']
     );
 
     const userId = result.insertId;
@@ -40,7 +40,7 @@ exports.createUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ success: false, message: 'Email already exists' });
+      return res.status(400).json({ success: false, message: 'Email or Username already exists' });
     }
     res.status(500).json({ success: false, message: 'Internal server error' });
   }

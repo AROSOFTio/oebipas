@@ -4,21 +4,21 @@ const pool = require('../config/db');
 const { logAudit } = require('../services/auditLogger');
 
 exports.register = async (req, res) => {
-  const { full_name, email, password, phone } = req.body;
-  if (!full_name || !email || !password) {
+  const { full_name, username, email, password, phone } = req.body;
+  if (!full_name || !email || !password || !username) {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
   }
 
   try {
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ? OR username = ?', [email, username]);
     if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: 'Email already in use' });
+      return res.status(400).json({ success: false, message: 'Email or Username already in use' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
-      'INSERT INTO users (full_name, email, password, phone, status) VALUES (?, ?, ?, ?, ?)',
-      [full_name, email, hashedPassword, phone, 'active']
+      'INSERT INTO users (full_name, username, email, password, phone, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [full_name, username, email, hashedPassword, phone, 'active']
     );
 
     const userId = result.insertId;
@@ -36,19 +36,19 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body; // 'email' from frontend is now representing either email or username
   if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Missing email or password' });
+    return res.status(400).json({ success: false, message: 'Missing email/username or password' });
   }
 
   try {
     const [users] = await pool.query(`
-      SELECT u.id, u.full_name, u.email, u.password, u.status, r.name as role
+      SELECT u.id, u.full_name, u.username, u.email, u.password, u.status, r.name as role
       FROM users u
       LEFT JOIN user_roles ur ON u.id = ur.user_id
       LEFT JOIN roles r ON ur.role_id = r.id
-      WHERE u.email = ?
-    `, [email]);
+      WHERE u.email = ? OR u.username = ?
+    `, [email, email]);
 
     if (users.length === 0) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -65,7 +65,7 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, full_name: user.full_name },
+      { id: user.id, email: user.email, username: user.username, role: user.role, full_name: user.full_name },
       process.env.JWT_SECRET || 'supersecretjwtkey2026',
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
@@ -79,6 +79,7 @@ exports.login = async (req, res) => {
       user: {
         id: user.id,
         full_name: user.full_name,
+        username: user.username,
         email: user.email,
         role: user.role
       }

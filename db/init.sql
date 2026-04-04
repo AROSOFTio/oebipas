@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS roles (
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   full_name VARCHAR(100) NOT NULL,
+  username VARCHAR(50) UNIQUE,
   email VARCHAR(100) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   phone VARCHAR(20),
@@ -313,11 +314,11 @@ INSERT INTO roles (name, description) VALUES
 ('Viewer', 'Read-only access to reports and logs');
 
 -- Insert Initial Admin User (password is 'password123' bcrypt hash)
-INSERT INTO users (full_name, email, password, phone, status) VALUES 
-('Winnie Nafuna', 'Winnie', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000000', 'active'),
-('System Admin', 'admin@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000000', 'active'),
-('Billing Staff', 'billing@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000001', 'active'),
-('Finance Staff', 'finance@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000002', 'active');
+INSERT INTO users (full_name, username, email, password, phone, status) VALUES 
+('Winnie Nafuna', 'winnie', 'winnie@local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000000', 'active'),
+('System Admin', 'admin', 'admin@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000000', 'active'),
+('Billing Staff', 'billing', 'billing@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000001', 'active'),
+('Finance Staff', 'finance', 'finance@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000002', 'active');
 
 -- Assign Roles
 INSERT INTO user_roles (user_id, role_id) VALUES 
@@ -340,8 +341,8 @@ INSERT INTO tariff_rules (customer_category, rate_per_unit, service_charge, tax_
 ('industrial', 350.00, 25000.00, 18.00, 'percentage', 5.00, '2025-01-01');
 
 -- Sample Customers
-INSERT INTO users (full_name, email, password, phone, status) VALUES 
-('John Doe', 'john@example.com', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0701111111', 'active');
+INSERT INTO users (full_name, username, email, password, phone, status) VALUES 
+('John Doe', 'johndoe', 'john@example.com', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0701111111', 'active');
 
 INSERT INTO user_roles (user_id, role_id) VALUES (5, 4); -- Customer role
 
