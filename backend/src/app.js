@@ -11,6 +11,8 @@ const customerRoutes = require('./routes/customerRoutes');
 const serviceConnectionRoutes = require('./routes/serviceConnectionRoutes');
 const meterRoutes = require('./routes/meterRoutes');
 const consumptionRoutes = require('./routes/consumptionRoutes');
+const tariffRoutes = require('./routes/tariffRoutes');
+const billRoutes = require('./routes/billRoutes');
 
 const app = express();
 
@@ -38,6 +40,8 @@ app.use('/api/v1/customers', customerRoutes);
 app.use('/api/v1/service-connections', serviceConnectionRoutes);
 app.use('/api/v1/meters', meterRoutes);
 app.use('/api/v1/consumption', consumptionRoutes);
+app.use('/api/v1/tariffs', tariffRoutes);
+app.use('/api/v1/bills', billRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {

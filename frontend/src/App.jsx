@@ -17,8 +17,12 @@ import Connections from './pages/admin/Connections';
 import Meters from './pages/admin/Meters';
 import Consumption from './pages/admin/Consumption';
 import ConsumptionDetails from './pages/admin/ConsumptionDetails';
+import Tariffs from './pages/admin/Tariffs';
+import Bills from './pages/admin/Bills';
+import BillDetails from './pages/admin/BillDetails';
 
 import CustomerConsumption from './pages/customer/CustomerConsumption';
+import CustomerBills from './pages/customer/CustomerBills';
 
 function App() {
   return (
@@ -37,6 +41,7 @@ function App() {
             <Route path="/customer" element={<CustomerLayout />}>
               <Route index element={<div className="p-6 text-xl font-medium text-gray-700">Customer Dashboard Placeholder</div>} />
               <Route path="consumption" element={<CustomerConsumption />} />
+              <Route path="bills" element={<CustomerBills />} />
             </Route>
           </Route>
 
@@ -51,6 +56,9 @@ function App() {
               <Route path="meters" element={<Meters />} />
               <Route path="consumption" element={<Consumption />} />
               <Route path="consumption/:id" element={<ConsumptionDetails />} />
+              <Route path="tariffs" element={<Tariffs />} />
+              <Route path="bills" element={<Bills />} />
+              <Route path="bills/:id" element={<BillDetails />} />
             </Route>
           </Route>
 
