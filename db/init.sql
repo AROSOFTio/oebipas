@@ -314,15 +314,17 @@ INSERT INTO roles (name, description) VALUES
 
 -- Insert Initial Admin User (password is 'password123' bcrypt hash)
 INSERT INTO users (full_name, email, password, phone, status) VALUES 
+('Winnie Nafuna', 'Winnie', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000000', 'active'),
 ('System Admin', 'admin@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000000', 'active'),
 ('Billing Staff', 'billing@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000001', 'active'),
 ('Finance Staff', 'finance@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000002', 'active');
 
 -- Assign Roles
 INSERT INTO user_roles (user_id, role_id) VALUES 
-(1, 1), -- System Admin -> Super Admin
-(2, 2), -- Billing Staff -> Billing Officer
-(3, 3); -- Finance Staff -> Finance Officer
+(1, 1), -- Winnie -> Super Admin
+(2, 1), -- System Admin -> Super Admin
+(3, 2), -- Billing Staff -> Billing Officer
+(4, 3); -- Finance Staff -> Finance Officer
 
 -- Insert Basic Settings
 INSERT INTO settings (key_name, value_text) VALUES 
@@ -341,10 +343,10 @@ INSERT INTO tariff_rules (customer_category, rate_per_unit, service_charge, tax_
 INSERT INTO users (full_name, email, password, phone, status) VALUES 
 ('John Doe', 'john@example.com', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0701111111', 'active');
 
-INSERT INTO user_roles (user_id, role_id) VALUES (4, 4); -- Customer role
+INSERT INTO user_roles (user_id, role_id) VALUES (5, 4); -- Customer role
 
 INSERT INTO customers (user_id, customer_number, full_name, email, phone, address, category) VALUES 
-(4, 'CUST-000001', 'John Doe', 'john@example.com', '0701111111', 'Plot 10, Kampala Road', 'residential');
+(5, 'CUST-000001', 'John Doe', 'john@example.com', '0701111111', 'Plot 10, Kampala Road', 'residential');
 
 -- Sample Connection & Meter
 INSERT INTO service_connections (customer_id, connection_number, connection_type, location) VALUES 
