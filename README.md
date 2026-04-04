@@ -1,67 +1,50 @@
-﻿# Online Electricity Billing and Payment System for UEDCL
+# OEBIPAS - Online Electricity Billing and Payment System
 
-This repository contains the scaffold and backend implementation for the **Online Electricity Billing and Payment System for UEDCL**. It is organized as a full-stack project with a React + Vite frontend, a Laravel-style backend API, shared documentation, and utility workflows for billing, payments, complaints, notifications, and reporting.
+OEBIPAS is a complete, production-ready, web-based system for managing electricity consumers, billing cycles, payments, and reporting, tailored for a utility company context (similar to UEDCL).
 
-## Repository Structure
+## Project Overview
+This phase provides the foundational architecture:
+- **Backend:** Node.js, Express, MySQL connection pool
+- **Frontend:** React (Vite), Tailwind CSS, Lucide Icons, React Router
+- **Database:** MySQL 8
+- **Infrastructure:** Docker, Docker Compose, Nginx Reverse Proxy, phpMyAdmin
 
-```text
-uedcl-billing-system/
-  frontend/
-  backend/
-  documentation/
-  README.md
-```
+## System Modules (To Be Implemented Fully)
+1. Authentication & Authorization (JWT & Role-based)
+2. Customer & Meter Management
+3. Consumption Data & Tariff Rules
+4. Automation Bill Calculation & Penalties
+5. Payment & Reconciliation
+6. Analytics & Audit Logs
 
-## Included in This Repository
+## Local Setup (Docker)
+1. Copy `.env.example` to `.env`.
+   ```bash
+   cp .env.example .env
+   ```
+2. Build and start the services.
+   ```bash
+   docker-compose up -d --build
+   ```
+3. Access the interfaces:
+   - **Frontend Application:** `http://localhost/`
+   - **Backend API Base Unit:** `http://localhost/api/v1/health`
+   - **phpMyAdmin:** `http://localhost:8080/` (User: root / Pass: rootpassword)
 
-- Public website pages for the utility-company interface
-- Role-based frontend page structure for Customer, Billing Officer, Helpdesk Officer, and Administrator
-- Reusable frontend layouts, route protection, mock auth context, and starter services
-- Laravel backend models, migrations, seeders, requests, middleware, services, controllers, and API routes
-- Sanctum-ready authentication flow with bearer tokens
-- Mock SMS notification persistence in the database
-- Documentation for schema, API summary, and demo credentials
+## Login Seed Credentials (Demo)
+- **System Admin:** admin@oebipas.local / password123
+- **Billing Officer:** billing@oebipas.local / password123
+- **Finance Officer:** finance@oebipas.local / password123
+- **Customer:** john@example.com / password123
 
-## Backend Highlights
+## How Billing Calculation Works (Concept)
+- Energy Charge = `Units Consumed` x `Rate Per Unit` (from Tariff Rules)
+- Total = `Energy Charge` + `Service Charge` + `Tax (VAT)` + `Penalties` + `Previous Arrears`.
 
-- Authentication: Laravel Sanctum token login, logout, and current-user endpoint
-- Role access: `customer`, `billing_officer`, `helpdesk_officer`, `administrator`
-- Billing logic: automatic bill calculation from stored meter readings and tariff settings
-- Payments: payment recording, bill status sync, and receipt generation
-- Complaints: customer submission, helpdesk reply, and status management
-- Notifications: mock SMS records saved in the `notifications` table
-
-## Local Setup
-
-### Frontend
-
-1. Open a terminal in `frontend`
-2. Run `npm install`
-3. Run `npm run dev`
-
-### Backend
-
-1. Open a terminal in `backend`
-2. Run `composer install`
-3. Copy `.env.example` to `.env`
-4. Configure MySQL credentials
-5. Run `php artisan migrate --seed`
-6. Run `php artisan serve`
-
-## Demo Credentials
-
-- Administrator: `admin@uedcl.local` / `password123`
-- Billing Officer: `billing@uedcl.local` / `password123`
-- Helpdesk Officer: `helpdesk@uedcl.local` / `password123`
-- Customer: `customer@uedcl.local` / `password123`
-
-## Documentation
-
-- [Project documentation index](./documentation/README.md)
-- [Database schema overview](./documentation/database-schema.md)
-- [API endpoint summary](./documentation/api-endpoints.md)
-- [Demo credentials](./documentation/demo-credentials.md)
-
-## Current Status
-
-The repository now includes the core Laravel backend implementation for authentication, customers, meters, readings, bills, payments, receipts, complaints, reports, and mock SMS notifications. Frontend-to-backend integration and additional polish can continue from this base.
+## Deployment Guide (Ubuntu / Contabo VPS)
+1. Install Docker & Docker Compose on your instance.
+2. Clone this repository (or copy it over).
+3. Update `.env` with secure, production-grade variables.
+4. Run `docker-compose up -d --build` to launch infrastructure.
+5. Setup a domain record A pointing to your VPS IP address.
+6. Either expose the built-in Nginx securely or use an external Nginx with Certbot/LetsEncrypt to proxy to the Docker stack.

@@ -1,26 +1,20 @@
-# Stage 1: Build React/Vite App
+# Stage 1: Build
 FROM node:20-alpine as build
 
 WORKDIR /app
+
 COPY package*.json ./
 RUN npm install
 
-# Copy full source
 COPY . .
-
-# Build the app to /dist (The API URL is built into the output via VITE_API_BASE_URL)
-# Docker-compose will supply this ARG
-ARG VITE_API_BASE_URL=/api
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-
 RUN npm run build
 
-# Stage 2: Serve via Nginx Alpine
+# Stage 2: Serve with Nginx
 FROM nginx:alpine
 
-# Copy built assets
 COPY --from=build /app/dist /usr/share/nginx/html
+# Note: we will use a custom nginx.conf at the composite level or rely on default routing
 
-# Custom Nginx configuration is injected by docker-compose mapping
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]
