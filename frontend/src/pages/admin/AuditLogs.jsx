@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import { History, ShieldAlert, ArrowRight } from 'lucide-react';
+import { AuthContext } from '../../context/AuthContext';
+import { History, ShieldAlert, ArrowRight, Lock } from 'lucide-react';
 
 export default function AuditLogs() {
+  const { user } = useContext(AuthContext);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (user?.role !== 'Super Admin') return;
     const fetchLogs = async () => {
       try {
         const res = await axiosInstance.get('/audit-logs');
@@ -18,7 +21,19 @@ export default function AuditLogs() {
       }
     };
     fetchLogs();
-  }, []);
+  }, [user]);
+
+  if (user?.role !== 'Super Admin') {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 shadow-xl shadow-red-100 ring-8 ring-red-50/50">
+          <Lock size={40} />
+        </div>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight">Access Denied</h1>
+        <p className="text-gray-500 font-medium max-w-sm text-center">You do not have the required permissions to view the System Audit Master Logs.</p>
+      </div>
+    );
+  }
 
   if (loading) return <div className="p-6">Loading audit logs...</div>;
 

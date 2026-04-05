@@ -214,23 +214,32 @@ exports.generateInvoicePdf = async (req, res) => {
     // Info Section
     doc.fontSize(10).font('Helvetica-Bold').text('BILL TO:', 30, 160);
     doc.font('Helvetica').text(bill.customer_name, 30, 175);
-    doc.text(bill.customer_number, 30, 188);
-    doc.text(bill.address || 'N/A', 30, 201);
+    doc.font('Helvetica').text(bill.customer_number, 30, 188);
+    doc.font('Helvetica').text(bill.address || 'N/A', 30, 201);
     
     doc.font('Helvetica-Bold').text('INVOICE DETAILS:', 350, 160);
     doc.font('Helvetica').text(`Invoice #: ${bill.bill_number}`, 350, 175);
-    doc.text(`Billing Period: ${bill.billing_month}/${bill.billing_year}`, 350, 188);
-    doc.text(`Due Date: ${new Date(bill.due_date).toLocaleDateString()}`, 350, 201);
-    doc.text(`Meter #: ${bill.meter_number}`, 350, 214);
+    doc.font('Helvetica').text(`Billing Period: ${bill.billing_month}/${bill.billing_year}`, 350, 188);
+    doc.font('Helvetica').text(`Due Date: ${new Date(bill.due_date).toLocaleDateString()}`, 350, 201);
+    doc.font('Helvetica').text(`Meter #: ${bill.meter_number}`, 350, 214);
 
     doc.moveDown(4);
 
     const table = {
-      headers: ["Description", "Quantity/Units", "Amount (UGX)"],
-      rows: items.map(i => [i.item_name, i.item_type === 'consumption' ? `${Number(i.amount).toFixed(2)} kWh` : '-', Number(i.amount).toLocaleString()])
+      headers: [
+        { label: "Description", property: 'desc', width: 250 },
+        { label: "Quantity/Units", property: 'qty', width: 100 },
+        { label: "Amount (UGX)", property: 'amt', width: 100 }
+      ],
+      rows: items.map(i => [
+        i.item_name, 
+        i.item_type === 'consumption' ? `${Number(i.amount / bill.energy_charge * bill.units_consumed || 0).toFixed(2)} kWh` : '-', 
+        Number(i.amount || 0).toLocaleString()
+      ])
     };
 
     await doc.table(table, {
+      width: 450,
       prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor('#0b2e63'),
       prepareRow: () => doc.font("Helvetica").fontSize(10).fillColor('#333333'),
     });
@@ -273,7 +282,10 @@ exports.generateReceiptPdf = async (req, res) => {
     doc.moveDown(2);
     
     const detailsTable = {
-      headers: ["Description", "Details"],
+      headers: [
+        { label: "Description", property: 'label', width: 150 },
+        { label: "Details", property: 'value', width: 250 }
+      ],
       rows: [
         ["Received From", receipt.customer_name],
         ["Customer Account", receipt.customer_number],

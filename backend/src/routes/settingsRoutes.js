@@ -5,8 +5,7 @@ const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware
 
 router.use(authenticateToken);
 
-router.get('/', settingsController.getSettings);
-// Only Super Admin can mutate settings
+router.get('/', restrictTo('Super Admin'), settingsController.getSettings);
 router.put('/', restrictTo('Super Admin'), settingsController.updateSettings);
 
 module.exports = router;

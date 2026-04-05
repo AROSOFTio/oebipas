@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
+import { AuthContext } from '../../context/AuthContext';
 import { Plus, Tag, Edit3, Trash2, X, Save } from 'lucide-react';
 
 function Modal({ title, onClose, children }) {
@@ -19,6 +20,8 @@ function Modal({ title, onClose, children }) {
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export default function Tariffs() {
+  const { user } = useContext(AuthContext);
+  const isSuper = user?.role === 'Super Admin';
   const [tariffs, setTariffs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -85,9 +88,11 @@ export default function Tariffs() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Tariff Rules</h1>
-        <button onClick={() => setShowForm(!showForm)} className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
-          <Plus size={18}/><span>Add Tariff</span>
-        </button>
+        {isSuper && (
+          <button onClick={() => setShowForm(!showForm)} className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+            <Plus size={18}/><span>Add Tariff</span>
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -176,14 +181,18 @@ export default function Tariffs() {
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${t.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{t.status.toUpperCase()}</span>
                 </td>
                 <td className="p-4 text-right">
-                  <div className="flex items-center justify-end space-x-2">
-                    <button onClick={() => handleEdit(t)} className="p-2 rounded-lg text-gray-500 hover:bg-primary/10 hover:text-primary transition-colors" title="Edit tariff">
-                      <Edit3 size={16}/>
-                    </button>
-                    <button onClick={() => handleDelete(t.id)} className="p-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Delete tariff">
-                      <Trash2 size={16}/>
-                    </button>
-                  </div>
+                  {isSuper ? (
+                    <div className="flex items-center justify-end space-x-2">
+                      <button onClick={() => handleEdit(t)} className="p-2 rounded-lg text-gray-500 hover:bg-primary/10 hover:text-primary transition-colors" title="Edit tariff">
+                        <Edit3 size={16}/>
+                      </button>
+                      <button onClick={() => handleDelete(t.id)} className="p-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Delete tariff">
+                        <Trash2 size={16}/>
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">Locked</span>
+                  )}
                 </td>
               </tr>
             ))}
