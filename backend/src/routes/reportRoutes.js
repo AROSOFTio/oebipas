@@ -14,5 +14,7 @@ router.get('/overdue-customers', reportController.getOverdueCustomers);
 
 router.get('/export/csv', reportController.exportCsv);
 router.get('/export/pdf', reportController.exportPdf);
+router.get('/invoice/:id', reportController.generateInvoicePdf);
+router.get('/receipt/:id', reportController.generateReceiptPdf);
 
 module.exports = router;

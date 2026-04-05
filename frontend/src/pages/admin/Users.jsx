@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 import axiosInstance from '../../utils/axiosInstance';
 import { Shield, UserPlus, Edit, Power, X, Save, Trash2 } from 'lucide-react';
 
@@ -33,6 +34,7 @@ function Modal({ title, onClose, children }) {
 }
 
 export default function Users() {
+  const { user } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);

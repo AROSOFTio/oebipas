@@ -20,6 +20,12 @@ export default function PaymentDetails() {
     finally { setLoading(false); }
   };
 
+  const handleDownloadReceipt = () => {
+    if (!payment.receipt) return;
+    const url = `${axiosInstance.defaults.baseURL}/reports/receipt/${payment.receipt.id}`;
+    window.open(url, '_blank');
+  };
+
   if (loading || !payment) return <div className="p-6">Loading details...</div>;
 
   return (
@@ -74,8 +80,11 @@ export default function PaymentDetails() {
                 <p className="text-sm text-gray-500"># {payment.receipt.receipt_number}</p>
               </div>
             </div>
-            <button className="flex items-center space-x-2 bg-white border border-border px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-              <Printer size={18}/><span>Print Receipt</span>
+            <button onClick={handleDownloadReceipt} className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-dark transition-colors shadow-sm">
+              <FileText size={18}/><span>Download PDF Receipt</span>
+            </button>
+            <button onClick={() => window.print()} className="flex items-center space-x-2 bg-white border border-border px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+              <Printer size={18}/><span>Print</span>
             </button>
           </div>
         )}

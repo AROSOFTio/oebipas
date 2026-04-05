@@ -1,6 +1,26 @@
 const pool = require('../config/db');
 const PDFDocument = require('pdfkit-table');
 const { parse } = require('json2csv');
+const path = require('path');
+
+// Helper to add professional header with logo
+const addHeader = (doc, title) => {
+  const logoPath = path.join(__dirname, '../assets/logo.png');
+  try {
+    doc.image(logoPath, 30, 25, { width: 50 });
+  } catch (e) {
+    console.error('Logo not found at', logoPath);
+  }
+  
+  doc.fillColor('#0b2e63').fontSize(20).font('Helvetica-Bold').text('OEBIPAS SYSTEM', 90, 30);
+  doc.fontSize(10).font('Helvetica').text('Online Electricity Billing & Payment System', 90, 52);
+  
+  doc.moveTo(30, 85).lineTo(565, 85).strokeColor('#eeeeee').stroke();
+  
+  doc.fillColor('#333333').fontSize(16).font('Helvetica-Bold').text(title, 30, 110, { align: 'right' });
+  doc.fontSize(8).font('Helvetica').text(`Generated: ${new Date().toLocaleString()}`, 30, 130, { align: 'right' });
+  doc.moveDown(4);
+};
 
 exports.getDailyRevenue = async (req, res) => {
   try {
@@ -91,7 +111,6 @@ const assembleReportData = async () => {
 exports.exportCsv = async (req, res) => {
   try {
     const data = await assembleReportData();
-    // For CSV, we'll export the top outstanding customers list as it formats best
     const csvData = data.outstanding_list.map(row => ({
       'Customer Name': row.full_name,
       'Customer Number': row.customer_number,
@@ -116,31 +135,36 @@ exports.exportCsv = async (req, res) => {
 exports.exportPdf = async (req, res) => {
   try {
     const data = await assembleReportData();
-
     const doc = new PDFDocument({ margin: 30, size: 'A4' });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="oebipas_master_report.pdf"');
     
-    // Pipe PDF to response
     doc.pipe(res);
+    addHeader(doc, 'MASTER KPI REPORT');
 
-    // Header
-    doc.fontSize(20).font('Helvetica-Bold').text('OEBIPAS Master Report', { align: 'center' });
-    doc.fontSize(10).font('Helvetica').text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
-    doc.moveDown(2);
+    doc.fontSize(14).font('Helvetica-Bold').text('System Financial Summary', 30, 160);
+    doc.moveDown(1);
+    
+    const kpiTable = {
+      headers: ["Metric", "Value"],
+      rows: [
+        ["Total Gross Billed", `UGX ${Number(data.total_billed).toLocaleString()}`],
+        ["Total Realized Revenue", `UGX ${Number(data.total_payments).toLocaleString()}`],
+        ["Total Overdue Accounts", `${data.overdue_accounts}`],
+        ["Total Outstanding Debt", `UGX ${Number(data.outstanding_balances).toLocaleString()}`]
+      ]
+    };
 
-    // KPIs
-    doc.fontSize(14).font('Helvetica-Bold').text('System KPI Summary');
-    doc.moveDown(0.5);
-    doc.fontSize(12).font('Helvetica');
-    doc.text(`Total Gross Billed: UGX ${Number(data.total_billed).toLocaleString()}`);
-    doc.text(`Total Payments Received: UGX ${Number(data.total_payments).toLocaleString()}`);
-    doc.text(`Total Overdue Accounts: ${data.overdue_accounts}`);
-    doc.text(`Total Outstanding Balance: UGX ${Number(data.outstanding_balances).toLocaleString()}`);
-    doc.moveDown(2);
+    await doc.table(kpiTable, {
+      width: 300,
+      x: 30,
+      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor('#0b2e63'),
+      prepareRow: () => doc.font("Helvetica").fontSize(10).fillColor('#333333'),
+    });
 
-    // Table
+    doc.moveDown(3);
+
     const table = {
       title: "Top 20 Outstanding Customer Balances",
       headers: ["Customer Name", "Customer Number", "Amount Due (UGX)"],
@@ -149,21 +173,130 @@ exports.exportPdf = async (req, res) => {
 
     if (data.outstanding_list.length > 0) {
       await doc.table(table, {
-          prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
+          prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor('#0b2e63'),
           prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
-            doc.font("Helvetica").fontSize(10);
+            doc.font("Helvetica").fontSize(10).fillColor('#333333');
           },
       });
-    } else {
-        doc.fontSize(12).font('Helvetica-Oblique').text("No outstanding balances at this time.");
     }
 
     doc.end();
-
   } catch (error) {
     console.error('PDF Export Error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, message: 'Server error generating PDF' });
-    }
+    if (!res.headersSent) res.status(500).json({ success: false, message: 'Server error generating PDF' });
+  }
+};
+
+exports.generateInvoicePdf = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [bills] = await pool.query(`
+      SELECT b.*, c.customer_number, c.full_name as customer_name, c.address, c.category,
+             m.meter_number, u.full_name as generated_by_name
+      FROM bills b
+      JOIN customers c ON b.customer_id = c.id
+      JOIN meters m ON b.meter_id = m.id
+      LEFT JOIN users u ON b.generated_by = u.id
+      WHERE b.id = ?
+    `, [id]);
+
+    if (bills.length === 0) return res.status(404).json({ success: false, message: 'Bill not found' });
+    const bill = bills[0];
+    const [items] = await pool.query('SELECT * FROM bill_items WHERE bill_id = ?', [id]);
+
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Invoice_${bill.bill_number}.pdf"`);
+    doc.pipe(res);
+
+    addHeader(doc, 'TAX INVOICE');
+
+    // Info Section
+    doc.fontSize(10).font('Helvetica-Bold').text('BILL TO:', 30, 160);
+    doc.font('Helvetica').text(bill.customer_name, 30, 175);
+    doc.text(bill.customer_number, 30, 188);
+    doc.text(bill.address || 'N/A', 30, 201);
+    
+    doc.font('Helvetica-Bold').text('INVOICE DETAILS:', 350, 160);
+    doc.font('Helvetica').text(`Invoice #: ${bill.bill_number}`, 350, 175);
+    doc.text(`Billing Period: ${bill.billing_month}/${bill.billing_year}`, 350, 188);
+    doc.text(`Due Date: ${new Date(bill.due_date).toLocaleDateString()}`, 350, 201);
+    doc.text(`Meter #: ${bill.meter_number}`, 350, 214);
+
+    doc.moveDown(4);
+
+    const table = {
+      headers: ["Description", "Quantity/Units", "Amount (UGX)"],
+      rows: items.map(i => [i.item_name, i.item_type === 'consumption' ? `${Number(i.amount).toFixed(2)} kWh` : '-', Number(i.amount).toLocaleString()])
+    };
+
+    await doc.table(table, {
+      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor('#0b2e63'),
+      prepareRow: () => doc.font("Helvetica").fontSize(10).fillColor('#333333'),
+    });
+
+    doc.moveDown(2);
+    doc.fontSize(14).font('Helvetica-Bold').fillColor('#0b2e63').text(`TOTAL PAYABLE: UGX ${Number(bill.total_amount).toLocaleString()}`, { align: 'right' });
+    
+    doc.fontSize(8).fillColor('#777777').text('Terms: Please pay by the due date to avoid disconnection and late penalties.', 30, 750, { align: 'center' });
+    doc.end();
+  } catch (error) {
+    console.error('Invoice PDF Error:', error);
+    if (!res.headersSent) res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.generateReceiptPdf = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [receipts] = await pool.query(`
+      SELECT r.*, c.customer_number, c.full_name as customer_name, p.payment_reference, p.payment_method, p.transaction_reference
+      FROM receipts r
+      JOIN customers c ON r.customer_id = c.id
+      JOIN payments p ON r.payment_id = p.id
+      WHERE r.id = ?
+    `, [id]);
+
+    if (receipts.length === 0) return res.status(404).json({ success: false, message: 'Receipt not found' });
+    const receipt = receipts[0];
+
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Receipt_${receipt.receipt_number}.pdf"`);
+    doc.pipe(res);
+
+    addHeader(doc, 'OFFICIAL RECEIPT');
+
+    doc.fontSize(12).font('Helvetica-Bold').text(`Receipt Number: ${receipt.receipt_number}`, 30, 160);
+    doc.fontSize(10).font('Helvetica').text(`Date Issued: ${new Date(receipt.issued_at).toLocaleString()}`, 30, 178);
+    
+    doc.moveDown(2);
+    
+    const detailsTable = {
+      headers: ["Description", "Details"],
+      rows: [
+        ["Received From", receipt.customer_name],
+        ["Customer Account", receipt.customer_number],
+        ["Payment Method", receipt.payment_method.toUpperCase()],
+        ["Transaction Ref", receipt.transaction_reference],
+        ["Payment Ref", receipt.payment_reference],
+        ["Amount Paid", `UGX ${Number(receipt.amount).toLocaleString()}`]
+      ]
+    };
+
+    await doc.table(detailsTable, {
+      width: 400,
+      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor('#0b2e63'),
+      prepareRow: () => doc.font("Helvetica").fontSize(10).fillColor('#333333'),
+    });
+
+    doc.moveDown(3);
+    doc.fontSize(18).font('Helvetica-Bold').fillColor('green').text('PAYMENT SUCCESSFUL', { align: 'center' });
+    doc.fontSize(10).fillColor('#333333').text('Thank you for your payment.', { align: 'center' });
+
+    doc.end();
+  } catch (error) {
+    console.error('Receipt PDF Error:', error);
+    if (!res.headersSent) res.status(500).json({ success: false, message: 'Server error' });
   }
 };

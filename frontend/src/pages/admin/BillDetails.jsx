@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
-import { ArrowLeft, Printer, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Printer, CheckCircle, Clock, AlertCircle, FileText } from 'lucide-react';
 
 const MONTHS = ['', 'January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -29,6 +29,11 @@ export default function BillDetails() {
 
   const statusCfg = STATUS_CONFIG[bill.status] || STATUS_CONFIG['unpaid'];
 
+  const handleDownloadPDF = () => {
+    const url = `${axiosInstance.defaults.baseURL}/reports/invoice/${id}`;
+    window.open(url, '_blank');
+  };
+
   const lineItems = [
     { label: 'Units Consumed', value: `${Number(bill.units_consumed).toFixed(2)} kWh`, highlight: false },
     { label: 'Energy Charge', sub: `${bill.units_consumed} kWh × UGX ${Number(bill.energy_charge / bill.units_consumed || 0).toFixed(2)}`, value: `UGX ${Number(bill.energy_charge).toLocaleString()}`, highlight: false },
@@ -55,7 +60,10 @@ export default function BillDetails() {
           <span className={`inline-flex items-center space-x-1.5 text-sm px-3 py-1.5 rounded-full font-medium border ${statusCfg.color}`}>
             {statusCfg.icon}<span>{bill.status.replace('_', ' ').toUpperCase()}</span>
           </span>
-          <button onClick={() => window.print()} className="flex items-center space-x-2 bg-sidebar text-white px-4 py-2 rounded-lg text-sm hover:bg-sidebar-dark transition-colors">
+          <button onClick={handleDownloadPDF} className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-dark transition-colors shadow-sm">
+            <FileText size={16}/><span>Download PDF</span>
+          </button>
+          <button onClick={() => window.print()} className="flex items-center space-x-2 bg-white border border-border text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">
             <Printer size={16}/><span>Print</span>
           </button>
         </div>

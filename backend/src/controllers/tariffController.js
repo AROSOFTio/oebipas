@@ -44,3 +44,18 @@ exports.updateTariff = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+exports.deleteTariff = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await pool.query('DELETE FROM tariff_rules WHERE id = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Tariff not found' });
+    }
+    await logAudit(req.user.id, 'DELETE_TARIFF', 'Tariffs', id, `Deleted tariff rule ${id}`);
+    res.status(200).json({ success: true, message: 'Tariff deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
