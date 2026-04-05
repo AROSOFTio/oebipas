@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { AuthContext } from '../../context/AuthContext';
 import { useContext } from 'react';
-import { CheckCircle, Clock } from 'lucide-react';
+import { CheckCircle, Clock, FileText } from 'lucide-react';
 
 export default function CustomerPaymentHistory() {
   const [payments, setPayments] = useState([]);
@@ -60,8 +60,19 @@ export default function CustomerPaymentHistory() {
                       </span>
                     )}
                   </td>
-                  <td className="p-4 text-primary font-medium hover:underline cursor-pointer">
-                    {p.receipt_number ? p.receipt_number : 'N/A'}
+                  <td className="p-4">
+                    {p.receipt_number ? (
+                      <button 
+                        onClick={() => {
+                          const token = localStorage.getItem('token');
+                          const url = `${axiosInstance.defaults.baseURL}/reports/receipt/${p.receipt_id || p.id}?token=${token}`;
+                          window.open(url, '_blank');
+                        }}
+                        className="text-primary font-medium hover:underline flex items-center"
+                      >
+                        <FileText size={14} className="mr-1"/> {p.receipt_number}
+                      </button>
+                    ) : 'N/A'}
                   </td>
                 </tr>
               ))}

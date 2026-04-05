@@ -22,7 +22,8 @@ export default function PaymentDetails() {
 
   const handleDownloadReceipt = () => {
     if (!payment.receipt) return;
-    const url = `${axiosInstance.defaults.baseURL}/reports/receipt/${payment.receipt.id}`;
+    const token = localStorage.getItem('token');
+    const url = `${axiosInstance.defaults.baseURL}/reports/receipt/${payment.receipt.id}?token=${token}`;
     window.open(url, '_blank');
   };
 

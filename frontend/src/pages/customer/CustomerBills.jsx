@@ -84,9 +84,22 @@ export default function CustomerBills() {
                   <p className="text-sm text-gray-500">{b.bill_number}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-gray-900">UGX {Number(b.total_amount).toLocaleString()}</p>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[b.status]}`}>{b.status.replace('_', ' ').toUpperCase()}</span>
+              <div className="flex items-center space-x-6">
+                <div className="text-right">
+                  <p className="font-bold text-gray-900">UGX {Number(b.total_amount).toLocaleString()}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[b.status]}`}>{b.status.replace('_', ' ').toUpperCase()}</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    const token = localStorage.getItem('token');
+                    const url = `${axiosInstance.defaults.baseURL}/reports/invoice/${b.id}?token=${token}`;
+                    window.open(url, '_blank');
+                  }}
+                  className="p-2 text-gray-400 hover:text-primary transition-colors"
+                  title="Download PDF Invoice"
+                >
+                  <FileText size={20}/>
+                </button>
               </div>
             </div>
           ))}

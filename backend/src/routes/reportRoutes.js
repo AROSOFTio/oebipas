@@ -4,17 +4,17 @@ const reportController = require('../controllers/reportController');
 const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware');
 
 router.use(authenticateToken);
-// Restrict all reports to Admin level roles
-router.use(restrictTo('Super Admin', 'Billing Officer', 'Finance Officer', 'Viewer'));
 
-router.get('/daily-revenue', reportController.getDailyRevenue);
-router.get('/monthly-billing', reportController.getMonthlyBilling);
-router.get('/outstanding-balances', reportController.getOutstandingBalances);
-router.get('/overdue-customers', reportController.getOverdueCustomers);
+// 1. Staff-Only Data Reports & CSV Exports
+router.get('/daily-revenue', restrictTo('Super Admin', 'Finance Officer', 'Viewer'), reportController.getDailyRevenue);
+router.get('/monthly-billing', restrictTo('Super Admin', 'Billing Officer', 'Viewer'), reportController.getMonthlyBilling);
+router.get('/outstanding-balances', restrictTo('Super Admin', 'Finance Officer', 'Viewer'), reportController.getOutstandingBalances);
+router.get('/overdue-customers', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer', 'Viewer'), reportController.getOverdueCustomers);
+router.get('/export/csv', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer', 'Viewer'), reportController.exportCsv);
+router.get('/export/pdf', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer', 'Viewer'), reportController.exportPdf);
 
-router.get('/export/csv', reportController.exportCsv);
-router.get('/export/pdf', reportController.exportPdf);
-router.get('/invoice/:id', reportController.generateInvoicePdf);
-router.get('/receipt/:id', reportController.generateReceiptPdf);
+// 2. Transnational Documents (Available to both Staff and Customers)
+router.get('/invoice/:id', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer', 'Viewer', 'Customer'), reportController.generateInvoicePdf);
+router.get('/receipt/:id', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer', 'Viewer', 'Customer'), reportController.generateReceiptPdf);
 
 module.exports = router;

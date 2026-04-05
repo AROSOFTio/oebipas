@@ -254,8 +254,8 @@ exports.generateReceiptPdf = async (req, res) => {
       FROM receipts r
       JOIN customers c ON r.customer_id = c.id
       JOIN payments p ON r.payment_id = p.id
-      WHERE r.id = ?
-    `, [id]);
+      WHERE r.id = ? OR r.payment_id = ?
+    `, [id, id]);
 
     if (receipts.length === 0) return res.status(404).json({ success: false, message: 'Receipt not found' });
     const receipt = receipts[0];
