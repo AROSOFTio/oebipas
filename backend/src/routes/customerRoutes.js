@@ -5,6 +5,7 @@ const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware
 
 const paymentController = require('../controllers/paymentController');
 const penaltyController = require('../controllers/penaltyController');
+const billController = require('../controllers/billController');
 
 router.use(authenticateToken);
 
@@ -21,5 +22,6 @@ router.delete('/:id', restrictTo('Super Admin', 'Billing Officer'), customerCont
 // Required specific nested endpoints
 router.get('/:id/payments', paymentController.getCustomerPayments);
 router.get('/:id/penalties', penaltyController.getCustomerPenalties);
+router.get('/:id/bills', billController.getCustomerBills);
 
 module.exports = router;

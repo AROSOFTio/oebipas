@@ -37,7 +37,7 @@ export default function MakePayment() {
           return;
       }
       const myProfile = profileRes.data.data;
-      const billsRes = await axiosInstance.get(`/customers/${myProfile.id}/bills`);
+      const billsRes = await axiosInstance.get(`/bills/customer/${myProfile.id}`);
       const unpaid = billsRes.data.data.filter(b => b.balance_due > 0);
       setBills(unpaid);
     } catch (err) { 
