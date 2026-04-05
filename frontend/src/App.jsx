@@ -29,6 +29,7 @@ import AdminFeedback from './pages/admin/AdminFeedback';
 import Reports from './pages/admin/Reports';
 import AuditLogs from './pages/admin/AuditLogs';
 import Settings from './pages/admin/Settings';
+import GlobalSearch from './pages/admin/GlobalSearch';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import CustomerNotifications from './pages/customer/CustomerNotifications';
 import CustomerFeedback from './pages/customer/CustomerFeedback';
@@ -67,6 +68,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Billing Officer', 'Finance Officer']} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="search" element={<GlobalSearch />} />
               <Route path="users" element={<Users />} />
               <Route path="feedback" element={<AdminFeedback />} />
               <Route path="reports" element={<Reports />} />

@@ -105,3 +105,63 @@ exports.getCustomerSummary = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error fetching dashboard data' });
   }
 };
+
+exports.globalSearch = async (req, res) => {
+  const { q } = req.query;
+  if (!q) {
+    return res.status(200).json({ success: true, data: { customers: [], connections: [], bills: [], payments: [] } });
+  }
+
+  const searchTerm = `%${q}%`;
+
+  try {
+    // 1. Search Customers
+    const [customers] = await pool.query(`
+      SELECT id, customer_number, full_name, email, phone, status 
+      FROM customers 
+      WHERE full_name LIKE ? OR customer_number LIKE ? OR email LIKE ? OR phone LIKE ?
+      LIMIT 10
+    `, [searchTerm, searchTerm, searchTerm, searchTerm]);
+
+    // 2. Search Connections
+    const [connections] = await pool.query(`
+      SELECT s.id, s.connection_number, s.meter_number, c.full_name as customer_name, s.status
+      FROM service_connections s
+      JOIN customers c ON s.customer_id = c.id
+      WHERE s.connection_number LIKE ? OR s.meter_number LIKE ?
+      LIMIT 10
+    `, [searchTerm, searchTerm]);
+
+    // 3. Search Bills
+    const [bills] = await pool.query(`
+      SELECT b.id, b.bill_number, c.full_name as customer_name, b.total_amount, b.status
+      FROM bills b
+      JOIN customers c ON b.customer_id = c.id
+      WHERE b.bill_number LIKE ?
+      LIMIT 10
+    `, [searchTerm]);
+
+    // 4. Search Payments
+    const [payments] = await pool.query(`
+      SELECT p.id, p.payment_reference, c.full_name as customer_name, p.amount, p.status
+      FROM payments p
+      JOIN customers c ON p.customer_id = c.id
+      WHERE p.payment_reference LIKE ?
+      LIMIT 10
+    `, [searchTerm]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        customers,
+        connections,
+        bills,
+        payments
+      }
+    });
+
+  } catch (error) {
+    console.error('Global Search Error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error during search' });
+  }
+};

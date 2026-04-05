@@ -11,6 +11,9 @@ import { AuthContext } from '../context/AuthContext';
 export default function AdminLayout() {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(location.pathname.includes('/admin/reports'));
   const [fieldOpsOpen, setFieldOpsOpen] = useState(['/admin/customers', '/admin/connections', '/admin/meters', '/admin/consumption'].includes(location.pathname));
@@ -24,17 +27,23 @@ export default function AdminLayout() {
 
   const close = () => setIsMobileOpen(false);
 
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/admin/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   const navItemClass = (path) => `flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
     isActive(path) 
     ? 'bg-primary text-white shadow-md font-bold' 
     : 'text-blue-100/70 hover:bg-white/10 hover:text-white font-medium'
-  }`;
+  } ${isCollapsed ? 'justify-center mx-2' : ''}`;
 
   const subNavItemClass = (path) => `flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 text-sm ${
     isActive(path) 
     ? 'bg-primary text-white shadow-md font-bold' 
     : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'
-  }`;
+  } ${isCollapsed ? 'justify-center mx-2' : ''}`;
 
 
   // --- SERIOUS ACCESS CONTROL RULES ---
@@ -58,36 +67,43 @@ export default function AdminLayout() {
         <div className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity" onClick={close} />
       )}
 
-      {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 w-72 bg-sidebar text-white flex flex-col shadow-2xl z-50 transform transition-transform duration-500 ease-in-out border-r border-white/5 ${
+        className={`fixed md:static inset-y-0 left-0 bg-sidebar text-white flex flex-col shadow-2xl z-50 transform transition-all duration-500 ease-in-out border-r border-white/5 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        } ${isCollapsed ? 'w-24' : 'w-72'} rounded-r-[2.5rem]`}
       >
-        <div className="p-8 flex flex-col items-center border-b border-white/5">
-          <div className="w-full bg-white rounded-xl p-3 shadow-lg flex flex-col items-center space-y-2">
-            <img src="/logo.png" alt="Logo" className="h-10 object-contain"/>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">OEBIPAS SYSTEM</div>
-            <div className="px-3 py-1 bg-sidebar text-white text-[10px] font-bold rounded-full uppercase tracking-widest border border-white/10">
-              {role.split(' ')[0]}
-            </div>
-          </div>
+        <div className="p-6 flex items-center justify-between border-b border-white/5 bg-sidebar-dark/20 relative">
+          {!isCollapsed && (
+             <div className="flex items-center space-x-3 w-full bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-xl border border-white/10">
+               <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain bg-white rounded-lg p-1"/>
+               <div className="flex flex-col overflow-hidden">
+                 <span className="text-sm font-bold text-white tracking-wide truncate">UEDCL OEBIPAS</span>
+                 <div className="flex items-center space-x-2 mt-1">
+                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                   <span className="text-[10px] font-medium text-blue-200 uppercase tracking-widest truncate">{role}</span>
+                 </div>
+               </div>
+             </div>
+          )}
+          {isCollapsed && (
+             <img src="/logo.png" alt="Logo" className="h-10 w-10 mx-auto object-contain bg-white rounded-lg p-1"/>
+          )}
         </div>
 
         <nav className="flex-1 p-6 space-y-1 overflow-y-auto custom-scrollbar scroll-smooth">
           
           <Link to="/admin" onClick={close} className={navItemClass('/admin')}>
-            <LayoutDashboard size={20}/><span>Overview</span>
+            <LayoutDashboard size={20}/>{!isCollapsed && <span>Overview</span>}
           </Link>
 
           {/* --- Field Operations (Billing/Super) --- */}
           {canShowFieldOps && (
             <div className="pt-2">
-              <button onClick={() => setFieldOpsOpen(p => !p)} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${fieldOpsOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
-                <span className="flex items-center space-x-3"><Map size={20}/><span>Field Operations</span></span>
-                <ChevronDown size={14} className={`transition-transform duration-300 ${fieldOpsOpen ? 'rotate-180' : ''}`}/>
+              <button onClick={() => { if(isCollapsed) setIsCollapsed(false); setFieldOpsOpen(p => !p); }} className={`w-full flex items-center ${isCollapsed ? 'justify-center mx-2' : 'justify-between'} p-3 rounded-lg transition-all duration-200 ${fieldOpsOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
+                <div className="flex items-center space-x-3"><Map size={20}/>{!isCollapsed && <span>Field Operations</span>}</div>
+                {!isCollapsed && <ChevronDown size={14} className={`transition-transform duration-300 ${fieldOpsOpen ? 'rotate-180' : ''}`}/>}
               </button>
-              {fieldOpsOpen && (
+              {fieldOpsOpen && !isCollapsed && (
                 <div className="ml-4 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
                   <Link to="/admin/customers" onClick={close} className={subNavItemClass('/admin/customers')}>
                     <Users size={18}/><span>Customers</span>
@@ -109,11 +125,11 @@ export default function AdminLayout() {
           {/* --- Billing & Finance --- */}
           {canShowBilling && (
             <div className="pt-2">
-              <button onClick={() => setFinanceOpen(p => !p)} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${financeOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
-                <span className="flex items-center space-x-3"><Wallet size={20}/><span>Financial Engine</span></span>
-                <ChevronDown size={14} className={`transition-transform duration-300 ${financeOpen ? 'rotate-180' : ''}`}/>
+              <button onClick={() => { if(isCollapsed) setIsCollapsed(false); setFinanceOpen(p => !p); }} className={`w-full flex items-center ${isCollapsed ? 'justify-center mx-2' : 'justify-between'} p-3 rounded-lg transition-all duration-200 ${financeOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
+                <div className="flex items-center space-x-3"><Wallet size={20}/>{!isCollapsed && <span>Financial Engine</span>}</div>
+                {!isCollapsed && <ChevronDown size={14} className={`transition-transform duration-300 ${financeOpen ? 'rotate-180' : ''}`}/>}
               </button>
-              {financeOpen && (
+              {financeOpen && !isCollapsed && (
                 <div className="ml-4 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
                   <Link to="/admin/tariffs" onClick={close} className={subNavItemClass('/admin/tariffs')}>
                     <Tag size={18}/><span>Tariff Rules</span>
@@ -141,11 +157,11 @@ export default function AdminLayout() {
 
           {/* --- Analytics & Support --- */}
           <div className="pt-2">
-            <button onClick={() => setAnalyticsOpen(p => !p)} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${analyticsOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
-              <span className="flex items-center space-x-3"><PieChart size={20}/><span>Analytics & Support</span></span>
-              <ChevronDown size={14} className={`transition-transform duration-300 ${analyticsOpen ? 'rotate-180' : ''}`}/>
+            <button onClick={() => { if(isCollapsed) setIsCollapsed(false); setAnalyticsOpen(p => !p); }} className={`w-full flex items-center ${isCollapsed ? 'justify-center mx-2' : 'justify-between'} p-3 rounded-lg transition-all duration-200 ${analyticsOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
+              <div className="flex items-center space-x-3"><PieChart size={20}/>{!isCollapsed && <span>Analytics & Support</span>}</div>
+              {!isCollapsed && <ChevronDown size={14} className={`transition-transform duration-300 ${analyticsOpen ? 'rotate-180' : ''}`}/>}
             </button>
-            {analyticsOpen && (
+            {analyticsOpen && !isCollapsed && (
               <div className="ml-4 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
                 <Link to="/admin/feedback" onClick={close} className={subNavItemClass('/admin/feedback')}>
                   <MessageSquare size={18}/><span>Support Tickets</span>
@@ -179,11 +195,11 @@ export default function AdminLayout() {
           {/* --- Administration (Strict Super Admin) --- */}
           {canShowAdmin && (
             <div className="pt-2">
-              <button onClick={() => setAdminOpen(p => !p)} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${adminOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
-                <span className="flex items-center space-x-3"><Lock size={20}/><span>Administration</span></span>
-                <ChevronDown size={14} className={`transition-transform duration-300 ${adminOpen ? 'rotate-180' : ''}`}/>
+              <button onClick={() => { if(isCollapsed) setIsCollapsed(false); setAdminOpen(p => !p); }} className={`w-full flex items-center ${isCollapsed ? 'justify-center mx-2' : 'justify-between'} p-3 rounded-lg transition-all duration-200 ${adminOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
+                <div className="flex items-center space-x-3"><Lock size={20}/>{!isCollapsed && <span>Administration</span>}</div>
+                {!isCollapsed && <ChevronDown size={14} className={`transition-transform duration-300 ${adminOpen ? 'rotate-180' : ''}`}/>}
               </button>
-              {adminOpen && (
+              {adminOpen && !isCollapsed && (
                 <div className="ml-4 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
                   <Link to="/admin/users" onClick={close} className={subNavItemClass('/admin/users')}>
                     <Briefcase size={18}/><span>System Users</span>
@@ -201,8 +217,8 @@ export default function AdminLayout() {
         </nav>
 
         <div className="p-6 border-t border-white/5">
-          <button onClick={handleLogout} className="w-full flex items-center space-x-3 p-3 rounded-lg text-blue-100/60 hover:bg-red-500/10 hover:text-red-400 transition-all font-bold text-sm">
-            <LogOut size={18}/><span>Security Sign Out</span>
+          <button onClick={handleLogout} className={`w-full flex items-center ${isCollapsed ? 'justify-center mx-2' : 'space-x-3 p-3'} rounded-lg text-blue-100/60 hover:bg-red-500/10 hover:text-red-400 transition-all font-bold text-sm`}>
+            <LogOut size={18}/>{!isCollapsed && <span>Security Sign Out</span>}
           </button>
         </div>
       </aside>
@@ -215,17 +231,30 @@ export default function AdminLayout() {
             <button className="md:hidden p-2 -ml-2 mr-4 text-gray-600 hover:bg-gray-100 rounded-xl" onClick={() => setIsMobileOpen(true)}>
               <Menu size={24}/>
             </button>
-            <div className="hidden sm:block">
-               <h3 className="text-lg font-bold text-gray-900">System Monitor</h3>
-               <p className="text-xs text-gray-400 font-medium">Monitoring OEBIPAS Operations</p>
+            <button className="hidden md:block p-2 ml-0 mr-4 text-gray-600 hover:bg-gray-100 rounded-xl transition-all" onClick={() => setIsCollapsed(!isCollapsed)}>
+              <Menu size={24}/>
+            </button>
+            <div className="hidden sm:flex items-center space-x-3">
+               <img src="/logo.png" alt="UEDCL Logo" className="h-8 object-contain" />
+               <div>
+                  <h3 className="text-lg font-bold text-gray-900">UEDCL Command Center</h3>
+                  <p className="text-xs text-gray-400 font-medium">UEDCL - OEBIPAS Operations</p>
+               </div>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
             {/* Search */}
-            <div className="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-2 w-72 transition-all">
+            <div className="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-2 w-72 focus-within:w-96 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all">
               <Search size={18} className="text-gray-400 mr-2"/>
-              <input type="text" placeholder="Systems Query..." className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder-gray-400 focus:ring-0" />
+              <input 
+                type="text" 
+                placeholder="Search customers, bills..." 
+                className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder-gray-400 focus:ring-0" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
+              />
             </div>
 
             {/* Notification */}
