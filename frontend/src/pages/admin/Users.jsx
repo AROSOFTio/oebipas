@@ -111,7 +111,7 @@ export default function Users() {
   };
 
   const handleDeleteUser = async (u) => {
-    if (u.id === user.id) {
+    if (user && u.id === user.id) {
         alert('You cannot delete your own account.');
         return;
     }
@@ -268,7 +268,7 @@ export default function Users() {
                     <button onClick={() => handleToggleStatus(u)} className={`p-2 rounded-lg transition-colors ${u.status === 'active' ? 'text-gray-500 hover:bg-red-50 hover:text-red-600' : 'text-gray-500 hover:bg-green-50 hover:text-green-600'}`} title={u.status === 'active' ? 'Deactivate' : 'Activate'}>
                       <Power size={16}/>
                     </button>
-                    {u.id !== user.id && (
+                    {user && u.id !== user.id && (
                         <button onClick={() => handleDeleteUser(u)} className="p-2 rounded-lg text-gray-500 hover:bg-red-100 hover:text-red-600 transition-colors" title="Delete user">
                             <Trash2 size={16}/>
                         </button>
