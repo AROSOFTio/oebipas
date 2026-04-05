@@ -91,7 +91,7 @@ export default function CustomerBills() {
                 </div>
                 <button 
                   onClick={() => {
-                    const token = localStorage.getItem('token');
+                    const token = localStorage.getItem('oebipas_token');
                     const url = `${axiosInstance.defaults.baseURL}/reports/invoice/${b.id}?token=${token}`;
                     window.open(url, '_blank');
                   }}

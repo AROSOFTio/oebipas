@@ -30,7 +30,7 @@ export default function BillDetails() {
   const statusCfg = STATUS_CONFIG[bill.status] || STATUS_CONFIG['unpaid'];
 
   const handleDownloadPDF = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('oebipas_token');
     const url = `${axiosInstance.defaults.baseURL}/reports/invoice/${id}?token=${token}`;
     window.open(url, '_blank');
   };

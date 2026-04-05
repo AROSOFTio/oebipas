@@ -22,7 +22,7 @@ export default function PaymentDetails() {
 
   const handleDownloadReceipt = () => {
     if (!payment.receipt) return;
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('oebipas_token');
     const url = `${axiosInstance.defaults.baseURL}/reports/receipt/${payment.receipt.id}?token=${token}`;
     window.open(url, '_blank');
   };
