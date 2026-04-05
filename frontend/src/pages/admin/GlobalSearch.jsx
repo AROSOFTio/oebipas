@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Search, Users, Zap, Receipt, CreditCard, ArrowRight, Loader2 } from 'lucide-react';
-import api from '../../utils/api';
+import api from '../../utils/axiosInstance';
 
 export default function GlobalSearch() {
   const [searchParams] = useSearchParams();
