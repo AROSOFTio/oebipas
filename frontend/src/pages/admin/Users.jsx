@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import { Shield, UserPlus, Edit, Power, X, Save } from 'lucide-react';
+import { Shield, UserPlus, Edit, Power, X, Save, Trash2 } from 'lucide-react';
 
 const ROLES = [
   { id: 1, name: 'Super Admin' },
@@ -105,6 +105,20 @@ export default function Users() {
       fetchUsers();
     } catch (err) {
       alert('Failed to update status');
+    }
+  };
+
+  const handleDeleteUser = async (u) => {
+    if (u.id === user.id) {
+        alert('You cannot delete your own account.');
+        return;
+    }
+    if (!confirm(`Are you sure you want to PERMANENTLY delete user ${u.full_name}? This cannot be undone.`)) return;
+    try {
+      await axiosInstance.delete(`/users/${u.id}`);
+      fetchUsers();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -252,6 +266,11 @@ export default function Users() {
                     <button onClick={() => handleToggleStatus(u)} className={`p-2 rounded-lg transition-colors ${u.status === 'active' ? 'text-gray-500 hover:bg-red-50 hover:text-red-600' : 'text-gray-500 hover:bg-green-50 hover:text-green-600'}`} title={u.status === 'active' ? 'Deactivate' : 'Activate'}>
                       <Power size={16}/>
                     </button>
+                    {u.id !== user.id && (
+                        <button onClick={() => handleDeleteUser(u)} className="p-2 rounded-lg text-gray-500 hover:bg-red-100 hover:text-red-600 transition-colors" title="Delete user">
+                            <Trash2 size={16}/>
+                        </button>
+                    )}
                   </div>
                 </td>
               </tr>
