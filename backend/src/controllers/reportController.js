@@ -4,20 +4,20 @@ const { parse } = require('json2csv');
 const path = require('path');
 
 // Helper to add professional header with logo
-const addHeader = (doc, title) => {
+const addHeader = (doc, title, titleColor = '#0b2e63') => {
   const logoPath = path.join(__dirname, '../assets/logo.png');
   try {
-    doc.image(logoPath, 30, 25, { width: 50 });
+    doc.image(logoPath, 30, 20, { width: 80 });
   } catch (e) {
     console.error('Logo not found at', logoPath);
   }
   
-  doc.fillColor('#0b2e63').fontSize(20).font('Helvetica-Bold').text('OEBIPAS SYSTEM', 90, 30);
-  doc.fontSize(10).font('Helvetica').text('Online Electricity Billing & Payment System', 90, 52);
+  doc.fillColor(titleColor).fontSize(22).font('Helvetica-Bold').text('OEBIPAS SYSTEM', 125, 30);
+  doc.fontSize(10).font('Helvetica').text('Online Electricity Billing & Payment System', 125, 55);
   
-  doc.moveTo(30, 85).lineTo(565, 85).strokeColor('#eeeeee').stroke();
+  doc.moveTo(30, 90).lineTo(565, 90).strokeColor('#eeeeee').stroke();
   
-  doc.fillColor('#333333').fontSize(16).font('Helvetica-Bold').text(title, 30, 110, { align: 'right' });
+  doc.fillColor(titleColor).fontSize(16).font('Helvetica-Bold').text(title, 30, 110, { align: 'right' });
   doc.fontSize(8).font('Helvetica').text(`Generated: ${new Date().toLocaleString()}`, 30, 130, { align: 'right' });
   doc.moveDown(4);
 };
@@ -189,6 +189,7 @@ exports.exportPdf = async (req, res) => {
 
 exports.generateInvoicePdf = async (req, res) => {
   const { id } = req.params;
+  const themeColor = '#0b2e63'; // Deep Blue
   try {
     const [bills] = await pool.query(`
       SELECT b.*, c.customer_number, c.full_name as customer_name, c.address, c.category,
@@ -209,7 +210,7 @@ exports.generateInvoicePdf = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="Invoice_${bill.bill_number}.pdf"`);
     doc.pipe(res);
 
-    addHeader(doc, 'TAX INVOICE');
+    addHeader(doc, 'TAX INVOICE', themeColor);
 
     // Info Section
     doc.fontSize(10).font('Helvetica-Bold').text('BILL TO:', 30, 160);
@@ -231,21 +232,21 @@ exports.generateInvoicePdf = async (req, res) => {
         { label: "Quantity/Units", property: 'qty', width: 100 },
         { label: "Amount (UGX)", property: 'amt', width: 100 }
       ],
-      rows: items.map(i => [
-        i.item_name, 
-        i.item_type === 'consumption' ? `${Number(i.amount / bill.energy_charge * bill.units_consumed || 0).toFixed(2)} kWh` : '-', 
-        Number(i.amount || 0).toLocaleString()
-      ])
+      rows: items.map(i => ({
+        desc: i.item_name, 
+        qty: i.item_type === 'consumption' ? `${Number(i.amount / bill.energy_charge * bill.units_consumed || 0).toFixed(2)} kWh` : '-', 
+        amt: Number(i.amount || 0).toLocaleString()
+      }))
     };
 
     await doc.table(table, {
       width: 450,
-      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor('#0b2e63'),
+      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor(themeColor),
       prepareRow: () => doc.font("Helvetica").fontSize(10).fillColor('#333333'),
     });
 
     doc.moveDown(2);
-    doc.fontSize(14).font('Helvetica-Bold').fillColor('#0b2e63').text(`TOTAL PAYABLE: UGX ${Number(bill.total_amount).toLocaleString()}`, { align: 'right' });
+    doc.fontSize(14).font('Helvetica-Bold').fillColor(themeColor).text(`TOTAL PAYABLE: UGX ${Number(bill.total_amount).toLocaleString()}`, { align: 'right' });
     
     doc.fontSize(8).fillColor('#777777').text('Terms: Please pay by the due date to avoid disconnection and late penalties.', 30, 750, { align: 'center' });
     doc.end();
@@ -257,6 +258,7 @@ exports.generateInvoicePdf = async (req, res) => {
 
 exports.generateReceiptPdf = async (req, res) => {
   const { id } = req.params;
+  const themeColor = '#166534'; // Forest Green
   try {
     const [receipts] = await pool.query(`
       SELECT r.*, c.customer_number, c.full_name as customer_name, p.payment_reference, p.payment_method, p.transaction_reference
@@ -274,10 +276,10 @@ exports.generateReceiptPdf = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="Receipt_${receipt.receipt_number}.pdf"`);
     doc.pipe(res);
 
-    addHeader(doc, 'OFFICIAL RECEIPT');
+    addHeader(doc, 'OFFICIAL RECEIPT', themeColor);
 
-    doc.fontSize(12).font('Helvetica-Bold').text(`Receipt Number: ${receipt.receipt_number}`, 30, 160);
-    doc.fontSize(10).font('Helvetica').text(`Date Issued: ${new Date(receipt.issued_at).toLocaleString()}`, 30, 178);
+    doc.fontSize(12).font('Helvetica-Bold').fillColor(themeColor).text(`Receipt Number: ${receipt.receipt_number}`, 30, 160);
+    doc.fontSize(10).font('Helvetica').fillColor('#333333').text(`Date Issued: ${new Date(receipt.issued_at).toLocaleString()}`, 30, 178);
     
     doc.moveDown(2);
     
@@ -287,23 +289,29 @@ exports.generateReceiptPdf = async (req, res) => {
         { label: "Details", property: 'value', width: 250 }
       ],
       rows: [
-        ["Received From", receipt.customer_name],
-        ["Customer Account", receipt.customer_number],
-        ["Payment Method", receipt.payment_method.toUpperCase()],
-        ["Transaction Ref", receipt.transaction_reference],
-        ["Payment Ref", receipt.payment_reference],
-        ["Amount Paid", `UGX ${Number(receipt.amount).toLocaleString()}`]
+        { label: "Received From", value: receipt.customer_name },
+        { label: "Customer Account", value: receipt.customer_number },
+        { label: "Payment Method", value: receipt.payment_method.toUpperCase() },
+        { label: "Transaction Ref", value: receipt.transaction_reference },
+        { label: "Payment Ref", value: receipt.payment_reference },
+        { label: "Amount Paid", value: `UGX ${Number(receipt.amount).toLocaleString()}` }
       ]
     };
 
     await doc.table(detailsTable, {
       width: 400,
-      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor('#0b2e63'),
+      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor(themeColor),
       prepareRow: () => doc.font("Helvetica").fontSize(10).fillColor('#333333'),
     });
 
+    // Watermark/Badge
+    doc.save();
+    doc.opacity(0.15);
+    doc.fillColor(themeColor).fontSize(60).font('Helvetica-Bold').text('PAID', 300, 450, { rotation: 45 });
+    doc.restore();
+
     doc.moveDown(3);
-    doc.fontSize(18).font('Helvetica-Bold').fillColor('green').text('PAYMENT SUCCESSFUL', { align: 'center' });
+    doc.fontSize(18).font('Helvetica-Bold').fillColor(themeColor).text('PAYMENT SUCCESSFUL', { align: 'center' });
     doc.fontSize(10).fillColor('#333333').text('Thank you for your payment.', { align: 'center' });
 
     doc.end();
