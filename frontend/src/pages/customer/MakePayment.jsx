@@ -181,6 +181,13 @@ export default function MakePayment() {
                                 <p className="font-black text-primary text-lg">UGX {Number(b.balance_due).toLocaleString()}</p>
                             </div>
                         ))}
+                        {bills.length === 0 && (
+                            <div className="p-8 text-center bg-green-50 rounded-[2rem] border-2 border-green-100 border-dashed">
+                                <CheckCircle2 size={40} className="mx-auto text-green-500 mb-2 opacity-50"/>
+                                <p className="font-black text-green-800 text-lg uppercase tracking-tight">Zero Balance!</p>
+                                <p className="text-green-600 text-[10px] font-bold uppercase tracking-widest">You have no outstanding bills at this time.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -190,14 +197,18 @@ export default function MakePayment() {
                         {PAYMENT_METHODS.map(m => (
                             <div 
                                 key={m.id} 
-                                onClick={() => { setMethod(m.id); setPhoneWarning(validatePhone(phoneNumber, m.id)); }}
-                                className={`group cursor-pointer border-2 rounded-2xl p-4 flex flex-col items-center justify-center space-y-3 transition-all relative overflow-hidden ${method === m.id ? 'border-primary bg-primary/5 shadow-lg' : 'border-gray-100 hover:border-gray-200'}`}
+                                onClick={() => { 
+                                    if (bills.length === 0) return;
+                                    setMethod(m.id); 
+                                    setPhoneWarning(validatePhone(phoneNumber, m.id)); 
+                                }}
+                                className={`group cursor-pointer border-2 rounded-2xl p-4 flex flex-col items-center justify-center space-y-3 transition-all relative overflow-hidden ${bills.length === 0 ? 'opacity-30 grayscale cursor-not-allowed' : (method === m.id ? 'border-primary bg-primary/5 shadow-lg' : 'border-gray-100 hover:border-gray-200')}`}
                             >
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${m.color} ${m.text} shadow-md`}>
                                     <m.icon size={20} />
                                 </div>
                                 <span className={`font-black text-[9px] uppercase tracking-widest text-center ${method === m.id ? 'text-primary' : 'text-gray-500'}`}>{m.brand}</span>
-                                {method === m.id && (
+                                {method === m.id && bills.length > 0 && (
                                     <div className="absolute top-1 right-1">
                                         <ShieldCheck size={14} className="text-primary"/>
                                     </div>
@@ -208,7 +219,7 @@ export default function MakePayment() {
                 </div>
 
                 {/* --- PHONE FIELD (MTN/AIRTEL) --- */}
-                {(method === 'mobile_money_mtn' || method === 'mobile_money_airtel') && (
+                {(method === 'mobile_money_mtn' || method === 'mobile_money_airtel') && bills.length > 0 && (
                     <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest block">3. Enter Mobile Number</label>
                         <div className="relative">
@@ -229,7 +240,7 @@ export default function MakePayment() {
                 )}
 
                 {/* --- CARD FIELDS --- */}
-                {method === 'card' && (
+                {method === 'card' && bills.length > 0 && (
                     <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest block">3. Card Details</label>
                         <div className="relative">
@@ -261,7 +272,7 @@ export default function MakePayment() {
                         disabled={processing || bills.length === 0 || !!phoneWarning || !method} 
                         className="w-full bg-sidebar text-white py-5 rounded-2xl font-black text-lg hover:bg-black transition-all shadow-xl hover:shadow-black/20 disabled:opacity-30 flex items-center justify-center group"
                     >
-                        {processing ? <span>Processing...</span> : <span>COMPLETE PAYMENT</span>}
+                        {processing ? <span>Processing...</span> : (bills.length === 0 ? <span>NO OUTSTANDING BILL</span> : <span>COMPLETE PAYMENT</span>)}
                     </button>
                     <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-4">Protected by Encrypted SSL Security</p>
                 </div>
