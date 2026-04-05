@@ -3,7 +3,8 @@ import { useContext, useState } from 'react';
 import {
   LayoutDashboard, Users, FileText, Settings, LogOut, Briefcase, Zap, Activity,
   Menu, X, Receipt, Tag, ShieldAlert, CreditCard, FileCheck, MessageSquare,
-  BarChart2, History, ChevronDown, TrendingUp, AlertTriangle, UserX, Shield
+  BarChart2, History, ChevronDown, TrendingUp, AlertTriangle, UserX, Shield,
+  Search, Bell, User
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -189,13 +190,31 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-6">
-            <div className="text-right flex flex-col justify-center">
-              <span className="font-bold text-gray-900 text-sm">{user?.full_name}</span>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">{role}</span>
+          <div className="flex items-center space-x-4">
+            {/* Search */}
+            <div className="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-2 w-72 transition-all">
+              <Search size={18} className="text-gray-400 mr-2"/>
+              <input type="text" placeholder="Systems Query..." className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder-gray-400 focus:ring-0" />
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-sidebar text-white flex items-center justify-center font-bold text-lg shadow-xl shadow-sidebar/20 ring-4 ring-gray-100 ring-offset-0">
-              {user?.full_name ? user.full_name.charAt(0) : 'A'}
+
+            {/* Notification */}
+            <div className="relative p-2 text-gray-400 cursor-pointer hover:bg-gray-100 rounded-full transition-colors ml-2">
+              <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+            </div>
+
+            {/* Profile */}
+            <div className="flex items-center space-x-3 pl-2 sm:pl-4 border-l border-gray-200 ml-2">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400">
+                  <User size={20} />
+                </div>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full ring-2 ring-white"></span>
+              </div>
+              <div className="hidden sm:flex flex-col justify-center">
+                <span className="font-bold text-gray-900 text-sm leading-tight">{user?.full_name || 'Admin User'}</span>
+                <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">{role}</span>
+              </div>
             </div>
           </div>
         </header>

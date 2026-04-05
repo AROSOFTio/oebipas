@@ -12,7 +12,7 @@ export default {
           dark: '#0f4299',
         },
         sidebar: {
-          DEFAULT: '#0b2e63',
+          DEFAULT: '#0a2355',
         },
         accent: {
           red: '#b12917',
