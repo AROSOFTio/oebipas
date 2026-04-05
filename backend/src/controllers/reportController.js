@@ -213,7 +213,7 @@ exports.generateInvoicePdf = async (req, res) => {
     addHeader(doc, 'TAX INVOICE', themeColor);
 
     // Info Section
-    doc.fontSize(10).font('Helvetica-Bold').text('BILL TO:', 30, 160);
+    doc.fontSize(10).font('Helvetica-Bold').fillColor('#333333').text('BILL TO:', 30, 160);
     doc.font('Helvetica').text(bill.customer_name, 30, 175);
     doc.font('Helvetica').text(bill.customer_number, 30, 188);
     doc.font('Helvetica').text(bill.address || 'N/A', 30, 201);
@@ -227,22 +227,19 @@ exports.generateInvoicePdf = async (req, res) => {
     doc.moveDown(4);
 
     const table = {
-      headers: [
-        { label: "Description", property: 'desc', width: 250 },
-        { label: "Quantity/Units", property: 'qty', width: 100 },
-        { label: "Amount (UGX)", property: 'amt', width: 100 }
-      ],
-      rows: items.map(i => ({
-        desc: i.item_name, 
-        qty: i.item_type === 'consumption' ? `${Number(i.amount / bill.energy_charge * bill.units_consumed || 0).toFixed(2)} kWh` : '-', 
-        amt: Number(i.amount || 0).toLocaleString()
-      }))
+      headers: ["Description", "Quantity/Units", "Amount (UGX)"],
+      rows: items.map(i => [
+        i.item_name, 
+        i.item_type === 'consumption' ? `${Number(i.amount / (bill.energy_charge || 1) * bill.units_consumed || 0).toFixed(2)} kWh` : '-', 
+        Number(i.amount || 0).toLocaleString()
+      ])
     };
 
     await doc.table(table, {
-      width: 450,
+      width: 480,
       prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor(themeColor),
       prepareRow: () => doc.font("Helvetica").fontSize(10).fillColor('#333333'),
+      columnSize: [280, 100, 100]
     });
 
     doc.moveDown(2);
@@ -284,30 +281,30 @@ exports.generateReceiptPdf = async (req, res) => {
     doc.moveDown(2);
     
     const detailsTable = {
-      headers: [
-        { label: "Description", property: 'label', width: 150 },
-        { label: "Details", property: 'value', width: 250 }
-      ],
+      headers: ["Description", "Details"],
       rows: [
-        { label: "Received From", value: receipt.customer_name },
-        { label: "Customer Account", value: receipt.customer_number },
-        { label: "Payment Method", value: receipt.payment_method.toUpperCase() },
-        { label: "Transaction Ref", value: receipt.transaction_reference },
-        { label: "Payment Ref", value: receipt.payment_reference },
-        { label: "Amount Paid", value: `UGX ${Number(receipt.amount).toLocaleString()}` }
+        ["Received From", receipt.customer_name],
+        ["Customer Account", receipt.customer_number],
+        ["Payment Method", receipt.payment_method.toUpperCase()],
+        ["Transaction Ref", receipt.transaction_reference],
+        ["Payment Ref", receipt.payment_reference],
+        ["Amount Paid", `UGX ${Number(receipt.amount).toLocaleString()}`]
       ]
     };
 
     await doc.table(detailsTable, {
-      width: 400,
+      width: 480,
       prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10).fillColor(themeColor),
       prepareRow: () => doc.font("Helvetica").fontSize(10).fillColor('#333333'),
+      columnSize: [150, 330]
     });
 
     // Watermark/Badge
     doc.save();
-    doc.opacity(0.15);
-    doc.fillColor(themeColor).fontSize(60).font('Helvetica-Bold').text('PAID', 300, 450, { rotation: 45 });
+    doc.opacity(0.1);
+    doc.fillColor(themeColor).fontSize(80).font('Helvetica-Bold');
+    doc.rotate(30, { origin: [300, 450] });
+    doc.text('PAID', 280, 420);
     doc.restore();
 
     doc.moveDown(3);
