@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, FileText, Settings, LogOut, Briefcase, Zap, Activity,
   Menu, X, Receipt, Tag, ShieldAlert, CreditCard, FileCheck, MessageSquare,
   BarChart2, History, ChevronDown, TrendingUp, AlertTriangle, UserX, Shield,
-  Search, Bell, User
+  Search, Bell, User, Map, Wallet, PieChart, Lock
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -13,6 +13,10 @@ export default function AdminLayout() {
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(location.pathname.includes('/admin/reports'));
+  const [fieldOpsOpen, setFieldOpsOpen] = useState(['/admin/customers', '/admin/connections', '/admin/meters', '/admin/consumption'].includes(location.pathname));
+  const [financeOpen, setFinanceOpen] = useState(['/admin/tariffs', '/admin/bills', '/admin/payments', '/admin/receipts', '/admin/penalties'].includes(location.pathname));
+  const [analyticsOpen, setAnalyticsOpen] = useState(location.pathname.includes('/admin/reports') || location.pathname === '/admin/feedback');
+  const [adminOpen, setAdminOpen] = useState(['/admin/users', '/admin/audit-logs', '/admin/settings'].includes(location.pathname));
 
   const handleLogout = () => { logout(); };
   const isActive = (path) => location.pathname === path;
@@ -25,6 +29,13 @@ export default function AdminLayout() {
     ? 'bg-primary text-white shadow-md font-bold' 
     : 'text-blue-100/70 hover:bg-white/10 hover:text-white font-medium'
   }`;
+
+  const subNavItemClass = (path) => `flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 text-sm ${
+    isActive(path) 
+    ? 'bg-primary text-white shadow-md font-bold' 
+    : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'
+  }`;
+
 
   // --- SERIOUS ACCESS CONTROL RULES ---
   const role = user?.role || 'Viewer';
@@ -71,100 +82,120 @@ export default function AdminLayout() {
 
           {/* --- Field Operations (Billing/Super) --- */}
           {canShowFieldOps && (
-            <div className="pt-6">
-              <div className="pb-2 px-3 text-[10px] uppercase tracking-widest text-blue-200/40 font-bold">Field Operations</div>
-              <div className="space-y-1">
-                <Link to="/admin/customers" onClick={close} className={navItemClass('/admin/customers')}>
-                  <Users size={20}/><span>Customers</span>
-                </Link>
-                <Link to="/admin/connections" onClick={close} className={navItemClass('/admin/connections')}>
-                  <Zap size={20}/><span>Connections</span>
-                </Link>
-                <Link to="/admin/meters" onClick={close} className={navItemClass('/admin/meters')}>
-                  <Activity size={20}/><span>Meters Hardware</span>
-                </Link>
-                <Link to="/admin/consumption" onClick={close} className={navItemClass('/admin/consumption')}>
-                  <FileText size={20}/><span>Unit Consumption</span>
-                </Link>
-              </div>
+            <div className="pt-2">
+              <button onClick={() => setFieldOpsOpen(p => !p)} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${fieldOpsOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
+                <span className="flex items-center space-x-3"><Map size={20}/><span>Field Operations</span></span>
+                <ChevronDown size={14} className={`transition-transform duration-300 ${fieldOpsOpen ? 'rotate-180' : ''}`}/>
+              </button>
+              {fieldOpsOpen && (
+                <div className="ml-4 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Link to="/admin/customers" onClick={close} className={subNavItemClass('/admin/customers')}>
+                    <Users size={18}/><span>Customers</span>
+                  </Link>
+                  <Link to="/admin/connections" onClick={close} className={subNavItemClass('/admin/connections')}>
+                    <Zap size={18}/><span>Connections</span>
+                  </Link>
+                  <Link to="/admin/meters" onClick={close} className={subNavItemClass('/admin/meters')}>
+                    <Activity size={18}/><span>Meters Hardware</span>
+                  </Link>
+                  <Link to="/admin/consumption" onClick={close} className={subNavItemClass('/admin/consumption')}>
+                    <FileText size={18}/><span>Unit Consumption</span>
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
           {/* --- Billing & Finance --- */}
           {canShowBilling && (
-            <div className="pt-6">
-              <div className="pb-2 px-3 text-[10px] uppercase tracking-widest text-blue-200/40 font-bold">Financial Engine</div>
-              <div className="space-y-1">
-                <Link to="/admin/tariffs" onClick={close} className={navItemClass('/admin/tariffs')}>
-                  <Tag size={20}/><span>Tariff Rules</span>
-                </Link>
-                <Link to="/admin/bills" onClick={close} className={navItemClass('/admin/bills')}>
-                  <Receipt size={20}/><span>All Invoices</span>
-                </Link>
-                {canShowFinance && (
-                  <>
-                    <Link to="/admin/payments" onClick={close} className={navItemClass('/admin/payments')}>
-                      <CreditCard size={20}/><span>Payments</span>
-                    </Link>
-                    <Link to="/admin/receipts" onClick={close} className={navItemClass('/admin/receipts')}>
-                      <FileCheck size={20}/><span>Receipts</span>
-                    </Link>
-                  </>
-                )}
-                <Link to="/admin/penalties" onClick={close} className={navItemClass('/admin/penalties')}>
-                  <ShieldAlert size={20}/><span>Penalties</span>
-                </Link>
-              </div>
+            <div className="pt-2">
+              <button onClick={() => setFinanceOpen(p => !p)} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${financeOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
+                <span className="flex items-center space-x-3"><Wallet size={20}/><span>Financial Engine</span></span>
+                <ChevronDown size={14} className={`transition-transform duration-300 ${financeOpen ? 'rotate-180' : ''}`}/>
+              </button>
+              {financeOpen && (
+                <div className="ml-4 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Link to="/admin/tariffs" onClick={close} className={subNavItemClass('/admin/tariffs')}>
+                    <Tag size={18}/><span>Tariff Rules</span>
+                  </Link>
+                  <Link to="/admin/bills" onClick={close} className={subNavItemClass('/admin/bills')}>
+                    <Receipt size={18}/><span>All Invoices</span>
+                  </Link>
+                  {canShowFinance && (
+                    <>
+                      <Link to="/admin/payments" onClick={close} className={subNavItemClass('/admin/payments')}>
+                        <CreditCard size={18}/><span>Payments</span>
+                      </Link>
+                      <Link to="/admin/receipts" onClick={close} className={subNavItemClass('/admin/receipts')}>
+                        <FileCheck size={18}/><span>Receipts</span>
+                      </Link>
+                    </>
+                  )}
+                  <Link to="/admin/penalties" onClick={close} className={subNavItemClass('/admin/penalties')}>
+                    <ShieldAlert size={18}/><span>Penalties</span>
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
           {/* --- Analytics & Support --- */}
-          <div className="pt-6">
-            <div className="pb-2 px-3 text-[10px] uppercase tracking-widest text-blue-200/40 font-bold">Analytics & Support</div>
-            <div className="space-y-1">
-              <Link to="/admin/feedback" onClick={close} className={navItemClass('/admin/feedback')}>
-                <MessageSquare size={20}/><span>Support Tickets</span>
-              </Link>
-              
-              {canShowReports && (
-                <>
-                  <button
-                    onClick={() => setReportsOpen(p => !p)}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 ${
-                      isReportsActive ? 'bg-white/10 text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white font-medium'
-                    }`}
-                  >
-                    <span className="flex items-center space-x-3"><BarChart2 size={20}/><span>Intel Reports</span></span>
-                    <ChevronDown size={14} className={`transition-transform duration-300 ${reportsOpen ? 'rotate-180' : ''}`}/>
-                  </button>
-                  {reportsOpen && (
-                    <div className="ml-8 pl-4 border-l border-white/10 space-y-1 mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <Link to="/admin/reports?type=monthly-billing" onClick={close} className="block p-2 text-xs text-gray-500 hover:text-white">Monthly Billing</Link>
-                      <Link to="/admin/reports?type=daily-revenue" onClick={close} className="block p-2 text-xs text-gray-500 hover:text-white">Daily Revenue</Link>
-                      <Link to="/admin/reports?type=outstanding-balances" onClick={close} className="block p-2 text-xs text-gray-500 hover:text-white">Outstanding Balances</Link>
-                      <Link to="/admin/reports?type=overdue-customers" onClick={close} className="block p-2 text-xs text-gray-500 hover:text-white">Overdue Accounts</Link>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+          <div className="pt-2">
+            <button onClick={() => setAnalyticsOpen(p => !p)} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${analyticsOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
+              <span className="flex items-center space-x-3"><PieChart size={20}/><span>Analytics & Support</span></span>
+              <ChevronDown size={14} className={`transition-transform duration-300 ${analyticsOpen ? 'rotate-180' : ''}`}/>
+            </button>
+            {analyticsOpen && (
+              <div className="ml-4 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                <Link to="/admin/feedback" onClick={close} className={subNavItemClass('/admin/feedback')}>
+                  <MessageSquare size={18}/><span>Support Tickets</span>
+                </Link>
+                
+                {canShowReports && (
+                  <>
+                    <button
+                      onClick={() => setReportsOpen(p => !p)}
+                      className={`w-full flex items-center justify-between p-2 rounded-lg transition-all duration-200 text-sm ${
+                        isReportsActive ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'
+                      }`}
+                    >
+                      <span className="flex items-center space-x-3"><BarChart2 size={18}/><span>Intel Reports</span></span>
+                      <ChevronDown size={14} className={`transition-transform duration-300 ${reportsOpen ? 'rotate-180' : ''}`}/>
+                    </button>
+                    {reportsOpen && (
+                      <div className="ml-6 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <Link to="/admin/reports?type=monthly-billing" onClick={close} className="block p-2 text-xs text-blue-200/50 hover:text-white">Monthly Billing</Link>
+                        <Link to="/admin/reports?type=daily-revenue" onClick={close} className="block p-2 text-xs text-blue-200/50 hover:text-white">Daily Revenue</Link>
+                        <Link to="/admin/reports?type=outstanding-balances" onClick={close} className="block p-2 text-xs text-blue-200/50 hover:text-white">Outstanding Balances</Link>
+                        <Link to="/admin/reports?type=overdue-customers" onClick={close} className="block p-2 text-xs text-blue-200/50 hover:text-white">Overdue Accounts</Link>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* --- Administration (Strict Super Admin) --- */}
           {canShowAdmin && (
-            <div className="pt-6">
-              <div className="pb-2 px-3 text-[10px] uppercase tracking-widest text-blue-200/40 font-bold">Administration</div>
-              <div className="space-y-1">
-                <Link to="/admin/users" onClick={close} className={navItemClass('/admin/users')}>
-                  <Briefcase size={20}/><span>System Users</span>
-                </Link>
-                <Link to="/admin/audit-logs" onClick={close} className={navItemClass('/admin/audit-logs')}>
-                  <History size={20}/><span>Audit Master Logs</span>
-                </Link>
-                <Link to="/admin/settings" onClick={close} className={navItemClass('/admin/settings')}>
-                  <Settings size={20}/><span>Global Settings</span>
-                </Link>
-              </div>
+            <div className="pt-2">
+              <button onClick={() => setAdminOpen(p => !p)} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${adminOpen ? 'bg-white/10 text-white font-bold' : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'}`}>
+                <span className="flex items-center space-x-3"><Lock size={20}/><span>Administration</span></span>
+                <ChevronDown size={14} className={`transition-transform duration-300 ${adminOpen ? 'rotate-180' : ''}`}/>
+              </button>
+              {adminOpen && (
+                <div className="ml-4 pl-4 border-l border-white/5 space-y-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Link to="/admin/users" onClick={close} className={subNavItemClass('/admin/users')}>
+                    <Briefcase size={18}/><span>System Users</span>
+                  </Link>
+                  <Link to="/admin/audit-logs" onClick={close} className={subNavItemClass('/admin/audit-logs')}>
+                    <History size={18}/><span>Audit Master Logs</span>
+                  </Link>
+                  <Link to="/admin/settings" onClick={close} className={subNavItemClass('/admin/settings')}>
+                    <Settings size={18}/><span>Global Settings</span>
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </nav>
