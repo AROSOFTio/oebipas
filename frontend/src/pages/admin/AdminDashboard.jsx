@@ -300,6 +300,52 @@ const ExecutiveView = ({ data }) => {
   );
 };
 
+// --- Staff View (Fallback for any role NOT explicitly mapped) ---
+const StaffView = ({ data, role }) => {
+  const { kpis } = data;
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <KPICard title="My Active Tasks" value={kpis?.my_active_tasks || 0} icon={<MessageSquare size={24}/>} color="orange" subtext="Tickets requiring your attention" />
+        <KPICard title="Current Status" value="Active" icon={<Activity size={24}/>} color="green" subtext={`Logged in as ${role}`} />
+      </div>
+      
+      {data.my_assigned_tickets?.length > 0 && (
+         <div className="bg-white rounded-xl shadow-sm border border-border p-6 font-sans">
+         <h2 className="font-bold text-gray-800 mb-4 flex items-center text-primary uppercase tracking-widest text-xs">
+           <MessageSquare size={16} className="mr-2"/> Your Pending Assignments ({data.my_assigned_tickets.length})
+         </h2>
+         <div className="overflow-x-auto">
+           <table className="w-full text-left text-sm">
+             <thead>
+               <tr className="border-b border-gray-100 text-gray-400 uppercase text-[10px] font-black">
+                 <th className="pb-3">Ticket ID</th>
+                 <th className="pb-3">Customer</th>
+                 <th className="pb-3">Subject</th>
+                 <th className="pb-3">Date</th>
+               </tr>
+             </thead>
+             <tbody>
+               {data.my_assigned_tickets.map(t => (
+                 <tr key={t.id} className="border-b border-gray-50 last:border-0 hover:bg-primary/5 transition-all">
+                   <td className="py-4 font-black text-gray-300 text-xs">#{t.id.toString().padStart(5, '0')}</td>
+                   <td className="py-4 font-bold text-gray-900">{t.customer_name}</td>
+                   <td className="py-4 text-gray-700">{t.subject}</td>
+                   <td className="py-4 text-gray-400 text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
+                 </tr>
+               ))}
+             </tbody>
+           </table>
+         </div>
+         <div className="mt-6 pt-4 border-t border-gray-50 text-right">
+           <a href="/admin/feedback" className="text-xs font-black text-primary hover:underline uppercase tracking-widest">Open Support Tickets →</a>
+         </div>
+       </div>
+      )}
+    </div>
+  );
+};
+
 // --- Main Container ---
 
 export default function AdminDashboard() {
@@ -322,29 +368,51 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) return <div className="p-6">Loading dashboard metrics...</div>;
-  if (!data) return <div className="p-6 text-red-500">Failed to load dashboard</div>;
+  if (loading) return (
+    <div className="p-12 text-center">
+       <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+       <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Synchronizing Command Center...</p>
+    </div>
+  );
+  if (!data) return <div className="p-6 text-red-500 font-black">System unreachable. Please refresh.</div>;
 
   const role = (user?.role || '').toLowerCase();
+  const userName = user?.full_name?.split(' ')[0] || 'Officer';
+
+  // Role categorization for UI routing
+  const isExecutive = ['super admin', 'general manager', 'regional manager', 'branch manager'].includes(role);
+  const isFinance = ['finance officer', 'accounts officer'].includes(role);
+  const isIT = ['it officer', 'system admin', 'it admin'].includes(role);
+  const isOperations = ['operation officer', 'field officer', 'technician', 'operations officer'].includes(role);
+  const isSupport = ['help desk', 'customer support', 'helpdesk'].includes(role);
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6 font-sans p-1 sm:p-2 animate-in fade-in zoom-in-95 duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 mb-8">
          <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Command Center</h1>
-            <p className="text-gray-500 mt-1 capitalize">{user?.role} Dashboard Overview</p>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center">
+              Welcome back, {userName}
+              <span className="ml-3 flex h-3 w-3 rounded-full bg-green-500 border-2 border-white shadow-sm"></span>
+            </h1>
+            <p className="text-gray-500 mt-1 font-medium capitalize">{user?.role} Control Panel</p>
          </div>
-         <div className="bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm text-sm font-medium text-gray-600">
-            {new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+         <div className="bg-white border border-gray-200 px-5 py-3 rounded-2xl shadow-sm text-xs font-black text-gray-500 uppercase tracking-widest flex items-center">
+            <Clock size={14} className="mr-2 text-primary"/>
+            {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
          </div>
       </div>
       
-      {/* Route the role to specific component (Case-insensitive) */}
-      {['super admin', 'general manager', 'regional manager', 'branch manager'].includes(role) && <ExecutiveView data={data} />}
-      {['finance officer'].includes(role) && <FinanceView data={data} />}
-      {['it officer'].includes(role) && <ITView data={data} />}
-      {['operation officer', 'field officer'].includes(role) && <OperationsView data={data} />}
-      {['help desk'].includes(role) && <SupportView data={data} />}
+      {/* Route the role to specific component (Case-insensitive & Robust) */}
+      {isExecutive && <ExecutiveView data={data} />}
+      {isFinance && <FinanceView data={data} />}
+      {isIT && <ITView data={data} />}
+      {isOperations && <OperationsView data={data} />}
+      {isSupport && <SupportView data={data} />}
+      
+      {/* Fallback View for any staff role not explicitly caught above */}
+      {!isExecutive && !isFinance && !isIT && !isOperations && !isSupport && (
+        <StaffView data={data} role={user?.role} />
+      )}
     </div>
   );
 }

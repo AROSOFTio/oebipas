@@ -116,13 +116,11 @@ exports.getAdminSummary = async (req, res) => {
 exports.getCustomerSummary = async (req, res) => {
   const { customer_id } = req.params;
   try {
-    // Current Bill / Balances (Join records to get units_consumed)
+    // Current Bill / Balances (Using units_consumed already stored in the bills table)
     const [openBills] = await pool.query(`
-      SELECT b.*, COALESCE(cr.units_consumed, 0) as units_consumed 
-      FROM bills b
-      LEFT JOIN consumption_records cr ON b.id = cr.bill_id
-      WHERE b.customer_id = ? AND b.balance_due > 0 
-      ORDER BY b.due_date ASC LIMIT 1
+      SELECT * FROM bills 
+      WHERE customer_id = ? AND balance_due > 0 
+      ORDER BY due_date ASC LIMIT 1
     `, [customer_id]);
     
     // Aggregation of total due

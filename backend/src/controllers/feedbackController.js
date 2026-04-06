@@ -2,6 +2,13 @@ const pool = require('../config/db');
 
 exports.getFeedback = async (req, res) => {
   const { customer_id } = req.query;
+  const user_id = req.user.id;
+  const currentRole = (req.user.role || '').toLowerCase();
+  
+  // High-level roles that can see everything
+  const managerRoles = ['super admin', 'general manager', 'regional manager', 'branch manager', 'help desk'];
+  const isManager = managerRoles.includes(currentRole);
+
   try {
     let query = `
       SELECT f.*, c.full_name as customer_name, c.customer_number, 
@@ -14,19 +21,16 @@ exports.getFeedback = async (req, res) => {
       WHERE 1=1
     `;
     const params = [];
+
     if (customer_id) {
       query += ' AND f.customer_id = ?';
       params.push(customer_id);
     }
     
-    // Whitelist roles that can see ALL tickets (Normalize to lowercase for case-insensitive check)
-    const showAllRoles = ['super admin', 'general manager', 'regional manager', 'branch manager', 'help desk'];
-    const currentRole = (req.user.role || '').toLowerCase();
-
-    if (!showAllRoles.includes(currentRole) && currentRole !== 'customer') {
-      // Officers/Staff only see tickets assigned to them
+    // RBAC: If not a manager, filter by assignee
+    if (!isManager && currentRole !== 'customer') {
       query += ' AND f.assigned_to = ?';
-      params.push(req.user.id);
+      params.push(user_id);
     }
 
     query += ' ORDER BY f.created_at DESC';
@@ -59,19 +63,31 @@ exports.submitFeedback = async (req, res) => {
 exports.assignTicket = async (req, res) => {
   const { id } = req.params;
   const { assigned_to, internal_notes } = req.body;
+  const user_id = req.user.id;
+  const currentRole = (req.user.role || '').toLowerCase();
+  const managerRoles = ['super admin', 'general manager', 'regional manager', 'branch manager', 'help desk'];
+
   try {
     const [[feedback]] = await pool.query('SELECT * FROM feedback WHERE id = ?', [id]);
     if (!feedback) return res.status(404).json({ success: false, message: 'Ticket not found' });
 
+    // Permissions: Only Manager OR current assignee can re-assign/forward
+    const isManager = managerRoles.includes(currentRole);
+    const isAssignee = feedback.assigned_to === user_id;
+
+    if (!isManager && !isAssignee) {
+      return res.status(403).json({ success: false, message: 'Unauthorized to assign this ticket' });
+    }
+
     const [[officer]] = await pool.query('SELECT full_name FROM users WHERE id = ?', [assigned_to]);
-    if (!officer) return res.status(404).json({ success: false, message: 'Officer not found' });
+    if (!officer) return res.status(404).json({ success: false, message: 'New Officer not found' });
 
     await pool.query(
       'UPDATE feedback SET assigned_to = ?, status = "assigned", admin_response = coalesce(?, admin_response) WHERE id = ?',
       [assigned_to, internal_notes || null, id]
     );
 
-    // Notify officer
+    // Notify new officer
     await pool.query(
       'INSERT INTO notifications (user_id, customer_id, type, title, message) VALUES (?, ?, ?, ?, ?)',
       [assigned_to, null, 'ticket_assigned', 'New Ticket Assigned', `Review ticket #${id}: "${feedback.subject}" for resolution.`]
@@ -95,14 +111,29 @@ exports.assignTicket = async (req, res) => {
 exports.updateFeedbackStatus = async (req, res) => {
   const { id } = req.params;
   const { status, admin_response } = req.body;
+  const user_id = req.user.id;
+  const currentRole = (req.user.role || '').toLowerCase();
+  const managerRoles = ['super admin', 'general manager', 'regional manager', 'branch manager', 'help desk'];
+
   try {
+    const [[feedback]] = await pool.query('SELECT * FROM feedback WHERE id = ?', [id]);
+    if (!feedback) return res.status(404).json({ success: false, message: 'Ticket not found' });
+
+    // Permissions: Manager OR Assigned Officer can update status
+    const isManager = managerRoles.includes(currentRole);
+    const isAssignee = feedback.assigned_to === user_id;
+
+    if (!isManager && !isAssignee) {
+       return res.status(403).json({ success: false, message: 'Unauthorized to update this ticket' });
+    }
+
     await pool.query(
       'UPDATE feedback SET status = ?, admin_response = coalesce(?, admin_response) WHERE id = ?',
       [status, admin_response || null, id]
     );
     
-    const [[feedback]] = await pool.query('SELECT customer_id, subject FROM feedback WHERE id = ?', [id]);
-    if (feedback) {
+    // Notify customer on update
+    if (feedback.customer_id) {
       await pool.query(
         'INSERT INTO notifications (customer_id, type, title, message) VALUES (?, ?, ?, ?)',
         [feedback.customer_id, 'support_update', 'Support Ticket Updated', `Your ticket "${feedback.subject}" has been updated to: ${status.replace('_', ' ').toUpperCase()}`]
