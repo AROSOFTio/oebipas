@@ -9,7 +9,7 @@ export default function AuditLogs() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.role !== 'Super Admin') return;
+    if (!['IT Officer', 'General Manager'].includes(user?.role)) return;
     const fetchLogs = async () => {
       try {
         const res = await axiosInstance.get('/audit-logs');
@@ -23,7 +23,7 @@ export default function AuditLogs() {
     fetchLogs();
   }, [user]);
 
-  if (user?.role !== 'Super Admin') {
+  if (!['IT Officer', 'General Manager'].includes(user?.role)) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 shadow-xl shadow-red-100 ring-8 ring-red-50/50">

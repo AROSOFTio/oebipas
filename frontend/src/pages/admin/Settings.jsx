@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 export default function Settings() {
   const { user } = useContext(AuthContext);
-  const isSuperAdmin = user?.role === 'Super Admin';
+  const isSuperAdmin = user?.role === 'IT Officer';
   const [settings, setSettings] = useState({
     company_name: '',
     currency: '',

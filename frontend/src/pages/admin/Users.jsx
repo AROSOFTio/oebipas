@@ -4,19 +4,25 @@ import axiosInstance from '../../utils/axiosInstance';
 import { Shield, UserPlus, Edit, Power, X, Save, Trash2 } from 'lucide-react';
 
 const ROLES = [
-  { id: 1, name: 'Super Admin' },
-  { id: 2, name: 'Billing Officer' },
+  { id: 1, name: 'General Manager' },
+  { id: 2, name: 'Branch Manager' },
   { id: 3, name: 'Finance Officer' },
-  { id: 4, name: 'Customer' },
-  { id: 5, name: 'Viewer' },
+  { id: 4, name: 'IT Officer' },
+  { id: 5, name: 'Operation Officer' },
+  { id: 6, name: 'Field Officer' },
+  { id: 7, name: 'Help Desk' },
+  { id: 8, name: 'Customer' },
 ];
 
 const ROLE_COLORS = {
-  'Super Admin': 'bg-purple-100 text-purple-700',
-  'Billing Officer': 'bg-blue-100 text-blue-700',
+  'General Manager': 'bg-purple-100 text-purple-700',
+  'Branch Manager': 'bg-fuchsia-100 text-fuchsia-700',
   'Finance Officer': 'bg-green-100 text-green-700',
+  'IT Officer': 'bg-blue-100 text-blue-700',
+  'Operation Officer': 'bg-pink-100 text-pink-700',
+  'Field Officer': 'bg-indigo-100 text-indigo-700',
+  'Help Desk': 'bg-orange-100 text-orange-700',
   'Customer': 'bg-gray-100 text-gray-700',
-  'Viewer': 'bg-yellow-100 text-yellow-700',
 };
 
 function Modal({ title, onClose, children }) {

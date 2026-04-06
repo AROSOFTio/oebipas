@@ -21,7 +21,7 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 
 export default function Tariffs() {
   const { user } = useContext(AuthContext);
-  const isSuper = user?.role === 'Super Admin';
+  const isSuper = ['General Manager', 'Operation Officer', 'Finance Officer', 'Branch Manager'].includes(user?.role);
   const [tariffs, setTariffs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

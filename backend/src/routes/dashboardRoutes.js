@@ -5,9 +5,9 @@ const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware
 
 router.use(authenticateToken);
 
-router.get('/admin-summary', restrictTo('General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer', 'Field Officer'), dashboardController.getAdminSummary);
+router.get('/admin-summary', restrictTo('General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer', 'Field Officer', 'IT Officer', 'Help Desk'), dashboardController.getAdminSummary);
 router.get('/customer-summary/:customer_id', dashboardController.getCustomerSummary);
-router.get('/search', restrictTo('General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer', 'Field Officer'), dashboardController.globalSearch);
+router.get('/search', restrictTo('General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer', 'Field Officer', 'IT Officer', 'Help Desk'), dashboardController.globalSearch);
 
 module.exports = router;
 
