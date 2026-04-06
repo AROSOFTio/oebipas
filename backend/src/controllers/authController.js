@@ -23,8 +23,10 @@ exports.register = async (req, res) => {
 
     const userId = result.insertId;
 
-    // Assign generic "Customer" role (ID 4 based on seed)
-    await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, 4]);
+    // Dynamically look up the Customer role ID so it never breaks if IDs shift
+    const [[customerRole]] = await pool.query('SELECT id FROM roles WHERE name = ?', ['Customer']);
+    if (!customerRole) throw new Error('Customer role not found in database');
+    await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, customerRole.id]);
 
     // Auto-create customer profile so they are immediately linked
     const customerNumber = 'CUST-' + Math.floor(100000 + Math.random() * 900000);
