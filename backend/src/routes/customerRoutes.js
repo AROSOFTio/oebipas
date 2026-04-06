@@ -13,11 +13,11 @@ router.use(authenticateToken);
 router.get('/my-profile', customerController.getMyProfile);
 
 // Admins & Billing Officers can manage customers
-router.get('/', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer'), customerController.getCustomers);
-router.post('/', restrictTo('Super Admin', 'Billing Officer'), customerController.createCustomer);
-router.put('/:id', restrictTo('Super Admin', 'Billing Officer'), customerController.updateCustomer);
-router.patch('/:id/status', restrictTo('Super Admin', 'Billing Officer'), customerController.updateCustomerStatus);
-router.delete('/:id', restrictTo('Super Admin', 'Billing Officer'), customerController.deleteCustomer);
+router.get('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.getCustomers);
+router.post('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.createCustomer);
+router.put('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.updateCustomer);
+router.patch('/:id/status', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.updateCustomerStatus);
+router.delete('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.deleteCustomer);
 
 // Required specific nested endpoints
 router.get('/:id/payments', paymentController.getCustomerPayments);
@@ -25,3 +25,4 @@ router.get('/:id/penalties', penaltyController.getCustomerPenalties);
 router.get('/:id/bills', billController.getCustomerBills);
 
 module.exports = router;
+

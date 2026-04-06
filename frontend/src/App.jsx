@@ -65,7 +65,7 @@ function App() {
           </Route>
 
           {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Billing Officer', 'Finance Officer']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer', 'IT Officer', 'Operation Officer', 'Field Officer', 'Help Desk']} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="search" element={<GlobalSearch />} />

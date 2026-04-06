@@ -5,8 +5,9 @@ const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware
 
 router.use(authenticateToken);
 router.get('/', tariffController.getTariffs);
-router.post('/', restrictTo('Super Admin'), tariffController.createTariff);
-router.put('/:id', restrictTo('Super Admin'), tariffController.updateTariff);
-router.delete('/:id', restrictTo('Super Admin'), tariffController.deleteTariff);
+router.post('/', restrictTo('General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer'), tariffController.createTariff);
+router.put('/:id', restrictTo('General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer'), tariffController.updateTariff);
+router.delete('/:id', restrictTo('General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer'), tariffController.deleteTariff);
 
 module.exports = router;
+

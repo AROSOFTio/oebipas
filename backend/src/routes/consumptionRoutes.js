@@ -9,8 +9,9 @@ router.use(authenticateToken);
 router.get('/customer/:customer_id', consumptionController.getCustomerConsumption);
 
 // Admin / Staff operations
-router.get('/', restrictTo('Super Admin', 'Billing Officer'), consumptionController.getConsumptionRecords);
-router.post('/', restrictTo('Super Admin', 'Billing Officer'), consumptionController.createConsumptionRecord);
-router.put('/:id', restrictTo('Super Admin', 'Billing Officer'), consumptionController.updateConsumptionRecord);
+router.get('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), consumptionController.getConsumptionRecords);
+router.post('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), consumptionController.createConsumptionRecord);
+router.put('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), consumptionController.updateConsumptionRecord);
 
 module.exports = router;
+

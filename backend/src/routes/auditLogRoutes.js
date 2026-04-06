@@ -4,8 +4,9 @@ const auditLogController = require('../controllers/auditLogController');
 const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware');
 
 router.use(authenticateToken);
-router.use(restrictTo('Super Admin', 'Viewer'));
+router.use(restrictTo('IT Officer', 'General Manager'));
 
 router.get('/', auditLogController.getAuditLogs);
 
 module.exports = router;
+

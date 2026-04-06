@@ -5,8 +5,9 @@ const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware
 
 router.use(authenticateToken);
 
-router.get('/', restrictTo('Super Admin', 'Billing Officer'), meterController.getMeters);
-router.post('/', restrictTo('Super Admin', 'Billing Officer'), meterController.createMeter);
-router.put('/:id', restrictTo('Super Admin', 'Billing Officer'), meterController.updateMeter);
+router.get('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), meterController.getMeters);
+router.post('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), meterController.createMeter);
+router.put('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), meterController.updateMeter);
 
 module.exports = router;
+

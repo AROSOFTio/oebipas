@@ -7,6 +7,7 @@ router.use(authenticateToken);
 
 router.get('/', notificationController.getNotifications);
 router.post('/mark-read', notificationController.markAsRead);
-router.post('/broadcast', restrictTo('Super Admin', 'Billing Officer'), notificationController.sendBroadcast);
+router.post('/broadcast', restrictTo('General Manager', 'Branch Manager', 'Operation Officer'), notificationController.sendBroadcast);
 
 module.exports = router;
+

@@ -5,9 +5,10 @@ const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware
 
 router.use(authenticateToken);
 
-router.get('/', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer'), penaltyController.getAllPenalties);
-router.post('/apply', restrictTo('Super Admin', 'Billing Officer'), penaltyController.applyBulkPenalties);
+router.get('/', restrictTo('General Manager', 'Branch Manager', 'Finance Officer'), penaltyController.getAllPenalties);
+router.post('/apply', restrictTo('General Manager', 'Branch Manager', 'Finance Officer'), penaltyController.applyBulkPenalties);
 router.get('/customer/:id', penaltyController.getCustomerPenalties);
-router.put('/:id/waive', restrictTo('Super Admin', 'Billing Officer'), penaltyController.waivePenalty);
+router.put('/:id/waive', restrictTo('General Manager', 'Branch Manager', 'Finance Officer'), penaltyController.waivePenalty);
 
 module.exports = router;
+

@@ -5,7 +5,7 @@ const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware
 
 router.use(authenticateToken);
 
-router.get('/', restrictTo('Super Admin'), settingsController.getSettings);
-router.put('/', restrictTo('Super Admin'), settingsController.updateSettings);
+router.get('/', restrictTo('IT Officer', 'General Manager'), settingsController.getSettings);
+router.put('/', restrictTo('IT Officer'), settingsController.updateSettings);
 
 module.exports = router;

@@ -47,17 +47,13 @@ export default function AdminLayout() {
 
 
   // --- SERIOUS ACCESS CONTROL RULES ---
-  const role = user?.role || 'Viewer';
-  const isSuper = role === 'Super Admin';
-  const isBilling = role === 'Billing Officer';
-  const isFinance = role === 'Finance Officer';
-  const isViewer = role === 'Viewer';
-
-  const canShowFieldOps = isSuper || isBilling;
-  const canShowBilling = isSuper || isBilling || isFinance;
-  const canShowFinance = isSuper || isFinance;
-  const canShowReports = isSuper || isFinance || isViewer;
-  const canShowAdmin = isSuper;
+  const role = user?.role || '';
+  
+  const canShowFieldOps = ['General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'].includes(role);
+  const canShowBilling = ['General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer'].includes(role);
+  const canShowFinance = ['General Manager', 'Branch Manager', 'Finance Officer'].includes(role);
+  const canShowReports = ['General Manager', 'Branch Manager', 'Finance Officer'].includes(role);
+  const canShowAdmin = ['General Manager', 'IT Officer'].includes(role);
 
   return (
     <div className="flex h-screen bg-gray-50 relative overflow-hidden font-sans">

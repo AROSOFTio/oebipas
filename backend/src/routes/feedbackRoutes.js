@@ -7,6 +7,7 @@ router.use(authenticateToken);
 
 router.get('/', feedbackController.getFeedback);
 router.post('/', feedbackController.submitFeedback);
-router.patch('/:id/status', restrictTo('Super Admin', 'Billing Officer', 'Finance Officer'), feedbackController.updateFeedbackStatus);
+router.patch('/:id/status', restrictTo('General Manager', 'Branch Manager', 'Help Desk'), feedbackController.updateFeedbackStatus);
 
 module.exports = router;
+
