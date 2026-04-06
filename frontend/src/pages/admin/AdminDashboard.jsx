@@ -325,26 +325,26 @@ export default function AdminDashboard() {
   if (loading) return <div className="p-6">Loading dashboard metrics...</div>;
   if (!data) return <div className="p-6 text-red-500">Failed to load dashboard</div>;
 
-  const role = user?.role;
+  const role = (user?.role || '').toLowerCase();
 
   return (
     <div className="space-y-6 font-sans">
       <div className="flex justify-between items-center mb-6">
          <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">Command Center</h1>
-            <p className="text-gray-500 mt-1 capitalize">{role} Dashboard Overview</p>
+            <p className="text-gray-500 mt-1 capitalize">{user?.role} Dashboard Overview</p>
          </div>
          <div className="bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm text-sm font-medium text-gray-600">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
          </div>
       </div>
       
-      {/* Route the role to specific component */}
-      {['Super Admin', 'General Manager', 'Regional Manager', 'Branch Manager'].includes(role) && <ExecutiveView data={data} />}
-      {['Finance Officer'].includes(role) && <FinanceView data={data} />}
-      {['IT Officer'].includes(role) && <ITView data={data} />}
-      {['Operation Officer', 'Field Officer'].includes(role) && <OperationsView data={data} />}
-      {['Help Desk'].includes(role) && <SupportView data={data} />}
+      {/* Route the role to specific component (Case-insensitive) */}
+      {['super admin', 'general manager', 'regional manager', 'branch manager'].includes(role) && <ExecutiveView data={data} />}
+      {['finance officer'].includes(role) && <FinanceView data={data} />}
+      {['it officer'].includes(role) && <ITView data={data} />}
+      {['operation officer', 'field officer'].includes(role) && <OperationsView data={data} />}
+      {['help desk'].includes(role) && <SupportView data={data} />}
     </div>
   );
 }

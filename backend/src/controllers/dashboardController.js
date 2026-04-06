@@ -65,10 +65,11 @@ exports.getAdminSummary = async (req, res) => {
     `);
     
     // Whitelist roles that see ALL summary (Executive)
-    const managerRoles = ['Super Admin', 'General Manager', 'Regional Manager', 'Branch Manager', 'Help Desk'];
+    const managerRoles = ['super admin', 'general manager', 'regional manager', 'branch manager', 'help desk'];
+    const currentRole = (req.user.role || '').toLowerCase();
     let my_assigned_tickets = [];
     
-    if (!managerRoles.includes(req.user.role)) {
+    if (!managerRoles.includes(currentRole)) {
       // Calculate tasks for Officers/Field staff
       const [tickets] = await pool.query(`
         SELECT f.id, f.subject, f.status, f.category, c.full_name as customer_name, f.created_at

@@ -19,9 +19,11 @@ exports.getFeedback = async (req, res) => {
       params.push(customer_id);
     }
     
-    // Whitelist roles that can see ALL tickets
-    const showAllRoles = ['Super Admin', 'General Manager', 'Regional Manager', 'Branch Manager', 'Help Desk'];
-    if (!showAllRoles.includes(req.user.role) && req.user.role !== 'Customer') {
+    // Whitelist roles that can see ALL tickets (Normalize to lowercase for case-insensitive check)
+    const showAllRoles = ['super admin', 'general manager', 'regional manager', 'branch manager', 'help desk'];
+    const currentRole = (req.user.role || '').toLowerCase();
+
+    if (!showAllRoles.includes(currentRole) && currentRole !== 'customer') {
       // Officers/Staff only see tickets assigned to them
       query += ' AND f.assigned_to = ?';
       params.push(req.user.id);
