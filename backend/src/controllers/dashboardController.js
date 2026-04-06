@@ -11,7 +11,15 @@ exports.getAdminSummary = async (req, res) => {
     
     // IT / Ops KPIs
     const [[{ total_users }]] = await pool.query('SELECT COUNT(*) as total_users FROM users WHERE status = "active"');
+    
+    // Support KPIs
     const [[{ active_tickets }]] = await pool.query('SELECT COUNT(*) as active_tickets FROM feedback WHERE status IN ("new", "in_progress")');
+    const [[{ resolved_tickets }]] = await pool.query('SELECT COUNT(*) as resolved_tickets FROM feedback WHERE status IN ("resolved", "closed")');
+
+    // Field Ops KPIs
+    const [[{ total_connections }]] = await pool.query('SELECT COUNT(*) as total_connections FROM service_connections');
+    const [[{ pending_connections }]] = await pool.query('SELECT COUNT(*) as pending_connections FROM service_connections WHERE status = "pending"');
+    const [[{ meters_installed }]] = await pool.query('SELECT COUNT(*) as meters_installed FROM meters WHERE status = "active"');
 
     // Recent Tables
     const [recent_bills] = await pool.query(`
@@ -28,6 +36,23 @@ exports.getAdminSummary = async (req, res) => {
       SELECT a.id, a.action, a.module, u.full_name as user_name 
       FROM audit_logs a LEFT JOIN users u ON a.user_id = u.id 
       ORDER BY a.created_at DESC LIMIT 5
+    `);
+    const [recent_feedback] = await pool.query(`
+      SELECT f.id, f.subject, f.status, c.full_name as customer_name, f.created_at
+      FROM feedback f JOIN customers c ON f.customer_id = c.id
+      ORDER BY f.created_at DESC LIMIT 5
+    `);
+    const [recent_connections] = await pool.query(`
+      SELECT s.id, s.connection_number, c.full_name as customer_name, s.status, s.connection_date
+      FROM service_connections s JOIN customers c ON s.customer_id = c.id
+      ORDER BY s.created_at DESC LIMIT 5
+    `);
+    const [recent_readings] = await pool.query(`
+      SELECT r.id, m.meter_number, c.full_name as customer_name, r.units_consumed, r.reading_date
+      FROM consumption_records r 
+      JOIN customers c ON r.customer_id = c.id
+      JOIN meters m ON r.meter_id = m.id
+      ORDER BY r.created_at DESC LIMIT 5
     `);
 
     // Chart Data (Last 6 Months Revenue)
@@ -49,11 +74,18 @@ exports.getAdminSummary = async (req, res) => {
           outstanding_balances,
           overdue_accounts,
           total_users,
-          active_tickets
+          active_tickets,
+          resolved_tickets,
+          total_connections,
+          pending_connections,
+          meters_installed
         },
         recent_bills,
         recent_payments,
         recent_audit_logs,
+        recent_feedback,
+        recent_connections,
+        recent_readings,
         revenue_trend
       }
     });
