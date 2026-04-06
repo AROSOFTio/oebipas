@@ -28,8 +28,11 @@ const restrictTo = (...roles) => {
       return res.status(403).json({ success: false, message: 'No role assigned to this user.' });
     }
 
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, message: 'You do not have permission to perform this action.' });
+    const userRole = req.user.role.toLowerCase();
+    const allowedRoles = roles.map(r => r.toLowerCase());
+
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({ success: false, message: `Access denied for role: ${req.user.role}` });
     }
 
     next();
