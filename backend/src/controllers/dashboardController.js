@@ -18,7 +18,7 @@ exports.getAdminSummary = async (req, res) => {
 
     // Field Ops KPIs
     const [[{ total_connections }]] = await pool.query('SELECT COUNT(*) as total_connections FROM service_connections');
-    const [[{ pending_connections }]] = await pool.query('SELECT COUNT(*) as pending_connections FROM service_connections WHERE status = "pending"');
+    const [[{ inactive_connections }]] = await pool.query('SELECT COUNT(*) as inactive_connections FROM service_connections WHERE status = "inactive"');
     const [[{ meters_installed }]] = await pool.query('SELECT COUNT(*) as meters_installed FROM meters WHERE status = "active"');
 
     // Recent Tables
@@ -43,7 +43,7 @@ exports.getAdminSummary = async (req, res) => {
       ORDER BY f.created_at DESC LIMIT 5
     `);
     const [recent_connections] = await pool.query(`
-      SELECT s.id, s.connection_number, c.full_name as customer_name, s.status, s.connection_date
+      SELECT s.id, s.connection_number, c.full_name as customer_name, s.status, s.created_at
       FROM service_connections s JOIN customers c ON s.customer_id = c.id
       ORDER BY s.created_at DESC LIMIT 5
     `);
@@ -77,7 +77,7 @@ exports.getAdminSummary = async (req, res) => {
           active_tickets,
           resolved_tickets,
           total_connections,
-          pending_connections,
+          inactive_connections,
           meters_installed
         },
         recent_bills,

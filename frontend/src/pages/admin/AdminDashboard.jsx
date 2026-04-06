@@ -137,7 +137,7 @@ const OperationsView = ({ data }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard title="Total Connections" value={kpis?.total_connections || 0} icon={<LinkIcon size={24}/>} color="blue" />
-        <KPICard title="Pending Requests" value={kpis?.pending_connections || 0} icon={<Clock size={24}/>} color="orange" subtext="Requires field action" />
+        <KPICard title="Inactive Connections" value={kpis?.inactive_connections || 0} icon={<Clock size={24}/>} color="orange" subtext="Require field attention" />
         <KPICard title="Meters Installed" value={kpis?.meters_installed || 0} icon={<Wrench size={24}/>} color="teal" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
