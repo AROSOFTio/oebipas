@@ -19,8 +19,9 @@ exports.getFeedback = async (req, res) => {
       params.push(customer_id);
     }
     
-    // If the user is an officer (not admin/helpdesk), they should only see tickets assigned to them
-    if (req.user.role !== 'General Manager' && req.user.role !== 'Branch Manager' && req.user.role !== 'Help Desk' && req.user.role !== 'Customer') {
+    // If the user is an officer (not manager or helpdesk), only see assigned tickets
+    const showAllRoles = ['General Manager', 'Branch Manager', 'Help Desk'];
+    if (!showAllRoles.includes(req.user.role) && req.user.role !== 'Customer') {
       query += ' AND f.assigned_to = ?';
       params.push(req.user.id);
     }

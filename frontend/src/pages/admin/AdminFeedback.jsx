@@ -62,7 +62,19 @@ export default function AdminFeedback() {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, createdAt) => {
+    const hours = (new Date() - new Date(createdAt)) / 36e5;
+    const isOverdue = hours > 24 && status !== 'resolved' && status !== 'closed';
+
+    if (isOverdue) {
+      return (
+        <div className="flex flex-col space-y-1">
+          <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-600 animate-pulse text-center shadow-lg shadow-red-500/20">SLA OVERDUE</span>
+          <span className="text-[9px] font-bold text-red-600 text-center uppercase tracking-tighter italic">Age: {Math.floor(hours)}h</span>
+        </div>
+      );
+    }
+
     switch(status) {
       case 'new': return <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-200">NEW</span>;
       case 'assigned': return <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-purple-200">ASSIGNED</span>;
@@ -176,7 +188,7 @@ export default function AdminFeedback() {
                     )}
                   </td>
                   <td className="px-8 py-6 align-top">
-                    {getStatusBadge(f.status)}
+                    {getStatusBadge(f.status, f.created_at)}
                     {f.admin_response && (
                        <div className="mt-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100/50 max-w-[200px]">
                           <p className="text-[10px] font-bold text-blue-600 uppercase mb-1 flex items-center"><Activity size={10} className="mr-1"/> Latest Response</p>
