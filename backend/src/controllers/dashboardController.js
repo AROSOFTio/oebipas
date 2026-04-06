@@ -8,6 +8,10 @@ exports.getAdminSummary = async (req, res) => {
     const [[{ total_payments }]] = await pool.query('SELECT COALESCE(SUM(amount), 0) as total_payments FROM payments WHERE status = "successful"');
     const [[{ outstanding_balances }]] = await pool.query('SELECT COALESCE(SUM(balance_due), 0) as outstanding_balances FROM bills WHERE status IN ("unpaid", "partially_paid", "overdue")');
     const [[{ overdue_accounts }]] = await pool.query('SELECT COUNT(DISTINCT customer_id) as overdue_accounts FROM bills WHERE status = "overdue" AND balance_due > 0');
+    
+    // IT / Ops KPIs
+    const [[{ total_users }]] = await pool.query('SELECT COUNT(*) as total_users FROM users WHERE status = "active"');
+    const [[{ active_tickets }]] = await pool.query('SELECT COUNT(*) as active_tickets FROM feedback WHERE status IN ("new", "in_progress")');
 
     // Recent Tables
     const [recent_bills] = await pool.query(`
@@ -19,6 +23,11 @@ exports.getAdminSummary = async (req, res) => {
       SELECT p.id, p.payment_reference, c.full_name as customer_name, p.amount, p.status 
       FROM payments p JOIN customers c ON p.customer_id = c.id 
       ORDER BY p.created_at DESC LIMIT 5
+    `);
+    const [recent_audit_logs] = await pool.query(`
+      SELECT a.id, a.action, a.module, u.full_name as user_name 
+      FROM audit_logs a LEFT JOIN users u ON a.user_id = u.id 
+      ORDER BY a.created_at DESC LIMIT 5
     `);
 
     // Chart Data (Last 6 Months Revenue)
@@ -38,10 +47,13 @@ exports.getAdminSummary = async (req, res) => {
           total_billed,
           total_payments,
           outstanding_balances,
-          overdue_accounts
+          overdue_accounts,
+          total_users,
+          active_tickets
         },
         recent_bills,
         recent_payments,
+        recent_audit_logs,
         revenue_trend
       }
     });
