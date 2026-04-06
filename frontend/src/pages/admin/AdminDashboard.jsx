@@ -83,8 +83,8 @@ const ITView = ({ data }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard title="Total System Users" value={kpis?.total_users || 0} icon={<Users size={24}/>} color="blue" />
-        <KPICard title="Active Security Sessions" value={kpis?.total_users || 1} icon={<Cpu size={24}/>} color="teal" subtext="Live connections" />
-        <KPICard title="System API Uptime" value="99.9%" icon={<Activity size={24}/>} color="green" subtext="All services operational" />
+        <KPICard title="Automation Engine" value="Active" icon={<Activity size={24}/>} color="green" subtext="Invoicing & Penalties" />
+        <KPICard title="System API Uptime" value="99.9%" icon={<Server size={24}/>} color="teal" subtext="All services operational" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-border p-6 flex flex-col">
@@ -93,7 +93,7 @@ const ITView = ({ data }) => {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-gray-500">
-                  <th className="pb-3 font-medium">User</th>
+                  <th className="pb-3 font-medium">User / Actor</th>
                   <th className="pb-3 font-medium">Action</th>
                   <th className="pb-3 font-medium">Module</th>
                 </tr>
@@ -101,9 +101,19 @@ const ITView = ({ data }) => {
               <tbody>
                 {(recent_audit_logs || []).map(log => (
                   <tr key={log.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                    <td className="py-3 font-medium text-gray-900">{log.user_name || 'System'}</td>
-                    <td className="py-3"><span className="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">{log.action}</span></td>
-                    <td className="py-3 text-gray-600">{log.module}</td>
+                    <td className="py-3 font-medium">
+                      {log.user_name ? (
+                        <span className="text-gray-900">{log.user_name}</span>
+                      ) : (
+                        <span className="text-primary font-black bg-primary/5 px-2 py-0.5 rounded text-[10px] uppercase border border-primary/10">System Auto</span>
+                      )}
+                    </td>
+                    <td className="py-3">
+                      <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-tight ${log.action.includes('AUTO') ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-700'}`}>
+                        {log.action}
+                      </span>
+                    </td>
+                    <td className="py-3 text-gray-600 font-medium">{log.module}</td>
                   </tr>
                 ))}
               </tbody>
@@ -111,18 +121,23 @@ const ITView = ({ data }) => {
           </div>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-border p-5 h-fit">
-          <h2 className="font-bold text-gray-800 mb-4 flex items-center"><Server size={18} className="mr-2"/> Database Health</h2>
+          <h2 className="font-bold text-gray-800 mb-4 flex-col items-center">
+            <div className="flex items-center mb-1"><Cpu size={18} className="mr-2 text-primary"/> Automation Status</div>
+          </h2>
           <div className="space-y-4">
-             <div>
-               <div className="flex justify-between text-xs mb-1"><span className="font-bold text-gray-700">Storage Capacity</span><span className="text-gray-500">45%</span></div>
-               <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{width: '45%'}}></div></div>
+             <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="flex justify-between items-center mb-2">
+                   <span className="text-xs font-bold text-gray-600 uppercase">Penalty Engine</span>
+                   <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                </div>
+                <p className="text-[10px] text-gray-500 leading-relaxed">Running category check intervals for overdue accounts (Res/Com/Ind).</p>
              </div>
-             <div>
-               <div className="flex justify-between text-xs mb-1"><span className="font-bold text-gray-700">Memory Usage</span><span className="text-gray-500">62%</span></div>
-               <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-orange-400 h-2 rounded-full" style={{width: '62%'}}></div></div>
-             </div>
-             <div className="pt-4 mt-2 border-t border-gray-100 text-xs text-gray-500">
-               Last automated backup completely successfully at 00:00 AM today.
+             <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="flex justify-between items-center mb-2">
+                   <span className="text-xs font-bold text-gray-600 uppercase">Auto-Invoicing</span>
+                   <span className="text-[10px] font-black text-primary">INSTANT</span>
+                </div>
+                <p className="text-[10px] text-gray-500 leading-relaxed">Generation triggered immediately upon valid consumption log.</p>
              </div>
           </div>
         </div>

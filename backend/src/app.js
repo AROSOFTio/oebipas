@@ -62,6 +62,14 @@ app.use((req, res, next) => {
   res.status(404).json({ success: false, message: 'Resource not found' });
 });
 
+// Automation Heartbeat (Self-Running Penalty Engine)
+const { applyBulkPenalties } = require('./controllers/penaltyController');
+const AUTOMATION_INTERVAL = 6 * 60 * 60 * 1000; // Every 6 hours
+setInterval(() => {
+  console.log('[Automation] Starting scheduled penalty check...');
+  applyBulkPenalties().catch(err => console.error('[Automation Error]', err));
+}, AUTOMATION_INTERVAL);
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);

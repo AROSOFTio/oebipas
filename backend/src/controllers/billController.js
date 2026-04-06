@@ -17,32 +17,31 @@ const { logAudit } = require('../services/auditLogger');
  * 10. Store bill and itemized bill_items rows
  */
 
-exports.generateBill = async (req, res) => {
-  const { customer_id, meter_id, billing_month, billing_year } = req.body;
-  if (!customer_id || !meter_id || !billing_month || !billing_year) {
-    return res.status(400).json({ success: false, message: 'Missing required fields' });
+exports.internalGenerateBill = async (data, conn = null) => {
+  const { customer_id, meter_id, billing_month, billing_year, userId } = data;
+  
+  let ownsConnection = false;
+  if (!conn) {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    ownsConnection = true;
   }
 
-  const conn = await pool.getConnection();
   try {
-    await conn.beginTransaction();
-
     // 1. Get consumption record
     const [consumptionRows] = await conn.query(
       'SELECT * FROM consumption_records WHERE customer_id = ? AND meter_id = ? AND billing_month = ? AND billing_year = ?',
       [customer_id, meter_id, billing_month, billing_year]
     );
     if (consumptionRows.length === 0) {
-      await conn.rollback();
-      return res.status(404).json({ success: false, message: 'No consumption record found for this period' });
+      throw new Error('No consumption record found for this period');
     }
     const consumption = consumptionRows[0];
 
     // 2. Get customer category
     const [customerRows] = await conn.query('SELECT category FROM customers WHERE id = ?', [customer_id]);
     if (customerRows.length === 0) {
-      await conn.rollback();
-      return res.status(404).json({ success: false, message: 'Customer not found' });
+      throw new Error('Customer not found');
     }
     const { category } = customerRows[0];
 
@@ -52,8 +51,7 @@ exports.generateBill = async (req, res) => {
       [category]
     );
     if (tariffRows.length === 0) {
-      await conn.rollback();
-      return res.status(404).json({ success: false, message: `No active tariff found for ${category} customers` });
+      throw new Error(`No active tariff found for ${category} customers`);
     }
     const tariff = tariffRows[0];
 
@@ -94,15 +92,14 @@ exports.generateBill = async (req, res) => {
     // 10. Check if bill already exists
     const [existingBill] = await conn.query('SELECT id FROM bills WHERE bill_number = ?', [billNumber]);
     if (existingBill.length > 0) {
-      await conn.rollback();
-      return res.status(409).json({ success: false, message: 'Bill already generated for this period' });
+      throw new Error('Bill already generated for this period');
     }
 
     // 11. Insert bill
     const [billResult] = await conn.query(
       `INSERT INTO bills (bill_number, customer_id, meter_id, billing_month, billing_year, units_consumed, energy_charge, service_charge, tax_amount, penalty_amount, previous_balance, total_amount, balance_due, due_date, status, generated_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', ?)`,
-      [billNumber, customer_id, meter_id, billing_month, billing_year, units, energyCharge, serviceCharge, taxAmount, penaltyAmount, previousBalance, totalAmount, totalAmount, dueDate.toISOString().split('T')[0], req.user.id]
+      [billNumber, customer_id, meter_id, billing_month, billing_year, units, energyCharge, serviceCharge, taxAmount, penaltyAmount, previousBalance, totalAmount, totalAmount, dueDate.toISOString().split('T')[0], userId]
     );
     const billId = billResult.insertId;
 
@@ -126,26 +123,43 @@ exports.generateBill = async (req, res) => {
       [customer_id, 'bill_generated', 'New Bill Generated', `Your new bill ${billNumber} for UGX ${totalAmount} has been generated. Due on ${dueDate.toISOString().split('T')[0]}.`, 'pending', new Date()]
     );
 
-    await conn.commit();
-    await logAudit(req.user.id, 'GENERATE_BILL', 'Bills', billId, `Generated ${billNumber} - UGX ${totalAmount}`);
+    if (ownsConnection) await conn.commit();
+    await logAudit(userId, 'GENERATE_BILL', 'Bills', billId, `Generated ${billNumber} - UGX ${totalAmount}`);
 
+    return {
+      bill_id: billId,
+      bill_number: billNumber,
+      total_amount: totalAmount,
+      due_date: dueDate.toISOString().split('T')[0],
+      breakdown: { units, energyCharge, serviceCharge, taxAmount, penaltyAmount, previousBalance, totalAmount }
+    };
+  } catch (error) {
+    if (ownsConnection) await conn.rollback();
+    throw error;
+  } finally {
+    if (ownsConnection) conn.release();
+  }
+};
+
+exports.generateBill = async (req, res) => {
+  const { customer_id, meter_id, billing_month, billing_year } = req.body;
+  if (!customer_id || !meter_id || !billing_month || !billing_year) {
+    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  }
+
+  try {
+    const result = await exports.internalGenerateBill({ ...req.body, userId: req.user.id });
     res.status(201).json({
       success: true,
       message: 'Bill generated successfully',
-      data: {
-        bill_id: billId,
-        bill_number: billNumber,
-        total_amount: totalAmount,
-        due_date: dueDate.toISOString().split('T')[0],
-        breakdown: { units, energyCharge, serviceCharge, taxAmount, penaltyAmount, previousBalance, totalAmount }
-      }
+      data: result
     });
   } catch (error) {
-    await conn.rollback();
     console.error(error);
-    res.status(500).json({ success: false, message: 'Bill generation failed', error: error.message });
-  } finally {
-    conn.release();
+    res.status(500).json({ 
+      success: false, 
+      message: error.message.includes('No consumption') || error.message.includes('already generated') ? error.message : 'Bill generation failed' 
+    });
   }
 };
 

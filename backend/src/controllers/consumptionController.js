@@ -34,6 +34,8 @@ exports.getCustomerConsumption = async (req, res) => {
   }
 };
 
+const { internalGenerateBill } = require('./billController');
+
 exports.createConsumptionRecord = async (req, res) => {
   const { customer_id, meter_id, billing_month, billing_year, units_consumed, reading_date } = req.body;
   
@@ -41,17 +43,51 @@ exports.createConsumptionRecord = async (req, res) => {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
   }
 
+  const conn = await pool.getConnection();
   try {
-    const [result] = await pool.query(
+    await conn.beginTransaction();
+
+    // 1. Insert consumption record
+    const [result] = await conn.query(
       'INSERT INTO consumption_records (customer_id, meter_id, billing_month, billing_year, units_consumed, reading_date, entered_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [customer_id, meter_id, billing_month, billing_year, units_consumed, reading_date, req.user.id]
     );
 
     await logAudit(req.user.id, 'CREATE_CONSUMPTION', 'Consumption', result.insertId, `Logged ${units_consumed} units for meter ${meter_id}`);
-    res.status(201).json({ success: true, message: 'Consumption recorded successfully', data: { id: result.insertId } });
+
+    // 2. AUTO-GENERATE BILL IMMEDIATELY
+    let billSummary = null;
+    try {
+      billSummary = await internalGenerateBill({
+        customer_id,
+        meter_id,
+        billing_month,
+        billing_year,
+        userId: req.user.id
+      }, conn);
+    } catch (billError) {
+      // If bill generation fails (e.g. no tariff found), we fail the whole transaction 
+      // because the user wants "Automated Invoice Generation" - no reading without a bill.
+      console.error('Auto-bill error:', billError);
+      throw new Error(`Consumption logged but invoice auto-generation failed: ${billError.message}`);
+    }
+
+    await conn.commit();
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Consumption recorded and Invoice generated automatically', 
+      data: { 
+        consumption_id: result.insertId,
+        bill: billSummary
+      } 
+    });
   } catch (error) {
+    await conn.rollback();
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res.status(500).json({ success: false, message: error.message || 'Internal server error' });
+  } finally {
+    conn.release();
   }
 };
 

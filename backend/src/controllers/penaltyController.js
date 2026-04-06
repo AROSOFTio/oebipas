@@ -35,70 +35,84 @@ exports.getCustomerPenalties = async (req, res) => {
 };
 
 exports.applyBulkPenalties = async (req, res) => {
-  // Logic to apply penalties to all overdue bills
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
 
-    // Find all overdue bills without an active penalty
-    const [overdueBills] = await conn.query(`
-      SELECT b.id, b.customer_id, b.balance_due, b.due_date, c.category
+    // Find all unpaid/partially_paid bills (we check if balance > threshold)
+    // We only apply if NOT already penalized (or we can apply once per month, but user says "Autoapplied")
+    const [eligibleBills] = await conn.query(`
+      SELECT b.id, b.customer_id, b.balance_due, b.due_date, c.category, c.full_name as customer_name
       FROM bills b
       JOIN customers c ON b.customer_id = c.id
-      WHERE b.status = 'unpaid' AND b.due_date < ? 
-      AND b.id NOT IN (SELECT bill_id FROM penalties WHERE status = 'active')
-    `, [today]);
+      WHERE b.status IN ('unpaid', 'partially_paid', 'overdue')
+      AND b.id NOT IN (SELECT bill_id FROM penalties WHERE status = 'active' AND applied_date > DATE_SUB(NOW(), INTERVAL 30 DAY))
+    `);
 
     let appliedCount = 0;
 
-    for (const bill of overdueBills) {
-      // Get tariff rules for category
-      const [tariffRows] = await conn.query(
-        'SELECT penalty_type, penalty_value FROM tariff_rules WHERE customer_category = ? AND status = "active" ORDER BY effective_from DESC LIMIT 1',
-        [bill.category]
-      );
+    for (const bill of eligibleBills) {
+      let shouldApply = false;
+      const daysOverdue = Math.floor((today - new Date(bill.due_date)) / (1000 * 60 * 60 * 24));
+      
+      const category = bill.category.toLowerCase();
+      const balance = parseFloat(bill.balance_due);
 
-      if (tariffRows.length > 0) {
-        const tariff = tariffRows[0];
-        let penaltyAmount = 0;
+      if (category === 'residential' && balance >= 100000 && daysOverdue > 7) {
+        shouldApply = true;
+      } else if (category === 'commercial' && balance >= 250000 && daysOverdue > 14) {
+        shouldApply = true;
+      } else if (category === 'industrial' && balance >= 1500000 && daysOverdue > 30) {
+        shouldApply = true;
+      }
 
-        if (tariff.penalty_type === 'fixed') {
-          penaltyAmount = parseFloat(tariff.penalty_value);
-        } else {
-          penaltyAmount = parseFloat((bill.balance_due * parseFloat(tariff.penalty_value) / 100).toFixed(2));
-        }
+      if (shouldApply) {
+        // Get tariff for penalty calculation
+        const [tariffRows] = await conn.query(
+          'SELECT penalty_type, penalty_value FROM tariff_rules WHERE customer_category = ? AND status = "active" ORDER BY effective_from DESC LIMIT 1',
+          [bill.category]
+        );
 
-        if (penaltyAmount > 0) {
-          // Insert penalty
-          await conn.query(
-            `INSERT INTO penalties (bill_id, customer_id, penalty_type, penalty_amount, reason, applied_date, status)
-             VALUES (?, ?, ?, ?, ?, ?, 'active')`,
-            [bill.id, bill.customer_id, tariff.penalty_type, penaltyAmount, 'Late payment fee', today]
-          );
+        if (tariffRows.length > 0) {
+          const tariff = tariffRows[0];
+          let penaltyAmount = (tariff.penalty_type === 'fixed') 
+            ? parseFloat(tariff.penalty_value) 
+            : parseFloat((balance * parseFloat(tariff.penalty_value) / 100).toFixed(2));
 
-          // Update bill status to overdue and increment balance_due & penalty_amount slightly if we want it embedded, 
-          // but our schema has penalty_amount in the bill generation. Let's add it to total_amount & balance_due.
-          await conn.query(
-            `UPDATE bills SET penalty_amount = penalty_amount + ?, total_amount = total_amount + ?, balance_due = balance_due + ?, status = 'overdue' WHERE id = ?`,
-            [penaltyAmount, penaltyAmount, penaltyAmount, bill.id]
-          );
-          appliedCount++;
+          if (penaltyAmount > 0) {
+            await conn.query(
+              `INSERT INTO penalties (bill_id, customer_id, penalty_type, penalty_amount, reason, applied_date, status)
+               VALUES (?, ?, ?, ?, ?, ?, 'active')`,
+              [bill.id, bill.customer_id, tariff.penalty_type, penaltyAmount, `Auto-applied penalty for ${bill.category} (Overdue ${daysOverdue} days)`, todayStr]
+            );
+
+            await conn.query(
+              `UPDATE bills SET penalty_amount = penalty_amount + ?, total_amount = total_amount + ?, balance_due = balance_due + ?, status = 'overdue' WHERE id = ?`,
+              [penaltyAmount, penaltyAmount, penaltyAmount, bill.id]
+            );
+            appliedCount++;
+          }
         }
       }
     }
 
     await conn.commit();
-
     if (appliedCount > 0) {
-      await logAudit(req.user.id, 'APPLY_PENALTIES', 'Penalties', null, `Applied ${appliedCount} late payment penalties.`);
+      const actorId = req.user ? req.user.id : 1; // 1 = System/Admin if automated
+      await logAudit(actorId, 'AUTO_APPLY_PENALTIES', 'Penalties', null, `System applied ${appliedCount} automated late payment penalties.`);
     }
 
-    res.status(200).json({ success: true, message: `Successfully applied ${appliedCount} penalties.` });
+    if (res) {
+      res.status(200).json({ success: true, message: `Successfully processed automation. Applied ${appliedCount} penalties.` });
+    }
+    return appliedCount;
   } catch (error) {
     await conn.rollback();
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error while applying penalties' });
+    console.error('Penalty Engine Error:', error);
+    if (res) res.status(500).json({ success: false, message: 'Internal server error while applying penalties' });
+    throw error;
   } finally {
     conn.release();
   }
