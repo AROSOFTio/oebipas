@@ -10,7 +10,7 @@ export default function CustomerFeedback() {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profileError, setProfileError] = useState('');
-  const [form, setForm] = useState({ subject: '', message: '' });
+  const [form, setForm] = useState({ category: 'General Inquiry', subject: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -52,10 +52,11 @@ export default function CustomerFeedback() {
     try {
       await axiosInstance.post('/feedback', {
         customer_id: customerId,
+        category: form.category,
         subject: form.subject,
         message: form.message
       });
-      setForm({ subject: '', message: '' });
+      setForm({ category: 'General Inquiry', subject: '', message: '' });
       setSubmitSuccess(true);
       fetchFeedback(customerId);
       // Clear success message after 5 seconds
