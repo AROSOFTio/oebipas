@@ -160,12 +160,15 @@ export default function CustomerDashboard() {
              </div>
 
              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-               {current_bill ? (
-                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-                   <p className="text-[10px] text-blue-200 font-bold uppercase tracking-wider mb-1 opacity-70">Latest Invoice</p>
-                   <p className="text-lg font-bold">{current_bill.bill_number}</p>
-                   <p className="text-xs text-blue-300">Due: <strong>{new Date(current_bill.due_date).toLocaleDateString()}</strong></p>
-                 </div>
+                {current_bill ? (
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
+                    <p className="text-[10px] text-blue-200 font-bold uppercase tracking-wider mb-1 opacity-70">Latest Invoice</p>
+                    <p className="text-lg font-bold">{current_bill.bill_number}</p>
+                    <div className="flex justify-between items-center mt-1">
+                      <p className="text-xs text-blue-300">Due: <strong>{new Date(current_bill.due_date).toLocaleDateString()}</strong></p>
+                      <span className="text-[10px] bg-primary/20 text-white px-2 py-0.5 rounded font-black uppercase tracking-tighter">Usage: {current_bill.units_consumed} kWh</span>
+                    </div>
+                  </div>
                ) : (
                  <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 backdrop-blur-md">
                    <p className="text-[10px] text-green-300 font-bold uppercase tracking-wider mb-1">Status</p>

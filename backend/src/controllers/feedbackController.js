@@ -19,9 +19,10 @@ exports.getFeedback = async (req, res) => {
       params.push(customer_id);
     }
     
-    // If the user is an officer (not manager or helpdesk), only see assigned tickets
-    const showAllRoles = ['General Manager', 'Branch Manager', 'Help Desk'];
+    // Whitelist roles that can see ALL tickets
+    const showAllRoles = ['Super Admin', 'General Manager', 'Regional Manager', 'Branch Manager', 'Help Desk'];
     if (!showAllRoles.includes(req.user.role) && req.user.role !== 'Customer') {
+      // Officers/Staff only see tickets assigned to them
       query += ' AND f.assigned_to = ?';
       params.push(req.user.id);
     }
@@ -57,6 +58,9 @@ exports.assignTicket = async (req, res) => {
   const { id } = req.params;
   const { assigned_to, internal_notes } = req.body;
   try {
+    const [[feedback]] = await pool.query('SELECT * FROM feedback WHERE id = ?', [id]);
+    if (!feedback) return res.status(404).json({ success: false, message: 'Ticket not found' });
+
     const [[officer]] = await pool.query('SELECT full_name FROM users WHERE id = ?', [assigned_to]);
     if (!officer) return res.status(404).json({ success: false, message: 'Officer not found' });
 

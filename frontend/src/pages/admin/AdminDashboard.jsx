@@ -340,7 +340,7 @@ export default function AdminDashboard() {
       </div>
       
       {/* Route the role to specific component */}
-      {['General Manager', 'Branch Manager'].includes(role) && <ExecutiveView data={data} />}
+      {['Super Admin', 'General Manager', 'Regional Manager', 'Branch Manager'].includes(role) && <ExecutiveView data={data} />}
       {['Finance Officer'].includes(role) && <FinanceView data={data} />}
       {['IT Officer'].includes(role) && <ITView data={data} />}
       {['Operation Officer', 'Field Officer'].includes(role) && <OperationsView data={data} />}

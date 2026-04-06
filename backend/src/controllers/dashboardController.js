@@ -63,11 +63,13 @@ exports.getAdminSummary = async (req, res) => {
       GROUP BY DATE_FORMAT(payment_date, '%b %Y'), YEAR(payment_date), MONTH(payment_date)
       ORDER BY YEAR(payment_date), MONTH(payment_date)
     `);
-
-    // My Assigned Tickets (if Officer)
+    
+    // Whitelist roles that see ALL summary (Executive)
+    const managerRoles = ['Super Admin', 'General Manager', 'Regional Manager', 'Branch Manager', 'Help Desk'];
     let my_assigned_tickets = [];
-    const officerRoles = ['IT Officer', 'Operation Officer', 'Field Officer', 'Finance Officer'];
-    if (officerRoles.includes(req.user.role)) {
+    
+    if (!managerRoles.includes(req.user.role)) {
+      // Calculate tasks for Officers/Field staff
       const [tickets] = await pool.query(`
         SELECT f.id, f.subject, f.status, f.category, c.full_name as customer_name, f.created_at
         FROM feedback f JOIN customers c ON f.customer_id = c.id
@@ -113,11 +115,13 @@ exports.getAdminSummary = async (req, res) => {
 exports.getCustomerSummary = async (req, res) => {
   const { customer_id } = req.params;
   try {
-    // Current Bill / Balances
+    // Current Bill / Balances (Join records to get units_consumed)
     const [openBills] = await pool.query(`
-      SELECT * FROM bills 
-      WHERE customer_id = ? AND balance_due > 0 
-      ORDER BY due_date ASC LIMIT 1
+      SELECT b.*, COALESCE(cr.units_consumed, 0) as units_consumed 
+      FROM bills b
+      LEFT JOIN consumption_records cr ON b.id = cr.bill_id
+      WHERE b.customer_id = ? AND b.balance_due > 0 
+      ORDER BY b.due_date ASC LIMIT 1
     `, [customer_id]);
     
     // Aggregation of total due
