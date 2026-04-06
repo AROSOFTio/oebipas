@@ -2,7 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
-export default function ProtectedRoute({ allowedRoles }) {
+export default function ProtectedRoute({ allowedRoles, children }) {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) {
@@ -18,8 +18,9 @@ export default function ProtectedRoute({ allowedRoles }) {
     if (user.role === 'Customer') {
       return <Navigate to="/customer" replace />;
     }
+    // For unauthorized admin roles trying to access specific sub-routes, redirect to /admin base dashboard
     return <Navigate to="/admin" replace />;
   }
 
-  return <Outlet />;
+  return children ? children : <Outlet />;
 }

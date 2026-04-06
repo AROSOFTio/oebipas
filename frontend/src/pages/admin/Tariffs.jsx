@@ -191,7 +191,7 @@ export default function Tariffs() {
                       </button>
                     </div>
                   ) : (
-                    <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">Locked</span>
+                    null
                   )}
                 </td>
               </tr>

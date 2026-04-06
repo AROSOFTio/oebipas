@@ -69,24 +69,33 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="search" element={<GlobalSearch />} />
-              <Route path="users" element={<Users />} />
               <Route path="feedback" element={<AdminFeedback />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="audit-logs" element={<AuditLogs />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="customers" element={<Customers />} />
-              <Route path="customers/:id" element={<CustomerDetails />} />
-              <Route path="connections" element={<Connections />} />
-              <Route path="meters" element={<Meters />} />
-              <Route path="consumption" element={<Consumption />} />
-              <Route path="consumption/:id" element={<ConsumptionDetails />} />
-              <Route path="tariffs" element={<Tariffs />} />
-              <Route path="bills" element={<Bills />} />
-              <Route path="bills/:id" element={<BillDetails />} />
-              <Route path="penalties" element={<Penalties />} />
-              <Route path="payments" element={<Payments />} />
-              <Route path="payments/:id" element={<PaymentDetails />} />
-              <Route path="receipts" element={<Receipts />} />
+              
+              {/* Field Operations */}
+              <Route path="customers" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer']}><Customers /></ProtectedRoute>} />
+              <Route path="customers/:id" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer']}><CustomerDetails /></ProtectedRoute>} />
+              <Route path="connections" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer']}><Connections /></ProtectedRoute>} />
+              <Route path="meters" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer']}><Meters /></ProtectedRoute>} />
+              <Route path="consumption" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer']}><Consumption /></ProtectedRoute>} />
+              <Route path="consumption/:id" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer']}><ConsumptionDetails /></ProtectedRoute>} />
+
+              {/* Financial Engine */}
+              <Route path="tariffs" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer']}><Tariffs /></ProtectedRoute>} />
+              <Route path="bills" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer']}><Bills /></ProtectedRoute>} />
+              <Route path="bills/:id" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer']}><BillDetails /></ProtectedRoute>} />
+              <Route path="penalties" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer', 'Operation Officer']}><Penalties /></ProtectedRoute>} />
+              
+              <Route path="payments" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer']}><Payments /></ProtectedRoute>} />
+              <Route path="payments/:id" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer']}><PaymentDetails /></ProtectedRoute>} />
+              <Route path="receipts" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer']}><Receipts /></ProtectedRoute>} />
+              
+              {/* Analytics & Support */}
+              <Route path="reports" element={<ProtectedRoute allowedRoles={['General Manager', 'Branch Manager', 'Finance Officer']}><Reports /></ProtectedRoute>} />
+              
+              {/* Administration */}
+              <Route path="users" element={<ProtectedRoute allowedRoles={['General Manager', 'IT Officer']}><Users /></ProtectedRoute>} />
+              <Route path="audit-logs" element={<ProtectedRoute allowedRoles={['General Manager', 'IT Officer']}><AuditLogs /></ProtectedRoute>} />
+              <Route path="settings" element={<ProtectedRoute allowedRoles={['General Manager', 'IT Officer']}><Settings /></ProtectedRoute>} />
             </Route>
           </Route>
 

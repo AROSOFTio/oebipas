@@ -69,15 +69,7 @@ export default function Settings() {
         </div>
       </div>
 
-      {!isSuperAdmin && (
-         <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl flex items-start space-x-3">
-           <AlertTriangle size={20} className="mt-0.5" />
-           <div>
-             <h3 className="font-bold">Read-Only Mode</h3>
-             <p className="text-sm">You do not have Super Admin privileges to modify the core system parameters.</p>
-           </div>
-         </div>
-      )}
+
 
       <div className="bg-white rounded-xl shadow-sm border border-border p-6">
         <form onSubmit={handleSave} className="space-y-6">
