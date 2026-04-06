@@ -11,6 +11,8 @@ export default function CustomerDashboard() {
   const [data, setData] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isLinked, setIsLinked] = useState(false);
   const [period, setPeriod] = useState('6m');
   const [consumptionTrend, setConsumptionTrend] = useState([]);
 
