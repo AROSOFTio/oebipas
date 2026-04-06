@@ -15,6 +15,9 @@ export default function AdminLayout() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(location.pathname.includes('/admin/reports'));
   const [fieldOpsOpen, setFieldOpsOpen] = useState(['/admin/customers', '/admin/connections', '/admin/meters', '/admin/consumption'].includes(location.pathname));
   const [financeOpen, setFinanceOpen] = useState(['/admin/tariffs', '/admin/bills', '/admin/payments', '/admin/receipts', '/admin/penalties'].includes(location.pathname));
@@ -44,6 +47,32 @@ export default function AdminLayout() {
     ? 'bg-primary text-white shadow-md font-bold' 
     : 'text-blue-100/70 hover:bg-white/5 hover:text-white font-medium'
   } ${isCollapsed ? 'justify-center mx-2' : ''}`;
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axiosInstance.get('/notifications');
+      setNotifications(res.data.data);
+      setUnreadCount(res.data.unread_count);
+    } catch (err) {
+      console.error("Failed to fetch notifications");
+    }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await axiosInstance.post('/notifications/mark-read', {});
+      setUnreadCount(0);
+      fetchNotifications();
+    } catch (err) {
+      console.error("Failed to mark notifications as read");
+    }
+  };
+
+  useState(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
 
   // --- SERIOUS ACCESS CONTROL RULES ---
@@ -254,9 +283,48 @@ export default function AdminLayout() {
             </div>
 
             {/* Notification */}
-            <div className="relative p-2 text-gray-400 cursor-pointer hover:bg-gray-100 rounded-full transition-colors ml-2">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+            <div className="relative ml-2">
+              <div 
+                className={`p-2 text-gray-400 cursor-pointer hover:bg-gray-100 rounded-full transition-colors ${showNotifications ? 'bg-gray-100 text-primary' : ''}`}
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full ring-2 ring-white animate-bounce">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              
+              {showNotifications && (
+                <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Internal Alerts</h3>
+                    <button onClick={markAllRead} className="text-[10px] font-black text-primary hover:underline uppercase">Clear All</button>
+                  </div>
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map(n => (
+                        <div key={n.id} className={`p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors ${n.status === 'pending' ? 'bg-blue-50/30' : ''}`}>
+                          <div className="flex items-start space-x-3">
+                            <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${n.status === 'pending' ? 'bg-primary animate-pulse' : 'bg-gray-300'}`}></div>
+                            <div>
+                              <p className="text-xs font-bold text-gray-900">{n.title}</p>
+                              <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">{n.message}</p>
+                              <p className="text-[9px] text-gray-400 mt-2 font-medium">{new Date(n.created_at).toLocaleString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-8 text-center text-gray-400 text-xs italic">No new alerts</div>
+                    )}
+                  </div>
+                  <div className="p-3 bg-gray-50 text-center border-t border-gray-100">
+                     <Link to="/admin/feedback" onClick={() => setShowNotifications(false)} className="text-[10px] font-black text-gray-500 hover:text-primary uppercase tracking-widest transition-colors">View All Support Tasks</Link>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Profile */}

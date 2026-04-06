@@ -40,6 +40,7 @@ const FinanceView = ({ data }) => {
         <KPICard title="Total Billed" value={`UGX ${Number(kpis?.total_billed || 0).toLocaleString()}`} icon={<FileText size={24}/>} color="purple" />
         <KPICard title="Total Received" value={`UGX ${Number(kpis?.total_payments || 0).toLocaleString()}`} icon={<CreditCard size={24}/>} color="green" />
         <KPICard title="Outstanding Bal" value={`UGX ${Number(kpis?.outstanding_balances || 0).toLocaleString()}`} icon={<AlertCircle size={24}/>} color="red" subtext={`${kpis?.overdue_accounts || 0} accounts overdue`} />
+        {kpis?.my_active_tasks > 0 && <KPICard title="My Active Tasks" value={kpis.my_active_tasks} icon={<MessageSquare size={24}/>} color="orange" subtext="Assigned to you" />}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-border p-6 flex flex-col">
@@ -84,7 +85,7 @@ const ITView = ({ data }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard title="Total System Users" value={kpis?.total_users || 0} icon={<Users size={24}/>} color="blue" />
         <KPICard title="Automation Engine" value="Active" icon={<Activity size={24}/>} color="green" subtext="Invoicing & Penalties" />
-        <KPICard title="System API Uptime" value="99.9%" icon={<Server size={24}/>} color="teal" subtext="All services operational" />
+        <KPICard title="My Active Tasks" value={kpis?.my_active_tasks || 0} icon={<MessageSquare size={24}/>} color="orange" subtext="Action required" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-border p-6 flex flex-col">
@@ -141,6 +142,42 @@ const ITView = ({ data }) => {
              </div>
           </div>
         </div>
+
+        {/* My Tasks Section */}
+        {data.my_assigned_tickets?.length > 0 && (
+          <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-border p-6 font-sans mt-6">
+            <h2 className="font-bold text-gray-800 mb-4 flex items-center text-orange-600 uppercase tracking-widest text-xs">
+              <MessageSquare size={16} className="mr-2"/> My Pending Tasks ({data.my_assigned_tickets.length})
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-gray-500 uppercase text-[10px] font-black">
+                    <th className="pb-3">Ticket ID</th>
+                    <th className="pb-3">Customer</th>
+                    <th className="pb-3">Subject</th>
+                    <th className="pb-3">Category</th>
+                    <th className="pb-3">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.my_assigned_tickets.map(t => (
+                    <tr key={t.id} className="border-b border-gray-50 last:border-0 hover:bg-orange-50/30 transition-all">
+                      <td className="py-4 font-black text-gray-400 text-xs">#{t.id.toString().padStart(5, '0')}</td>
+                      <td className="py-4 font-bold text-gray-900">{t.customer_name}</td>
+                      <td className="py-4 text-gray-700">{t.subject}</td>
+                      <td className="py-4"><span className="text-[10px] px-2 py-1 bg-gray-100 rounded-md font-bold uppercase">{t.category}</span></td>
+                      <td className="py-4 text-gray-400 text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-6 pt-4 border-t border-gray-50 text-right">
+              <a href="/admin/feedback" className="text-xs font-black text-primary hover:underline uppercase tracking-widest">Go to Ticket Command Center →</a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -153,7 +190,11 @@ const OperationsView = ({ data }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard title="Total Connections" value={kpis?.total_connections || 0} icon={<LinkIcon size={24}/>} color="blue" />
         <KPICard title="Inactive Connections" value={kpis?.inactive_connections || 0} icon={<Clock size={24}/>} color="orange" subtext="Require field attention" />
-        <KPICard title="Meters Installed" value={kpis?.meters_installed || 0} icon={<Wrench size={24}/>} color="teal" />
+        {kpis?.my_active_tasks > 0 ? (
+          <KPICard title="My Active Tasks" value={kpis.my_active_tasks} icon={<MessageSquare size={24}/>} color="red" subtext="Action required" />
+        ) : (
+          <KPICard title="Meters Installed" value={kpis?.meters_installed || 0} icon={<Wrench size={24}/>} color="teal" />
+        )}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-border p-6 font-sans">

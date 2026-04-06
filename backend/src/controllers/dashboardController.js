@@ -64,6 +64,19 @@ exports.getAdminSummary = async (req, res) => {
       ORDER BY YEAR(payment_date), MONTH(payment_date)
     `);
 
+    // My Assigned Tickets (if Officer)
+    let my_assigned_tickets = [];
+    const officerRoles = ['IT Officer', 'Operation Officer', 'Field Officer', 'Finance Officer'];
+    if (officerRoles.includes(req.user.role)) {
+      const [tickets] = await pool.query(`
+        SELECT f.id, f.subject, f.status, f.category, c.full_name as customer_name, f.created_at
+        FROM feedback f JOIN customers c ON f.customer_id = c.id
+        WHERE f.assigned_to = ? AND f.status NOT IN ('resolved', 'closed')
+        ORDER BY f.created_at DESC
+      `, [req.user.id]);
+      my_assigned_tickets = tickets;
+    }
+
     res.status(200).json({
       success: true,
       data: {
@@ -78,7 +91,8 @@ exports.getAdminSummary = async (req, res) => {
           resolved_tickets,
           total_connections,
           inactive_connections,
-          meters_installed
+          meters_installed,
+          my_active_tasks: my_assigned_tickets.length
         },
         recent_bills,
         recent_payments,
@@ -86,7 +100,8 @@ exports.getAdminSummary = async (req, res) => {
         recent_feedback,
         recent_connections,
         recent_readings,
-        revenue_trend
+        revenue_trend,
+        my_assigned_tickets
       }
     });
   } catch (error) {

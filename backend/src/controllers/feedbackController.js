@@ -65,12 +65,17 @@ exports.assignTicket = async (req, res) => {
       [assigned_to, internal_notes || null, id]
     );
 
+    // Notify officer
+    await pool.query(
+      'INSERT INTO notifications (user_id, customer_id, type, title, message) VALUES (?, ?, ?, ?, ?)',
+      [assigned_to, null, 'ticket_assigned', 'New Ticket Assigned', `Review ticket #${id}: "${feedback.subject}" for resolution.`]
+    );
+
     // Notify customer
-    const [[feedback]] = await pool.query('SELECT customer_id, subject FROM feedback WHERE id = ?', [id]);
-    if (feedback) {
+    if (feedback.customer_id) {
       await pool.query(
-        'INSERT INTO notifications (customer_id, type, title, message) VALUES (?, ?, ?, ?)',
-        [feedback.customer_id, 'support_assigned', 'Ticket Assigned', `Your ticket "${feedback.subject}" has been assigned to ${officer.full_name} for resolution.`]
+        'INSERT INTO notifications (user_id, customer_id, type, title, message) VALUES (?, ?, ?, ?, ?)',
+        [null, feedback.customer_id, 'support_assigned', 'Support Ticket Assigned', `Your ticket "${feedback.subject}" has been assigned to ${officer.full_name} for resolution.`]
       );
     }
 

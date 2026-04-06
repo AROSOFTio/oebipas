@@ -247,7 +247,8 @@ CREATE TABLE IF NOT EXISTS receipts (
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  customer_id INT NOT NULL,
+  user_id INT NULL,
+  customer_id INT NULL,
   type VARCHAR(50),
   title VARCHAR(100) NOT NULL,
   message TEXT NOT NULL,
@@ -256,6 +257,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   sent_at DATETIME,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
