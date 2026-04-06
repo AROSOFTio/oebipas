@@ -58,7 +58,9 @@ exports.createCustomer = async (req, res) => {
         [full_name, username, email, defaultPassword, phone, 'active']
       );
       userId = userResult.insertId;
-      await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, 4]); // Customer role
+      // Dynamically lookup Customer role
+      const [[customerRole]] = await pool.query('SELECT id FROM roles WHERE name = ?', ['Customer']);
+      await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, customerRole.id]);
     }
 
     const [result] = await pool.query(
@@ -137,6 +139,47 @@ exports.deleteCustomer = async (req, res) => {
     await logAudit(req.user.id, 'DELETE_CUSTOMER', 'Customers', id, 'Deleted customer and their user account');
 
     res.status(200).json({ success: true, message: 'Customer completely deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+exports.getCustomerById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query(`
+      SELECT c.id, c.customer_number, c.full_name, c.email, c.phone, c.address, c.category, c.status, c.created_at
+      FROM customers c WHERE c.id = ? LIMIT 1
+    `, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Fetch meters and connections
+    const [connections] = await pool.query(`
+      SELECT s.id, s.connection_number, s.connection_type, s.location, s.status
+      FROM service_connections s WHERE s.customer_id = ?
+    `, [id]);
+
+    const [meters] = await pool.query(`
+      SELECT m.id, m.meter_number, m.installation_date, m.status
+      FROM meters m WHERE m.customer_id = ?
+    `, [id]);
+
+    const [bills] = await pool.query(`
+      SELECT id, bill_number, billing_month, billing_year, total_amount, balance_due, status
+      FROM bills WHERE customer_id = ? ORDER BY created_at DESC LIMIT 5
+    `, [id]);
+
+    const [payments] = await pool.query(`
+      SELECT id, payment_reference, amount, payment_method, status, payment_date
+      FROM payments WHERE customer_id = ? ORDER BY payment_date DESC LIMIT 5
+    `, [id]);
+
+    res.status(200).json({ 
+      success: true, 
+      data: { ...rows[0], connections, meters, bills, payments } 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Internal server error' });

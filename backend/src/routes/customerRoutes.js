@@ -14,6 +14,7 @@ router.get('/my-profile', customerController.getMyProfile);
 
 // Admins & Billing Officers can manage customers
 router.get('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.getCustomers);
+router.get('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.getCustomerById);
 router.post('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.createCustomer);
 router.put('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.updateCustomer);
 router.patch('/:id/status', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.updateCustomerStatus);
