@@ -122,10 +122,36 @@ export default function CustomerFeedback() {
                     </div>
                   )}
 
-                  <div>
-                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Subject / Inquiry Type</label>
-                    <input required value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} type="text" className="w-full bg-gray-50 border-2 border-transparent focus:border-primary focus:bg-white px-4 py-3 rounded-2xl outline-none transition-all font-medium text-gray-800" placeholder="e.g. Broken meter, Billing discrepancy..."/>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Issue Category</label>
+                      <select 
+                        className="w-full bg-gray-50 border-2 border-transparent focus:border-primary focus:bg-white px-4 py-3 rounded-2xl outline-none transition-all font-medium text-gray-800"
+                        value={form.category}
+                        onChange={(e) => setForm({...form, category: e.target.value})}
+                        required
+                      >
+                        <option value="General Inquiry">General Inquiry</option>
+                        <option value="Billing Issue">Billing Issue</option>
+                        <option value="Meter Fault">Meter Fault</option>
+                        <option value="New Connection">New Connection</option>
+                        <option value="Power Outage">Power Outage</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Subject</label>
+                      <input 
+                        required 
+                        value={form.subject} 
+                        onChange={e => setForm({...form, subject: e.target.value})} 
+                        type="text" 
+                        className="w-full bg-gray-50 border-2 border-transparent focus:border-primary focus:bg-white px-4 py-3 rounded-2xl outline-none transition-all font-medium text-gray-800" 
+                        placeholder="Brief summary of the issue..."
+                      />
+                    </div>
                   </div>
+
                   <div>
                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Message Body</label>
                     <textarea required value={form.message} onChange={e => setForm({...form, message: e.target.value})} rows="6" className="w-full bg-gray-50 border-2 border-transparent focus:border-primary focus:bg-white px-4 py-3 rounded-2xl outline-none transition-all font-medium text-gray-800 resize-none" placeholder="Describe your issue or question in detail..."/>

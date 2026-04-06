@@ -265,13 +265,16 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE TABLE IF NOT EXISTS feedback (
   id INT AUTO_INCREMENT PRIMARY KEY,
   customer_id INT NOT NULL,
+  category VARCHAR(100) NOT NULL DEFAULT 'General Inquiry',
   subject VARCHAR(150) NOT NULL,
   message TEXT NOT NULL,
-  status ENUM('new', 'in_progress', 'resolved', 'closed') DEFAULT 'new',
+  status ENUM('new', 'assigned', 'in_progress', 'resolved', 'closed') DEFAULT 'new',
+  assigned_to INT,
   admin_response TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- --------------------------------------------------------

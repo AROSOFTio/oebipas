@@ -11,8 +11,8 @@ export default function CustomerDashboard() {
   const [data, setData] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [isLinked, setIsLinked] = useState(false);
+  const [period, setPeriod] = useState('6m');
+  const [consumptionTrend, setConsumptionTrend] = useState([]);
 
   useEffect(() => {
     fetchSummary();
@@ -23,9 +23,11 @@ export default function CustomerDashboard() {
       const profileRes = await axiosInstance.get('/customers/my-profile');
       if (profileRes.data.linked) {
         setIsLinked(true);
-        setProfile(profileRes.data.data);
-        const res = await axiosInstance.get(`/dashboard/customer-summary/${profileRes.data.data.id}`);
+        const customerProfile = profileRes.data.data;
+        setProfile(customerProfile);
+        const res = await axiosInstance.get(`/dashboard/customer-summary/${customerProfile.id}`);
         setData(res.data.data);
+        setConsumptionTrend(res.data.data.consumption_trend || []);
       } else {
         setIsLinked(false);
       }
@@ -34,6 +36,21 @@ export default function CustomerDashboard() {
       setError('Failed to load dashboard. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUsage = async (newPeriod) => {
+    try {
+      setPeriod(newPeriod);
+      const res = await axiosInstance.get(`/consumption/customer/${profile.id}?period=${newPeriod}`);
+      // Format the bar data properly for the dashboard chart
+      const formatted = res.data.data.map(r => ({
+        period: `${r.billing_month}/${r.billing_year}`,
+        units: parseFloat(r.units_consumed)
+      })).reverse(); // Reverse to show chronological order (left to right)
+      setConsumptionTrend(formatted);
+    } catch (err) {
+      console.error('Fetch Usage Error:', err);
     }
   };
 
@@ -205,21 +222,32 @@ export default function CustomerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-12">
-        {/* Consumption Chart */}
         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-border">
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 space-y-4 sm:space-y-0">
             <h2 className="font-black text-xl text-gray-900 tracking-tight flex items-center">
               <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center mr-4 text-green-500 border border-green-100">
                 <Activity size={22} />
               </div>
               Usage History
             </h2>
-            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-3 py-1 bg-gray-50 rounded-lg">Units: kWh</div>
+            <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
+              {['6m', '1y'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => fetchUsage(p)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    period === p ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {p === '6m' ? '6 Months' : '1 Year'}
+                </button>
+              ))}
+            </div>
           </div>
-          {consumption_trend.length > 0 ? (
+          {consumptionTrend.length > 0 ? (
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={consumption_trend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <BarChart data={consumptionTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6"/>
                   <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{fill: '#9CA3AF', fontSize: 10, fontWeight: 700}} dy={15}/>
                   <YAxis axisLine={false} tickLine={false} tick={{fill: '#9CA3AF', fontSize: 10, fontWeight: 700}} dx={-10} />

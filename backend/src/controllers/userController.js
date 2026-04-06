@@ -102,3 +102,20 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+exports.getOfficers = async (req, res) => {
+  try {
+    const [officers] = await pool.query(`
+      SELECT u.id, u.full_name, r.name as role
+      FROM users u
+      JOIN user_roles ur ON u.id = ur.user_id
+      JOIN roles r ON ur.role_id = r.id
+      WHERE r.name NOT IN ('Customer') AND u.status = 'active'
+      ORDER BY u.full_name ASC
+    `);
+    res.status(200).json({ success: true, data: officers });
+  } catch (error) {
+    console.error('Get Officers Error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

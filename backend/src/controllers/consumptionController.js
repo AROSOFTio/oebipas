@@ -19,14 +19,26 @@ exports.getConsumptionRecords = async (req, res) => {
 
 exports.getCustomerConsumption = async (req, res) => {
   const { customer_id } = req.params;
+  const { period } = req.query; // 6m, 1y, all
+  
   try {
-    const [records] = await pool.query(`
+    let query = `
       SELECT cr.*, m.meter_number
       FROM consumption_records cr
       JOIN meters m ON cr.meter_id = m.id
       WHERE cr.customer_id = ?
-      ORDER BY cr.billing_year DESC, cr.billing_month DESC
-    `, [customer_id]);
+    `;
+    const params = [customer_id];
+
+    if (period === '6m') {
+      query += ' AND cr.reading_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)';
+    } else if (period === '1y') {
+      query += ' AND cr.reading_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)';
+    }
+
+    query += ' ORDER BY cr.billing_year DESC, cr.billing_month DESC';
+    
+    const [records] = await pool.query(query, params);
     res.status(200).json({ success: true, data: records });
   } catch (error) {
     console.error(error);

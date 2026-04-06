@@ -8,6 +8,7 @@ router.use(authenticateToken);
 router.get('/', feedbackController.getFeedback);
 router.post('/', feedbackController.submitFeedback);
 router.patch('/:id/status', restrictTo('General Manager', 'Branch Manager', 'Help Desk'), feedbackController.updateFeedbackStatus);
+router.patch('/:id/assign', restrictTo('General Manager', 'Branch Manager', 'Help Desk'), feedbackController.assignTicket);
 
 module.exports = router;
 
