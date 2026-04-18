@@ -2,7 +2,7 @@ import { useContext, useMemo, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import {
   Bell,
-  ChartColumn,
+  BarChart3,
   CreditCard,
   FileText,
   Gauge,
@@ -23,7 +23,7 @@ const navConfig = {
     { to: '/manager/consumption', label: 'Consumption', icon: Zap },
     { to: '/manager/bills', label: 'Bills', icon: FileText },
     { to: '/manager/payments', label: 'Payments', icon: CreditCard },
-    { to: '/manager/reports', label: 'Reports', icon: ChartColumn },
+    { to: '/manager/reports', label: 'Reports', icon: BarChart3 },
     { to: '/manager/notifications', label: 'Notifications', icon: Bell },
     { to: '/manager/tariffs', label: 'Tariffs', icon: Gauge },
   ],
