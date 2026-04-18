@@ -36,13 +36,15 @@ Backend and frontend both enforce this role structure.
 
 ## Default Demo Accounts
 
-All seeded passwords are `password123`.
+The seed now contains the three requested users below. The database stores the exact bcrypt hashes provided for them.
+
+Note: bcrypt hashes are one-way. That means the original plain-text passwords cannot be read back from the hashes.
 
 | Role | Username | Email |
 | --- | --- | --- |
-| Branch Manager | `manager` | `manager@uedcl.local` |
-| Billing Staff | `billing` | `billing@uedcl.local` |
-| Customer | `customer` | `customer@uedcl.local` |
+| Branch Manager | `winnie` | `winniemarkie@gmail.com` |
+| Billing Staff | `sylon` | `nsylon256@gmail.com` |
+| Customer | `benjamin` | `bangella23@gmail.com` |
 
 ## Main Documents
 

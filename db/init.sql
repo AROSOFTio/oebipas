@@ -178,12 +178,12 @@ INSERT INTO roles (name, description) VALUES
 ('Customer', 'End user role for bills, payments and profile access');
 
 INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at) VALUES
-(1, 'Branch Manager Demo', 'manager', 'manager@uedcl.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000001', 'active', NOW()),
-(2, 'Billing Staff Demo', 'billing', 'billing@uedcl.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000002', 'active', NOW()),
-(3, 'Customer Demo', 'customer', 'customer@uedcl.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000003', 'active', NOW());
+(1, 'Winnie Nafuna', 'winnie', 'winniemarkie@gmail.com', '$2a$12$REqtjRP0X4Vg3GnlhuZUA.e7ldPtEtZM2W7OOjnz.HRyIwgAdTH6K', '0700000001', 'active', NOW()),
+(2, 'Nimusiima Sylon', 'sylon', 'nsylon256@gmail.com', '$2a$12$sJC0dn3l1zebBRlhLt.Q6eFgqr85mGCOIeKn5Y.0I6GTg9Ea83AFi', '0700000002', 'active', NOW()),
+(3, 'Benjamin Angella', 'benjamin', 'bangella23@gmail.com', '$2a$12$LeJt4UjUiJwU/J5xFj1EMeV5.peFF2GUeAqEaPf.vEy8Fyx5UojJq', '0700000003', 'active', NOW());
 
 INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status) VALUES
-(3, 'UEDCL-0001', 'MTR-0001', 'Customer Demo', 'customer@uedcl.local', '0700000003', 'Kampala Central Division', 'active');
+(3, 'UEDCL-0001', 'MTR-0001', 'Benjamin Angella', 'bangella23@gmail.com', '0700000003', 'Kampala Central Division', 'active');
 
 INSERT INTO tariffs (rate_per_unit, fixed_charge, penalty_type, penalty_value, due_days, is_active, effective_from, created_by) VALUES
 (850.00, 5000.00, 'percentage', 5.00, 14, 1, '2026-01-01', 1);
@@ -208,5 +208,5 @@ WHERE id = 1;
 INSERT INTO notifications (
   user_id, customer_id, notification_type, channel, title, message, recipient_email, recipient_phone, status, sent_at
 ) VALUES
-(3, 1, 'bill_generated', 'email', 'Bill Generated', 'Your March 2026 electricity bill has been generated.', 'customer@uedcl.local', '0700000003', 'sent', NOW()),
-(3, 1, 'payment_overdue', 'email', 'Payment Overdue', 'Your electricity bill is overdue and now includes an automatic penalty.', 'customer@uedcl.local', '0700000003', 'sent', NOW());
+(3, 1, 'bill_generated', 'email', 'Bill Generated', 'Your March 2026 electricity bill has been generated.', 'bangella23@gmail.com', '0700000003', 'sent', NOW()),
+(3, 1, 'payment_overdue', 'email', 'Payment Overdue', 'Your electricity bill is overdue and now includes an automatic penalty.', 'bangella23@gmail.com', '0700000003', 'sent', NOW());
