@@ -171,15 +171,14 @@ exports.initiatePayment = async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO payments
-        (payment_reference, customer_id, bill_id, amount, payment_method, transaction_reference, provider, status, callback_status, callback_url, initiated_by)
-       VALUES (?, ?, ?, ?, 'pesapal', ?, 'pesapal', 'pending', 'pending', ?, ?)`,
+        (payment_reference, customer_id, bill_id, amount, payment_method, transaction_reference, provider, status, callback_status, initiated_by)
+       VALUES (?, ?, ?, ?, 'pesapal', ?, 'pesapal', 'pending', 'pending', ?)`,
       [
         paymentReference,
         bill.customer_id,
         bill_id,
         amount,
         transactionReference,
-        `${process.env.FRONTEND_URL || ''}/customer/payments/return`,
         req.user.id,
       ]
     );
@@ -201,9 +200,9 @@ exports.initiatePayment = async (req, res) => {
 
     await pool.query(
       `UPDATE payments
-       SET order_tracking_id = ?, callback_url = ?
+       SET order_tracking_id = ?
        WHERE id = ?`,
-      [pesapalOrder.orderTrackingId, pesapalOrder.redirectUrl, result.insertId]
+      [pesapalOrder.orderTrackingId, result.insertId]
     );
 
     return res.status(201).json({
