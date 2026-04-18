@@ -25,6 +25,10 @@ export default function PaymentReturn() {
           const paymentStatus = response.data.data?.payment_status_description || 'Pending';
           const normalized = response.data.data?.payment_status || 'pending';
           const success = normalized === 'successful';
+          const pendingMessage =
+            paymentStatus.toLowerCase().includes('request processed successfully')
+              ? 'Pesapal has received the request and is finalizing payment confirmation.'
+              : `Pesapal returned a payment status of ${paymentStatus}.`;
 
           if (normalized === 'pending' && attempts < 4) {
             attempts += 1;
@@ -37,7 +41,7 @@ export default function PaymentReturn() {
             success,
             message: success
               ? 'Your Pesapal payment was confirmed, your bill balance is now updated, and notifications have been sent.'
-              : `Pesapal returned a payment status of ${paymentStatus}.`,
+              : pendingMessage,
           });
         })
         .catch(error => {

@@ -1,147 +1,16 @@
 const crypto = require('crypto');
 const pool = require('../config/db');
 const { applyAutomaticPenalties } = require('../services/automationService');
-const { queueNotification } = require('../services/notificationService');
-const { submitOrderRequest, getTransactionStatus } = require('../services/pesapalService');
+const { submitOrderRequest } = require('../services/pesapalService');
+const { reconcilePendingPayments, verifyAndPersistPayment } = require('../services/paymentSettlementService');
 
 const buildPaymentReference = () => `PAY-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-const normalizeStatus = status => {
-  const normalized = String(status || '').toUpperCase();
-  if (
-    normalized.includes('COMPLETED') ||
-    normalized.includes('SUCCESS') ||
-    normalized.includes('PAID')
-  ) {
-    return 'successful';
-  }
-  if (
-    normalized.includes('FAILED') ||
-    normalized.includes('INVALID') ||
-    normalized.includes('REVERSED')
-  ) {
-    return 'failed';
-  }
-  return 'pending';
-};
-
-const notifyInternalPaymentReceipt = async ({ billNumber, customerId, amount }) => {
-  const [staffRows] = await pool.query(
-    `SELECT u.id
-     FROM users u
-     INNER JOIN roles r ON r.id = u.role_id
-     WHERE r.name IN ('Branch Manager', 'Billing Staff')
-       AND u.status = 'active'`
-  );
-
-  const title = 'Payment received';
-  const message = `Payment of UGX ${Number(amount).toLocaleString()} has been received for bill ${billNumber}.`;
-
-  for (const staff of staffRows) {
-    await pool.query(
-      `INSERT INTO notifications
-        (user_id, customer_id, notification_type, channel, title, message, recipient_email, recipient_phone, status, sent_at)
-       VALUES (?, ?, 'payment_successful', 'in_app', ?, ?, NULL, NULL, 'sent', NOW())`,
-      [staff.id, customerId, title, message]
-    );
-  }
-};
-
-const settlePayment = async ({ paymentId, status, orderTrackingId = null, confirmationCode = null }) => {
-  const conn = await pool.getConnection();
-
-  try {
-    await conn.beginTransaction();
-
-    const [rows] = await conn.query(
-      `SELECT p.*, c.user_id, c.email, c.phone, b.bill_number, b.balance_due, b.due_date, b.customer_id
-       FROM payments p
-       INNER JOIN customers c ON c.id = p.customer_id
-       INNER JOIN bills b ON b.id = p.bill_id
-       WHERE p.id = ?
-       LIMIT 1`,
-      [paymentId]
-    );
-
-    if (!rows.length) {
-      throw new Error('Payment not found.');
-    }
-
-    const payment = rows[0];
-    if (payment.status !== 'pending') {
-      await conn.commit();
-      return payment;
-    }
-
-    if (status === 'successful') {
-      const amount = Number(payment.amount);
-      const currentBalance = Number(payment.balance_due);
-      const newBalance = Number(Math.max(0, currentBalance - amount).toFixed(2));
-      const isOverdue = payment.due_date && new Date(payment.due_date) < new Date();
-      const newStatus = newBalance === 0 ? 'paid' : isOverdue ? 'overdue' : 'partially_paid';
-
-      await conn.query(
-        `UPDATE payments
-         SET status = 'successful',
-             callback_status = 'received',
-             payment_date = NOW(),
-             order_tracking_id = COALESCE(?, order_tracking_id),
-             confirmation_code = COALESCE(?, confirmation_code)
-         WHERE id = ?`,
-        [orderTrackingId, confirmationCode, paymentId]
-      );
-      await conn.query(
-        `UPDATE bills
-         SET amount_paid = amount_paid + ?, balance_due = ?, status = ?
-         WHERE id = ?`,
-        [amount, newBalance, newStatus, payment.bill_id]
-      );
-      if (newBalance === 0) {
-        await conn.query(`UPDATE penalties SET status = 'cleared' WHERE bill_id = ?`, [payment.bill_id]);
-      }
-
-      await conn.commit();
-
-      await queueNotification({
-        userId: payment.user_id,
-        customerId: payment.customer_id,
-        type: 'payment_successful',
-        title: 'Payment confirmed',
-        message: `Payment for bill ${payment.bill_number} was successful. Your account balance has been updated automatically.`,
-        recipientEmail: payment.email,
-        recipientPhone: payment.phone,
-      });
-
-      await notifyInternalPaymentReceipt({
-        billNumber: payment.bill_number,
-        customerId: payment.customer_id,
-        amount,
-      });
-    } else {
-      await conn.query(
-        `UPDATE payments
-         SET status = 'failed',
-             callback_status = 'received',
-             order_tracking_id = COALESCE(?, order_tracking_id),
-             confirmation_code = COALESCE(?, confirmation_code)
-         WHERE id = ?`,
-        [orderTrackingId, confirmationCode, paymentId]
-      );
-      await conn.commit();
-    }
-
-    return payment;
-  } catch (error) {
-    await conn.rollback();
-    throw error;
-  } finally {
-    conn.release();
-  }
-};
 
 exports.getPayments = async (req, res) => {
   try {
     await applyAutomaticPenalties();
+    await reconcilePendingPayments();
+
     const [rows] = await pool.query(
       `SELECT p.*, c.customer_number, c.full_name AS customer_name, b.bill_number
        FROM payments p
@@ -159,6 +28,8 @@ exports.getPayments = async (req, res) => {
 
 exports.getMyPayments = async (req, res) => {
   try {
+    await reconcilePendingPayments({ customerId: req.user.customer_id });
+
     const [rows] = await pool.query(
       `SELECT p.*, b.bill_number
        FROM payments p
@@ -202,8 +73,12 @@ exports.initiatePayment = async (req, res) => {
     if (req.user.role === 'Customer' && req.user.customer_id !== bill.customer_id) {
       return res.status(403).json({ success: false, message: 'You can only pay your own bill.' });
     }
+
     if (Number(amount) <= 0 || Number(amount) > Number(bill.balance_due)) {
-      return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero and not exceed the bill balance.' });
+      return res.status(400).json({
+        success: false,
+        message: 'Payment amount must be greater than zero and not exceed the bill balance.',
+      });
     }
 
     const paymentReference = buildPaymentReference();
@@ -213,14 +88,7 @@ exports.initiatePayment = async (req, res) => {
       `INSERT INTO payments
         (payment_reference, customer_id, bill_id, amount, payment_method, transaction_reference, provider, status, callback_status, initiated_by)
        VALUES (?, ?, ?, ?, 'pesapal', ?, 'pesapal', 'pending', 'pending', ?)`,
-      [
-        paymentReference,
-        bill.customer_id,
-        bill_id,
-        amount,
-        transactionReference,
-        req.user.id,
-      ]
+      [paymentReference, bill.customer_id, bill_id, amount, transactionReference, req.user.id]
     );
 
     const [customerRows] = await pool.query(
@@ -263,40 +131,12 @@ exports.initiatePayment = async (req, res) => {
   }
 };
 
-const verifyAndPersistPayment = async orderTrackingId => {
-  const transactionStatus = await getTransactionStatus(orderTrackingId);
-  const merchantReference = transactionStatus.merchant_reference;
-  const [rows] = await pool.query(
-    `SELECT id
-     FROM payments
-     WHERE order_tracking_id = ? OR transaction_reference = ?
-     LIMIT 1`,
-    [orderTrackingId, merchantReference]
-  );
-
-  if (!rows.length) {
-    throw new Error('Payment transaction not found.');
-  }
-
-  const normalizedStatus = normalizeStatus(transactionStatus.payment_status_description);
-  await settlePayment({
-    paymentId: rows[0].id,
-    status: normalizedStatus,
-    orderTrackingId: orderTrackingId,
-    confirmationCode: transactionStatus.confirmation_code || null,
-  });
-
-  return {
-    payment_status_description: transactionStatus.payment_status_description,
-    merchant_reference: merchantReference,
-    order_tracking_id: orderTrackingId,
-    amount: transactionStatus.amount,
-    payment_status: normalizedStatus,
-  };
-};
-
 exports.verifyPesapalPayment = async (req, res) => {
-  const orderTrackingId = req.query.orderTrackingId || req.query.OrderTrackingId || req.body?.orderTrackingId || req.body?.OrderTrackingId;
+  const orderTrackingId =
+    req.query.orderTrackingId ||
+    req.query.OrderTrackingId ||
+    req.body?.orderTrackingId ||
+    req.body?.OrderTrackingId;
 
   if (!orderTrackingId) {
     return res.status(400).json({ success: false, message: 'Order tracking ID is required.' });

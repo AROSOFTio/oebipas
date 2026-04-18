@@ -1,11 +1,14 @@
 const pool = require('../config/db');
 const { applyAutomaticPenalties } = require('../services/automationService');
+const { reconcilePendingPayments } = require('../services/paymentSettlementService');
 
 exports.getDashboard = async (req, res) => {
   try {
     await applyAutomaticPenalties();
 
     if (req.user.role === 'Customer') {
+      await reconcilePendingPayments({ customerId: req.user.customer_id });
+
       const [[totals]] = await pool.query(
         `SELECT COALESCE(SUM(balance_due), 0) AS outstanding_balance,
                 COUNT(*) AS total_bills
@@ -48,6 +51,8 @@ exports.getDashboard = async (req, res) => {
         },
       });
     }
+
+    await reconcilePendingPayments();
 
     const [[summary]] = await pool.query(
       `SELECT
