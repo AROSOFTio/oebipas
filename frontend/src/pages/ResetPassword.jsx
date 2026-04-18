@@ -1,55 +1,64 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 
 export default function ResetPassword() {
-  const [password, setPassword] = useState('');
+  const [searchParams] = useSearchParams();
+  const initialToken = useMemo(() => searchParams.get('token') || '', [searchParams]);
+  const [token, setToken] = useState(initialToken);
+  const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
-  
-  // Real app would extract token from URL query params
-  const token = 'simulated-token'; 
+  const [error, setError] = useState('');
 
-  const handleReset = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async event => {
+    event.preventDefault();
+    setMessage('');
+    setError('');
+
     try {
-      const res = await axiosInstance.post('/auth/reset-password', { token, new_password: password });
-      setMessage(res.data.message);
+      const response = await axiosInstance.post('/auth/reset-password', {
+        token,
+        new_password: newPassword,
+      });
+      setMessage(response.data.message);
     } catch (err) {
-      setMessage('Failed to reset password.');
+      setError(err.response?.data?.message || 'Reset failed.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8 space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Reset Password</h2>
-          <p className="text-gray-500 mt-2">Enter your new password below.</p>
-        </div>
+    <div className="min-h-screen bg-[var(--page-bg)] px-4 py-10">
+      <div className="mx-auto max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <h1 className="text-3xl font-semibold text-slate-900">Reset password</h1>
+        <p className="mt-2 text-sm text-slate-500">Use the token from the reset email to complete verification and set a new password.</p>
 
-        {message && <div className="bg-blue-50 text-blue-600 p-3 rounded-lg text-sm text-center">{message}</div>}
+        {message ? <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
+        {error ? <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
-        <form onSubmit={handleReset} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">New Password</label>
-            <input 
-              type="password" required
-              value={password} onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg outline-none focus:border-primary" 
-              placeholder="••••••••"
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Reset token</span>
+            <input
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
+              value={token}
+              onChange={event => setToken(event.target.value)}
+              required
             />
-          </div>
-          <button 
-            type="submit"
-            className="w-full py-2.5 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
-          >
-            Update Password
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">New password</span>
+            <input
+              type="password"
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
+              value={newPassword}
+              onChange={event => setNewPassword(event.target.value)}
+              required
+            />
+          </label>
+          <button type="submit" className="w-full rounded-2xl bg-[var(--panel-strong)] px-4 py-3 text-sm font-semibold text-white">
+            Reset password
           </button>
         </form>
-        
-        <div className="text-center text-sm">
-          <Link to="/login" className="text-primary hover:underline">Back to Login</Link>
-        </div>
       </div>
     </div>
   );

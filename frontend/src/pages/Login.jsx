@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import { AuthContext } from '../context/AuthContext';
@@ -7,82 +7,76 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useContext(AuthContext);
+  const [submitting, setSubmitting] = useState(false);
+  const { login, getHomePath } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async event => {
+    event.preventDefault();
+    setSubmitting(true);
     setError('');
-    try {
-      const res = await axiosInstance.post('/auth/login', { email, password });
-      login(res.data.token, res.data.user);
 
-      if (res.data.user.role === 'Customer') {
-        navigate('/customer');
-      } else {
-        navigate('/admin');
-      }
+    try {
+      const response = await axiosInstance.post('/auth/login', { email, password });
+      login(response.data.token, response.data.user);
+      navigate(getHomePath(response.data.user.role));
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || 'Login failed.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8 space-y-6">
-        
-        {/* Logo — full image, no crop, white bg for transparency */}
-        <div className="text-center">
-          <div className="mx-auto mb-2 w-36 h-36 bg-white rounded-full flex items-center justify-center">
-            <img
-              src="/logo.png"
-              alt="OEBIPAS Logo"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <p className="text-gray-500 text-sm">Sign in to your account</p>
-        </div>
+    <div className="min-h-screen bg-[var(--page-bg)] px-4 py-10">
+      <div className="mx-auto max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Secure Access</p>
+        <h1 className="mt-4 text-3xl font-semibold text-slate-900">Sign in</h1>
+        <p className="mt-2 text-sm text-slate-500">Use your Branch Manager, Billing Staff, or Customer credentials.</p>
 
-        {error && <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm text-center">{error}</div>}
+        {error ? <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email / Username</label>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Email or username</span>
             <input
-              type="text"
-              required
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary outline-none transition-colors"
-              placeholder="admin@oebipas.local"
+              onChange={event => setEmail(event.target.value)}
+              required
             />
-          </div>
-          <div>
-            <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium text-gray-700">Password</label>
-              <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
+          </label>
+          <label className="block">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-700">Password</span>
+              <Link to="/forgot-password" className="text-sm text-[var(--panel-strong)]">
+                Forgot password?
+              </Link>
             </div>
             <input
               type="password"
-              required
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg focus:ring-primary focus:border-primary outline-none transition-colors"
-              placeholder="••••••••"
+              onChange={event => setPassword(event.target.value)}
+              required
             />
-          </div>
+          </label>
+
           <button
             type="submit"
-            className="w-full py-2.5 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
+            disabled={submitting}
+            className="w-full rounded-2xl bg-[var(--panel-strong)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            Sign In
+            {submitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
-        <div className="text-center text-sm">
-          <span className="text-gray-500">Don't have an account? </span>
-          <Link to="/register" className="text-primary hover:underline">Register</Link>
-        </div>
+        <p className="mt-6 text-sm text-slate-500">
+          Need a customer account?{' '}
+          <Link to="/register" className="font-medium text-[var(--panel-strong)]">
+            Register here
+          </Link>
+        </p>
       </div>
     </div>
   );

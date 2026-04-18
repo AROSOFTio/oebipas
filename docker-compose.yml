@@ -3,18 +3,20 @@ services:
     image: mysql:8.0
     container_name: oebipas_db
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      MYSQL_DATABASE: oebipas
-      MYSQL_USER: oebipas_user
-      MYSQL_PASSWORD: secretpassword
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - oebipas_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -24,10 +26,12 @@ services:
     image: phpmyadmin/phpmyadmin
     container_name: oebipas_phpmyadmin
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       PMA_HOST: db
       PMA_USER: root
-      PMA_PASSWORD: rootpassword
+      PMA_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
       - "8084:80"
     depends_on:
@@ -41,17 +45,20 @@ services:
       context: ./backend
     container_name: oebipas_backend
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "5000:5000"
+      - "${PORT:-5000}:5000"
     environment:
-      - PORT=5000
-      - NODE_ENV=production
-      - DB_HOST=db
-      - DB_USER=oebipas_user
-      - DB_PASSWORD=secretpassword
-      - DB_NAME=oebipas
-      - JWT_SECRET=supersecretjwtkey2026
-      - JWT_EXPIRES_IN=24h
+      - PORT=${PORT}
+      - NODE_ENV=${NODE_ENV}
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - FRONTEND_URL=${FRONTEND_URL}
     depends_on:
       db:
         condition: service_healthy

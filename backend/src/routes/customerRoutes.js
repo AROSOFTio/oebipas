@@ -1,29 +1,18 @@
 const express = require('express');
-const router = express.Router();
 const customerController = require('../controllers/customerController');
-const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware');
+const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
 
-const paymentController = require('../controllers/paymentController');
-const penaltyController = require('../controllers/penaltyController');
-const billController = require('../controllers/billController');
+const router = express.Router();
 
 router.use(authenticateToken);
 
-// Customer can get their own profile
-router.get('/my-profile', customerController.getMyProfile);
+router.get('/me', authorizeRoles('Customer'), customerController.getMyProfile);
+router.put('/me', authorizeRoles('Customer'), customerController.updateMyProfile);
 
-// Admins & Billing Officers can manage customers
-router.get('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.getCustomers);
-router.get('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.getCustomerById);
-router.post('/', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.createCustomer);
-router.put('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.updateCustomer);
-router.patch('/:id/status', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.updateCustomerStatus);
-router.delete('/:id', restrictTo('General Manager', 'Branch Manager', 'Operation Officer', 'Field Officer'), customerController.deleteCustomer);
-
-// Required specific nested endpoints
-router.get('/:id/payments', paymentController.getCustomerPayments);
-router.get('/:id/penalties', penaltyController.getCustomerPenalties);
-router.get('/:id/bills', billController.getCustomerBills);
+router.get('/', authorizeRoles('Branch Manager', 'Billing Staff'), customerController.getCustomers);
+router.get('/:id', authorizeRoles('Branch Manager', 'Billing Staff'), customerController.getCustomerById);
+router.post('/', authorizeRoles('Branch Manager'), customerController.createCustomer);
+router.put('/:id', authorizeRoles('Branch Manager'), customerController.updateCustomer);
+router.delete('/:id', authorizeRoles('Branch Manager'), customerController.deleteCustomer);
 
 module.exports = router;
-

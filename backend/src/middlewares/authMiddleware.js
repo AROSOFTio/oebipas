@@ -1,45 +1,34 @@
 const jwt = require('jsonwebtoken');
 
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  let token = authHeader && authHeader.split(' ')[1];
-
-  // Fallback to query parameter for file downloads
-  if (!token && req.query.token) {
-    token = req.query.token;
-  }
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
   if (!token) {
-    return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
+    return res.status(401).json({ success: false, message: 'Authentication token is required.' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey2026', (err, user) => {
-    if (err) {
-      return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
-    }
-    req.user = user;
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey2026');
     next();
-  });
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Invalid or expired authentication token.' });
+  }
 };
 
-const restrictTo = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user || !req.user.role) {
-      return res.status(403).json({ success: false, message: 'No role assigned to this user.' });
-    }
+const authorizeRoles = (...roles) => (req, res, next) => {
+  if (!req.user?.role) {
+    return res.status(403).json({ success: false, message: 'Access denied.' });
+  }
 
-    const userRole = req.user.role.toLowerCase();
-    const allowedRoles = roles.map(r => r.toLowerCase());
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ success: false, message: `The ${req.user.role} role cannot access this resource.` });
+  }
 
-    if (!allowedRoles.includes(userRole)) {
-      return res.status(403).json({ success: false, message: `Access denied for role: ${req.user.role}` });
-    }
-
-    next();
-  };
+  next();
 };
 
 module.exports = {
   authenticateToken,
-  restrictTo
+  authorizeRoles,
 };

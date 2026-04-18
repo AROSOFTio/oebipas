@@ -1,187 +1,183 @@
-const pool = require('../config/db');
-const { logAudit } = require('../services/auditLogger');
 const bcrypt = require('bcrypt');
+const pool = require('../config/db');
 
-// Customer looks up their own profile via their user_id (JWT)
-exports.getMyProfile = async (req, res) => {
-  try {
-    const [rows] = await pool.query(
-      `SELECT c.* FROM customers c WHERE c.user_id = ? LIMIT 1`,
-      [req.user.id]
-    );
-    if (rows.length === 0) {
-      return res.status(200).json({ success: true, linked: false, message: 'No customer profile linked to this account.' });
-    }
-    res.status(200).json({ success: true, linked: true, data: rows[0] });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-};
-
+const buildCustomerQuery = `
+  SELECT c.id, c.customer_number, c.meter_number, c.full_name, c.email, c.phone, c.address,
+         c.connection_status, c.created_at, u.id AS user_id
+  FROM customers c
+  INNER JOIN users u ON u.id = c.user_id
+`;
 
 exports.getCustomers = async (req, res) => {
   try {
-    const [customers] = await pool.query(`
-      SELECT c.id, c.customer_number, c.full_name, c.email, c.phone, c.address, c.category, c.status, u.id as user_id
-      FROM customers c
-      LEFT JOIN users u ON c.user_id = u.id
-      ORDER BY c.created_at DESC
-    `);
-    res.status(200).json({ success: true, data: customers });
+    const [rows] = await pool.query(`${buildCustomerQuery} ORDER BY c.created_at DESC`);
+    return res.status(200).json({ success: true, data: rows });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Unable to load customers.' });
+  }
+};
+
+exports.getCustomerById = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`${buildCustomerQuery} WHERE c.id = ? LIMIT 1`, [req.params.id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Customer not found.' });
+    }
+
+    const customer = rows[0];
+    const [bills] = await pool.query(
+      `SELECT id, bill_number, billing_month, billing_year, total_amount, balance_due, status, due_date
+       FROM bills
+       WHERE customer_id = ?
+       ORDER BY billing_year DESC, billing_month DESC`,
+      [customer.id]
+    );
+    const [payments] = await pool.query(
+      `SELECT id, payment_reference, amount, payment_method, status, payment_date
+       FROM payments
+       WHERE customer_id = ?
+       ORDER BY created_at DESC`,
+      [customer.id]
+    );
+
+    return res.status(200).json({ success: true, data: { ...customer, bills, payments } });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Unable to load customer details.' });
   }
 };
 
 exports.createCustomer = async (req, res) => {
-  const { customer_number, full_name, email, phone, address, category } = req.body;
-  if (!customer_number || !full_name || !email) {
-    return res.status(400).json({ success: false, message: 'Missing required fields (Name, Number, Email)' });
+  const { full_name, username, email, phone, address, meter_number } = req.body;
+
+  if (!full_name || !username || !email || !address || !meter_number) {
+    return res.status(400).json({ success: false, message: 'Full name, username, email, address and meter number are required.' });
   }
 
+  const conn = await pool.getConnection();
   try {
-    let userId = null;
-    // Check if user already exists
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
-    if (existing.length > 0) {
-      userId = existing[0].id;
-    } else {
-      // Create user account so they can log in
-      const defaultPassword = await bcrypt.hash('Oebipas@123', 10);
-      const baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
-      const username = baseUsername + Math.floor(100 + Math.random() * 900);
-      
-      const [userResult] = await pool.query(
-        'INSERT INTO users (full_name, username, email, password, phone, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [full_name, username, email, defaultPassword, phone, 'active']
-      );
-      userId = userResult.insertId;
-      // Dynamically lookup Customer role
-      const [[customerRole]] = await pool.query('SELECT id FROM roles WHERE name = ?', ['Customer']);
-      await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, customerRole.id]);
+    await conn.beginTransaction();
+
+    const [existing] = await conn.query(
+      `SELECT id FROM users WHERE email = ? OR username = ?`,
+      [email, username]
+    );
+    if (existing.length) {
+      await conn.rollback();
+      return res.status(400).json({ success: false, message: 'Email or username is already in use.' });
     }
 
-    const [result] = await pool.query(
-      'INSERT INTO customers (user_id, customer_number, full_name, email, phone, address, category, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [userId, customer_number, full_name, email, phone, address, category || 'residential', 'active']
+    const [[role]] = await conn.query(`SELECT id FROM roles WHERE name = 'Customer' LIMIT 1`);
+    const defaultPassword = await bcrypt.hash('Password123!', 10);
+
+    const [userResult] = await conn.query(
+      `INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
+      [role.id, full_name, username, email, defaultPassword, phone || null]
     );
 
-    await logAudit(req.user.id, 'CREATE_CUSTOMER', 'Customers', result.insertId, `Created customer ${customer_number} and user account if missing`);
+    const customerNumber = `UEDCL-${String(userResult.insertId).padStart(4, '0')}`;
+    const [customerResult] = await conn.query(
+      `INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'active')`,
+      [userResult.insertId, customerNumber, meter_number, full_name, email, phone || null, address]
+    );
 
-    res.status(201).json({ success: true, message: 'Customer created successfully. Default password is Oebipas@123', data: { id: result.insertId } });
+    await conn.commit();
+    return res.status(201).json({
+      success: true,
+      message: 'Customer created successfully. Default password is Password123!',
+      data: { id: customerResult.insertId, customer_number: customerNumber },
+    });
   } catch (error) {
+    await conn.rollback();
     console.error(error);
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ success: false, message: 'Customer number or Email already exists' });
-    }
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Unable to create customer.' });
+  } finally {
+    conn.release();
   }
 };
 
 exports.updateCustomer = async (req, res) => {
-  const { id } = req.params;
-  const { full_name, email, phone, address, category } = req.body;
+  const { full_name, email, phone, address, meter_number, connection_status } = req.body;
 
   try {
+    const [rows] = await pool.query(`SELECT user_id FROM customers WHERE id = ? LIMIT 1`, [req.params.id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Customer not found.' });
+    }
+
     await pool.query(
-      'UPDATE customers SET full_name = ?, email = ?, phone = ?, address = ?, category = ? WHERE id = ?',
-      [full_name, email, phone, address, category, id]
+      `UPDATE customers
+       SET full_name = ?, email = ?, phone = ?, address = ?, meter_number = ?, connection_status = ?
+       WHERE id = ?`,
+      [full_name, email, phone || null, address, meter_number, connection_status || 'active', req.params.id]
+    );
+    await pool.query(
+      `UPDATE users
+       SET full_name = ?, email = ?, phone = ?
+       WHERE id = ?`,
+      [full_name, email, phone || null, rows[0].user_id]
     );
 
-    await logAudit(req.user.id, 'UPDATE_CUSTOMER', 'Customers', id, `Updated customer details`);
-
-    res.status(200).json({ success: true, message: 'Customer updated successfully' });
+    return res.status(200).json({ success: true, message: 'Customer updated successfully.' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-};
-
-exports.updateCustomerStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body; // 'active' or 'inactive'
-
-  if (!['active', 'inactive'].includes(status)) {
-    return res.status(400).json({ success: false, message: 'Invalid status' });
-  }
-
-  try {
-    await pool.query('UPDATE customers SET status = ? WHERE id = ?', [status, id]);
-
-    await logAudit(req.user.id, 'UPDATE_CUSTOMER_STATUS', 'Customers', id, `Customer status changed to ${status}`);
-
-    res.status(200).json({ success: true, message: `Customer marked as ${status}` });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Unable to update customer.' });
   }
 };
 
 exports.deleteCustomer = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const [cust] = await pool.query('SELECT user_id FROM customers WHERE id = ?', [id]);
-    if (cust.length === 0) {
-      return res.status(404).json({ success: false, message: 'Customer not found' });
+    const [rows] = await pool.query(`SELECT user_id FROM customers WHERE id = ? LIMIT 1`, [req.params.id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Customer not found.' });
     }
 
-    // Delete customer
-    await pool.query('DELETE FROM customers WHERE id = ?', [id]);
-    
-    // Delete user
-    if (cust[0].user_id) {
-       await pool.query('DELETE FROM users WHERE id = ?', [cust[0].user_id]);
-    }
-
-    await logAudit(req.user.id, 'DELETE_CUSTOMER', 'Customers', id, 'Deleted customer and their user account');
-
-    res.status(200).json({ success: true, message: 'Customer completely deleted' });
+    await pool.query(`DELETE FROM users WHERE id = ?`, [rows[0].user_id]);
+    return res.status(200).json({ success: true, message: 'Customer removed successfully.' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Unable to remove customer.' });
   }
 };
-exports.getCustomerById = async (req, res) => {
-  const { id } = req.params;
+
+exports.getMyProfile = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT c.id, c.customer_number, c.full_name, c.email, c.phone, c.address, c.category, c.status, c.created_at
-      FROM customers c WHERE c.id = ? LIMIT 1
-    `, [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Customer not found' });
+    const [rows] = await pool.query(`${buildCustomerQuery} WHERE c.user_id = ? LIMIT 1`, [req.user.id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Customer profile not found.' });
     }
 
-    // Fetch meters and connections
-    const [connections] = await pool.query(`
-      SELECT s.id, s.connection_number, s.connection_type, s.location, s.status
-      FROM service_connections s WHERE s.customer_id = ?
-    `, [id]);
-
-    const [meters] = await pool.query(`
-      SELECT m.id, m.meter_number, m.installation_date, m.status
-      FROM meters m WHERE m.customer_id = ?
-    `, [id]);
-
-    const [bills] = await pool.query(`
-      SELECT id, bill_number, billing_month, billing_year, total_amount, balance_due, status
-      FROM bills WHERE customer_id = ? ORDER BY created_at DESC LIMIT 5
-    `, [id]);
-
-    const [payments] = await pool.query(`
-      SELECT id, payment_reference, amount, payment_method, status, payment_date
-      FROM payments WHERE customer_id = ? ORDER BY payment_date DESC LIMIT 5
-    `, [id]);
-
-    res.status(200).json({ 
-      success: true, 
-      data: { ...rows[0], connections, meters, bills, payments } 
-    });
+    return res.status(200).json({ success: true, data: rows[0] });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Unable to load customer profile.' });
+  }
+};
+
+exports.updateMyProfile = async (req, res) => {
+  const { full_name, phone, address } = req.body;
+
+  try {
+    const [rows] = await pool.query(`SELECT id FROM customers WHERE user_id = ? LIMIT 1`, [req.user.id]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Customer profile not found.' });
+    }
+
+    await pool.query(
+      `UPDATE customers SET full_name = ?, phone = ?, address = ? WHERE user_id = ?`,
+      [full_name, phone || null, address, req.user.id]
+    );
+    await pool.query(
+      `UPDATE users SET full_name = ?, phone = ? WHERE id = ?`,
+      [full_name, phone || null, req.user.id]
+    );
+
+    return res.status(200).json({ success: true, message: 'Profile updated successfully.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Unable to update profile.' });
   }
 };

@@ -1,13 +1,13 @@
 const express = require('express');
-const router = express.Router();
 const billController = require('../controllers/billController');
-const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware');
+const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
+
+const router = express.Router();
 
 router.use(authenticateToken);
-router.get('/', restrictTo('General Manager', 'Branch Manager', 'Finance Officer'), billController.getAllBills);
-router.post('/generate', restrictTo('General Manager', 'Branch Manager', 'Finance Officer'), billController.generateBill);
-router.get('/customer/:customer_id', billController.getCustomerBills);
+
+router.get('/mine', authorizeRoles('Customer'), billController.getMyBills);
+router.get('/', authorizeRoles('Branch Manager', 'Billing Staff'), billController.getBills);
 router.get('/:id', billController.getBillById);
 
 module.exports = router;
-

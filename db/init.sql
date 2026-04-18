@@ -1,375 +1,212 @@
--- SQL dump for OEBIPAS (Online Electricity Billing and Payment System)
--- Creates database, tables and seed data
-
 CREATE DATABASE IF NOT EXISTS oebipas;
 USE oebipas;
 
--- --------------------------------------------------------
--- Table: roles
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS roles (
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS password_resets;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS penalties;
+DROP TABLE IF EXISTS bills;
+DROP TABLE IF EXISTS consumption_records;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS tariffs;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
+SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL UNIQUE,
-  description VARCHAR(255)
+  description VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- --------------------------------------------------------
--- Table: users
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  role_id INT NOT NULL,
   full_name VARCHAR(100) NOT NULL,
-  username VARCHAR(50) UNIQUE,
+  username VARCHAR(50) NOT NULL UNIQUE,
   email VARCHAR(100) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   phone VARCHAR(20),
-  status ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
+  status ENUM('active', 'inactive') DEFAULT 'active',
+  email_verified_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
--- --------------------------------------------------------
--- Table: user_roles
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS user_roles (
-  user_id INT,
-  role_id INT,
-  PRIMARY KEY (user_id, role_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
-);
-
--- --------------------------------------------------------
--- Table: customers
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS customers (
+CREATE TABLE customers (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  customer_number VARCHAR(50) UNIQUE NOT NULL,
+  user_id INT NOT NULL UNIQUE,
+  customer_number VARCHAR(50) NOT NULL UNIQUE,
+  meter_number VARCHAR(50) NOT NULL UNIQUE,
   full_name VARCHAR(100) NOT NULL,
-  email VARCHAR(100),
+  email VARCHAR(100) NOT NULL,
   phone VARCHAR(20),
   address TEXT,
-  category ENUM('residential', 'commercial', 'industrial') DEFAULT 'residential',
-  status ENUM('active', 'inactive') DEFAULT 'active',
+  connection_status ENUM('active', 'inactive') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  CONSTRAINT fk_customers_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- --------------------------------------------------------
--- Table: service_connections
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS service_connections (
+CREATE TABLE tariffs (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  customer_id INT NOT NULL,
-  connection_number VARCHAR(50) UNIQUE NOT NULL,
-  connection_type VARCHAR(50),
-  location TEXT,
-  status ENUM('active', 'inactive', 'disconnected') DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
-);
-
--- --------------------------------------------------------
--- Table: meters
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS meters (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  customer_id INT NOT NULL,
-  service_connection_id INT NOT NULL,
-  meter_number VARCHAR(50) UNIQUE NOT NULL,
-  installation_date DATE,
-  status ENUM('active', 'faulty', 'inactive') DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  FOREIGN KEY (service_connection_id) REFERENCES service_connections(id) ON DELETE CASCADE
-);
-
--- --------------------------------------------------------
--- Table: consumption_records
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS consumption_records (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  customer_id INT NOT NULL,
-  meter_id INT NOT NULL,
-  billing_month INT NOT NULL,
-  billing_year INT NOT NULL,
-  units_consumed DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  reading_date DATE NOT NULL,
-  entered_by INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  FOREIGN KEY (meter_id) REFERENCES meters(id) ON DELETE CASCADE,
-  FOREIGN KEY (entered_by) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- --------------------------------------------------------
--- Table: tariff_rules
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tariff_rules (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  customer_category ENUM('residential', 'commercial', 'industrial') NOT NULL,
-  rate_per_unit DECIMAL(10,2) NOT NULL,
-  service_charge DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  tax_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00,
-  penalty_type ENUM('fixed', 'percentage') DEFAULT 'percentage',
-  penalty_value DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  rate_per_unit DECIMAL(12,2) NOT NULL,
+  fixed_charge DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  penalty_type ENUM('fixed', 'percentage') NOT NULL DEFAULT 'percentage',
+  penalty_value DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  due_days INT NOT NULL DEFAULT 14,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
   effective_from DATE NOT NULL,
-  status ENUM('active', 'inactive') DEFAULT 'active',
+  created_by INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_tariffs_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- --------------------------------------------------------
--- Table: bills
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS bills (
+CREATE TABLE consumption_records (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  bill_number VARCHAR(50) UNIQUE NOT NULL,
   customer_id INT NOT NULL,
-  meter_id INT NOT NULL,
   billing_month INT NOT NULL,
   billing_year INT NOT NULL,
-  units_consumed DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  energy_charge DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  service_charge DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  tax_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  penalty_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  previous_balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  amount_paid DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  balance_due DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  units_consumed DECIMAL(12,2) NOT NULL,
+  reading_date DATE NOT NULL,
+  entered_by INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_consumption_period (customer_id, billing_month, billing_year),
+  CONSTRAINT fk_consumption_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  CONSTRAINT fk_consumption_user FOREIGN KEY (entered_by) REFERENCES users(id) ON DELETE RESTRICT
+);
+
+CREATE TABLE bills (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  bill_number VARCHAR(50) NOT NULL UNIQUE,
+  customer_id INT NOT NULL,
+  consumption_record_id INT NOT NULL UNIQUE,
+  tariff_id INT NOT NULL,
+  billing_month INT NOT NULL,
+  billing_year INT NOT NULL,
+  units_consumed DECIMAL(12,2) NOT NULL,
+  rate_per_unit DECIMAL(12,2) NOT NULL,
+  fixed_charge DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  bill_amount DECIMAL(12,2) NOT NULL,
+  previous_balance DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  penalty_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  total_amount DECIMAL(12,2) NOT NULL,
+  amount_paid DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  balance_due DECIMAL(12,2) NOT NULL,
   due_date DATE NOT NULL,
   status ENUM('unpaid', 'partially_paid', 'paid', 'overdue') DEFAULT 'unpaid',
-  generated_by INT,
+  generated_by INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  FOREIGN KEY (meter_id) REFERENCES meters(id) ON DELETE CASCADE,
-  FOREIGN KEY (generated_by) REFERENCES users(id) ON DELETE SET NULL
+  CONSTRAINT fk_bills_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  CONSTRAINT fk_bills_consumption FOREIGN KEY (consumption_record_id) REFERENCES consumption_records(id) ON DELETE CASCADE,
+  CONSTRAINT fk_bills_tariff FOREIGN KEY (tariff_id) REFERENCES tariffs(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_bills_user FOREIGN KEY (generated_by) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- --------------------------------------------------------
--- Table: bill_items
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS bill_items (
+CREATE TABLE penalties (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  bill_id INT NOT NULL,
-  item_name VARCHAR(100) NOT NULL,
-  item_type VARCHAR(50),
-  amount DECIMAL(10,2) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE
-);
-
--- --------------------------------------------------------
--- Table: penalties
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS penalties (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  bill_id INT NOT NULL,
+  bill_id INT NOT NULL UNIQUE,
   customer_id INT NOT NULL,
-  penalty_type VARCHAR(50),
-  penalty_amount DECIMAL(10,2) NOT NULL,
-  reason VARCHAR(255),
+  penalty_type ENUM('fixed', 'percentage') NOT NULL,
+  penalty_amount DECIMAL(12,2) NOT NULL,
+  reason VARCHAR(255) NOT NULL,
   applied_date DATE NOT NULL,
-  status ENUM('active', 'waived', 'paid') DEFAULT 'active',
+  status ENUM('active', 'cleared') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+  CONSTRAINT fk_penalties_bill FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE,
+  CONSTRAINT fk_penalties_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
--- --------------------------------------------------------
--- Table: payments
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS payments (
+CREATE TABLE payments (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  payment_reference VARCHAR(50) UNIQUE NOT NULL,
+  payment_reference VARCHAR(50) NOT NULL UNIQUE,
   customer_id INT NOT NULL,
-  bill_id INT,
-  amount DECIMAL(10,2) NOT NULL,
-  payment_method ENUM('cash', 'mobile_money', 'bank_transfer', 'card') NOT NULL,
-  transaction_reference VARCHAR(100),
-  status ENUM('pending', 'successful', 'failed', 'reversed') DEFAULT 'pending',
-  payment_date DATETIME NOT NULL,
-  recorded_by INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE SET NULL,
-  FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- --------------------------------------------------------
--- Table: payment_reconciliations
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS payment_reconciliations (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  payment_id INT NOT NULL,
   bill_id INT NOT NULL,
-  reconciled_amount DECIMAL(10,2) NOT NULL,
-  reconciled_by INT,
-  reconciled_at DATETIME NOT NULL,
-  notes TEXT,
+  amount DECIMAL(12,2) NOT NULL,
+  payment_method ENUM('pesapal', 'mobile_money', 'bank_transfer', 'card') NOT NULL,
+  transaction_reference VARCHAR(100) NOT NULL UNIQUE,
+  provider VARCHAR(50) NOT NULL DEFAULT 'simulated',
+  status ENUM('pending', 'successful', 'failed') DEFAULT 'pending',
+  callback_status ENUM('pending', 'received') DEFAULT 'pending',
+  payment_date DATETIME NULL,
+  initiated_by INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
-  FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE,
-  FOREIGN KEY (reconciled_by) REFERENCES users(id) ON DELETE SET NULL
+  CONSTRAINT fk_payments_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  CONSTRAINT fk_payments_bill FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE,
+  CONSTRAINT fk_payments_user FOREIGN KEY (initiated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- --------------------------------------------------------
--- Table: receipts
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS receipts (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  receipt_number VARCHAR(50) UNIQUE NOT NULL,
-  payment_id INT NOT NULL,
-  customer_id INT NOT NULL,
-  amount DECIMAL(10,2) NOT NULL,
-  issued_at DATETIME NOT NULL,
-  issued_by INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  FOREIGN KEY (issued_by) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- --------------------------------------------------------
--- Table: notifications
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NULL,
   customer_id INT NULL,
-  type VARCHAR(50),
-  title VARCHAR(100) NOT NULL,
+  notification_type ENUM('bill_generated', 'payment_successful', 'payment_overdue', 'password_reset', 'manual') NOT NULL,
+  channel ENUM('email', 'sms', 'in_app') NOT NULL DEFAULT 'email',
+  title VARCHAR(120) NOT NULL,
   message TEXT NOT NULL,
-  channel ENUM('email', 'sms', 'in-app') DEFAULT 'in-app',
+  recipient_email VARCHAR(100) NULL,
+  recipient_phone VARCHAR(20) NULL,
   status ENUM('pending', 'sent', 'failed') DEFAULT 'pending',
-  sent_at DATETIME,
+  sent_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+  CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_notifications_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
--- --------------------------------------------------------
--- Table: feedback
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS feedback (
+CREATE TABLE password_resets (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  customer_id INT NOT NULL,
-  category VARCHAR(100) NOT NULL DEFAULT 'General Inquiry',
-  subject VARCHAR(150) NOT NULL,
-  message TEXT NOT NULL,
-  status ENUM('new', 'assigned', 'in_progress', 'resolved', 'closed') DEFAULT 'new',
-  assigned_to INT,
-  admin_response TEXT,
+  user_id INT NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  token_hash VARCHAR(255) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  used_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
+  CONSTRAINT fk_password_resets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- --------------------------------------------------------
--- Table: audit_logs
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS audit_logs (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  action VARCHAR(100) NOT NULL,
-  module VARCHAR(100) NOT NULL,
-  entity_id INT,
-  details TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
+INSERT INTO roles (name, description) VALUES
+('Branch Manager', 'Full control over the branch billing system'),
+('Billing Staff', 'Operational role for consumption, billing and payment monitoring'),
+('Customer', 'End user role for bills, payments and profile access');
 
--- --------------------------------------------------------
--- Table: settings
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS settings (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  key_name VARCHAR(100) UNIQUE NOT NULL,
-  value_text TEXT,
-  updated_by INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
-);
+INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at) VALUES
+(1, 'Branch Manager Demo', 'manager', 'manager@uedcl.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000001', 'active', NOW()),
+(2, 'Billing Staff Demo', 'billing', 'billing@uedcl.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000002', 'active', NOW()),
+(3, 'Customer Demo', 'customer', 'customer@uedcl.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000003', 'active', NOW());
 
--- ========================================================
--- SEED DATA
--- ========================================================
+INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status) VALUES
+(3, 'UEDCL-0001', 'MTR-0001', 'Customer Demo', 'customer@uedcl.local', '0700000003', 'Kampala Central Division', 'active');
 
--- Insert Roles
-INSERT INTO roles (name, description) VALUES 
-('General Manager', 'View all, except IT settings'),
-('Branch Manager', 'View branch operations and reports'),
-('Finance Officer', 'Manage payments, reconciliation, receipts, reports'),
-('IT Officer', 'Manage system settings and user accounts'),
-('Operation Officer', 'Manage field operations and basic configs'),
-('Field Officer', 'Manage customer connections and meters'),
-('Help Desk', 'View customer history, manage support tickets'),
-('Customer', 'Only own account access');
+INSERT INTO tariffs (rate_per_unit, fixed_charge, penalty_type, penalty_value, due_days, is_active, effective_from, created_by) VALUES
+(850.00, 5000.00, 'percentage', 5.00, 14, 1, '2026-01-01', 1);
 
--- Insert Initial Admin User (password is 'password123' bcrypt hash unless specified)
-INSERT INTO users (full_name, username, email, password, phone, status) VALUES 
-('Winnie Nafuna', 'winnie', 'winniemarkie@gmail.com', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000000', 'active'),
-('Benjamin Angella', 'benjamin', 'bangella23@gmail.com', '$2a$12$Ow4YSw3e52pdBG6cRg4uTeXFPAIEJVjRvbQXeTrTc/Qu3pKXIh58q', '0700000000', 'active'),
-('Sylon Nimusiima', 'sylon', 'nsylon256@gmail.com', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000000', 'active'),
-('Enoch Micah', 'enoch', 'enochmicahf@gmail.com', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000001', 'active'),
-('Finance Staff', 'finance', 'finance@oebipas.local', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0700000002', 'active');
+INSERT INTO consumption_records (customer_id, billing_month, billing_year, units_consumed, reading_date, entered_by) VALUES
+(1, 3, 2026, 120.00, '2026-03-31', 2);
 
--- Assign Roles
-INSERT INTO user_roles (user_id, role_id) VALUES 
-(1, 1), -- Winnie -> General Manager
-(2, 2), -- Benjamin -> Branch Manager
-(3, 4), -- Sylon -> IT Officer
-(4, 5), -- Enoch -> Operation Officer
-(5, 3); -- Finance Staff -> Finance Officer
+INSERT INTO bills (
+  bill_number, customer_id, consumption_record_id, tariff_id, billing_month, billing_year, units_consumed,
+  rate_per_unit, fixed_charge, bill_amount, previous_balance, penalty_amount, total_amount,
+  amount_paid, balance_due, due_date, status, generated_by
+) VALUES
+('BILL-202603-0001', 1, 1, 1, 3, 2026, 120.00, 850.00, 5000.00, 107000.00, 0.00, 0.00, 107000.00, 0.00, 107000.00, '2026-04-14', 'overdue', 2);
 
--- Insert Basic Settings
-INSERT INTO settings (key_name, value_text) VALUES 
-('company_name', 'UEDCL Demo OEBIPAS'),
-('currency', 'UGX'),
-('tax_rate', '18'), -- 18% VAT
-('default_due_days', '14');
+INSERT INTO penalties (bill_id, customer_id, penalty_type, penalty_amount, reason, applied_date, status) VALUES
+(1, 1, 'percentage', 5350.00, 'Automatic overdue penalty after due date.', '2026-04-15', 'active');
 
--- Insert Sample Tariff Rules
-INSERT INTO tariff_rules (customer_category, rate_per_unit, service_charge, tax_percent, penalty_type, penalty_value, effective_from) VALUES 
-('residential', 250.00, 3000.00, 18.00, 'percentage', 5.00, '2025-01-01'),
-('commercial', 450.00, 10000.00, 18.00, 'percentage', 5.00, '2025-01-01'),
-('industrial', 350.00, 25000.00, 18.00, 'percentage', 5.00, '2025-01-01');
+UPDATE bills
+SET penalty_amount = 5350.00, total_amount = 112350.00, balance_due = 112350.00
+WHERE id = 1;
 
--- Sample Customers
-INSERT INTO users (full_name, username, email, password, phone, status) VALUES 
-('John Doe', 'johndoe', 'john@example.com', '$2b$10$wY.u9f/N4X7qLd/5h8Nn/OU8MvXNXY3Z/oXMyC0YVn4/2f8WkUfN.', '0701111111', 'active');
-
-INSERT INTO user_roles (user_id, role_id) VALUES (6, 8); -- Customer role
-
-INSERT INTO customers (user_id, customer_number, full_name, email, phone, address, category) VALUES 
-(6, 'CUST-000001', 'John Doe', 'john@example.com', '0701111111', 'Plot 10, Kampala Road', 'residential');
-
--- Sample Connection & Meter
-INSERT INTO service_connections (customer_id, connection_number, connection_type, location) VALUES 
-(1, 'CONN-000001', 'Single Phase', 'Plot 10, Kampala Road');
-
-INSERT INTO meters (customer_id, service_connection_id, meter_number, installation_date) VALUES 
-(1, 1, 'MTR-12345678', '2025-01-15');
-
--- Sample Consumption Data
-INSERT INTO consumption_records (customer_id, meter_id, billing_month, billing_year, units_consumed, reading_date, entered_by) VALUES 
-(1, 1, 3, 2026, 120.50, '2026-03-31', 2);
-
--- Sample Bill
-INSERT INTO bills (bill_number, customer_id, meter_id, billing_month, billing_year, units_consumed, energy_charge, service_charge, tax_amount, total_amount, balance_due, due_date, status, generated_by) VALUES 
-('INV-202603-00001', 1, 1, 3, 2026, 120.50, 30125.00, 3000.00, 5962.50, 39087.50, 39087.50, '2026-04-14', 'unpaid', 2);
+INSERT INTO notifications (
+  user_id, customer_id, notification_type, channel, title, message, recipient_email, recipient_phone, status, sent_at
+) VALUES
+(3, 1, 'bill_generated', 'email', 'Bill Generated', 'Your March 2026 electricity bill has been generated.', 'customer@uedcl.local', '0700000003', 'sent', NOW()),
+(3, 1, 'payment_overdue', 'email', 'Payment Overdue', 'Your electricity bill is overdue and now includes an automatic penalty.', 'customer@uedcl.local', '0700000003', 'sent', NOW());

@@ -1,13 +1,12 @@
 const express = require('express');
-const router = express.Router();
 const notificationController = require('../controllers/notificationController');
-const { authenticateToken, restrictTo } = require('../middlewares/authMiddleware');
+const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
+
+const router = express.Router();
 
 router.use(authenticateToken);
 
 router.get('/', notificationController.getNotifications);
-router.post('/mark-read', notificationController.markAsRead);
-router.post('/broadcast', restrictTo('General Manager', 'Branch Manager', 'Operation Officer'), notificationController.sendBroadcast);
+router.post('/', authorizeRoles('Branch Manager'), notificationController.sendNotification);
 
 module.exports = router;
-

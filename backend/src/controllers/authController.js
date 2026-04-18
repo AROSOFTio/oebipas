@@ -1,124 +1,231 @@
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
-const { logAudit } = require('../services/auditLogger');
+const { queueNotification } = require('../services/notificationService');
+
+const signToken = user =>
+  jwt.sign(
+    {
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      full_name: user.full_name,
+      customer_id: user.customer_id || null,
+    },
+    process.env.JWT_SECRET || 'supersecretjwtkey2026',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+  );
 
 exports.register = async (req, res) => {
-  const { full_name, username, email, password, phone } = req.body;
-  if (!full_name || !email || !password || !username) {
-    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  const { full_name, username, email, password, phone, address, meter_number } = req.body;
+
+  if (!full_name || !username || !email || !password || !address || !meter_number) {
+    return res.status(400).json({ success: false, message: 'Full name, username, email, password, address and meter number are required.' });
   }
 
+  const conn = await pool.getConnection();
   try {
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ? OR username = ?', [email, username]);
-    if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: 'Email or Username already in use' });
+    await conn.beginTransaction();
+
+    const [existingUsers] = await conn.query(
+      `SELECT id FROM users WHERE email = ? OR username = ?`,
+      [email, username]
+    );
+    if (existingUsers.length) {
+      await conn.rollback();
+      return res.status(400).json({ success: false, message: 'Email or username is already in use.' });
     }
 
+    const [[customerRole]] = await conn.query(`SELECT id FROM roles WHERE name = 'Customer' LIMIT 1`);
     const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await pool.query(
-      'INSERT INTO users (full_name, username, email, password, phone, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [full_name, username, email, hashedPassword, phone, 'active']
+
+    const [userResult] = await conn.query(
+      `INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
+      [customerRole.id, full_name, username, email, hashedPassword, phone || null]
     );
 
-    const userId = result.insertId;
-
-    // Dynamically look up the Customer role ID so it never breaks if IDs shift
-    const [[customerRole]] = await pool.query('SELECT id FROM roles WHERE name = ?', ['Customer']);
-    if (!customerRole) throw new Error('Customer role not found in database');
-    await pool.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)', [userId, customerRole.id]);
-
-    // Auto-create customer profile so they are immediately linked
-    const customerNumber = 'CUST-' + Math.floor(100000 + Math.random() * 900000);
-    const [custResult] = await pool.query(
-      'INSERT INTO customers (user_id, customer_number, full_name, email, phone, category, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [userId, customerNumber, full_name, email, phone, 'residential', 'active']
-    );
-    const customerId = custResult.insertId;
-
-    // Create a welcome notification email (simulated)
-    await pool.query(
-      'INSERT INTO notifications (customer_id, type, title, message, channel, status, sent_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
-      [customerId, 'Registration', 'Welcome to OEBIPAS', 'Thank you for registering. Your profile is automatically linked. Please contact support or wait for an administrator to assign a meter to your account.', 'email', 'sent']
+    const customerNumber = `UEDCL-${String(userResult.insertId).padStart(4, '0')}`;
+    await conn.query(
+      `INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'active')`,
+      [userResult.insertId, customerNumber, meter_number, full_name, email, phone || null, address]
     );
 
-    await logAudit(userId, 'REGISTER', 'Auth', userId, 'New user registered and customer profile linked');
+    await conn.commit();
 
-    res.status(201).json({ success: true, message: 'Registration successful. Welcome email sent.' });
+    return res.status(201).json({
+      success: true,
+      message: 'Customer account created successfully.',
+    });
   } catch (error) {
+    await conn.rollback();
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Unable to register customer account.' });
+  } finally {
+    conn.release();
   }
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body; // 'email' from frontend is now representing either email or username
+  const { email, password } = req.body;
+
   if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Missing email/username or password' });
+    return res.status(400).json({ success: false, message: 'Email or username and password are required.' });
   }
 
   try {
-    const [users] = await pool.query(`
-      SELECT u.id, u.full_name, u.username, u.email, u.password, u.status, r.name as role
-      FROM users u
-      LEFT JOIN user_roles ur ON u.id = ur.user_id
-      LEFT JOIN roles r ON ur.role_id = r.id
-      WHERE u.email = ? OR u.username = ?
-    `, [email, email]);
-
-    if (users.length === 0) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    const user = users[0];
-    if (user.status !== 'active') {
-      return res.status(403).json({ success: false, message: 'Account is not active' });
-    }
-
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email, username: user.username, role: user.role, full_name: user.full_name },
-      process.env.JWT_SECRET || 'supersecretjwtkey2026',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+    const [rows] = await pool.query(
+      `SELECT u.id, u.full_name, u.username, u.email, u.password, u.status, r.name AS role, c.id AS customer_id
+       FROM users u
+       INNER JOIN roles r ON r.id = u.role_id
+       LEFT JOIN customers c ON c.user_id = u.id
+       WHERE u.email = ? OR u.username = ?
+       LIMIT 1`,
+      [email, email]
     );
 
-    await logAudit(user.id, 'LOGIN', 'Auth', user.id, 'User logged in');
+    if (!rows.length) {
+      return res.status(401).json({ success: false, message: 'Invalid login credentials.' });
+    }
 
-    res.status(200).json({
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch || user.status !== 'active') {
+      return res.status(401).json({ success: false, message: 'Invalid login credentials.' });
+    }
+
+    const token = signToken(user);
+
+    return res.status(200).json({
       success: true,
-      message: 'Login successful',
       token,
       user: {
         id: user.id,
         full_name: user.full_name,
         username: user.username,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+        customer_id: user.customer_id,
+      },
     });
-
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Unable to complete login.' });
   }
 };
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
-  // Simulate forgot password
-  res.status(200).json({ success: true, message: 'If the email exists, a reset link will be sent.' });
+
+  if (!email) {
+    return res.status(400).json({ success: false, message: 'Email is required.' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.id, u.email, u.full_name, c.id AS customer_id, c.phone
+       FROM users u
+       LEFT JOIN customers c ON c.user_id = u.id
+       WHERE u.email = ?
+       LIMIT 1`,
+      [email]
+    );
+
+    if (!rows.length) {
+      return res.status(200).json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+    }
+
+    const user = rows[0];
+    const rawToken = crypto.randomBytes(24).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    await pool.query(`UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL`, [user.id]);
+    await pool.query(
+      `INSERT INTO password_resets (user_id, email, token_hash, expires_at)
+       VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE))`,
+      [user.id, user.email, tokenHash]
+    );
+
+    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${rawToken}`;
+    await queueNotification({
+      userId: user.id,
+      customerId: user.customer_id,
+      type: 'password_reset',
+      title: 'Password reset request',
+      message: `Use this password reset link to verify your email and reset your password: ${resetLink}`,
+      recipientEmail: user.email,
+      recipientPhone: user.phone || null,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'If the email exists, a reset link has been sent.',
+      reset_token: rawToken,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Unable to process password reset request.' });
+  }
 };
 
 exports.resetPassword = async (req, res) => {
   const { token, new_password } = req.body;
-  // Simulate reset password
-  res.status(200).json({ success: true, message: 'Password has been reset successfully.' });
+
+  if (!token || !new_password) {
+    return res.status(400).json({ success: false, message: 'Reset token and new password are required.' });
+  }
+
+  try {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const [rows] = await pool.query(
+      `SELECT * FROM password_resets
+       WHERE token_hash = ?
+         AND used_at IS NULL
+         AND expires_at > NOW()
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [tokenHash]
+    );
+
+    if (!rows.length) {
+      return res.status(400).json({ success: false, message: 'This password reset token is invalid or expired.' });
+    }
+
+    const resetRecord = rows[0];
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    await pool.query(`UPDATE users SET password = ?, email_verified_at = NOW() WHERE id = ?`, [hashedPassword, resetRecord.user_id]);
+    await pool.query(`UPDATE password_resets SET used_at = NOW() WHERE id = ?`, [resetRecord.id]);
+
+    return res.status(200).json({ success: true, message: 'Password has been reset successfully.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Unable to reset password.' });
+  }
 };
 
 exports.getMe = async (req, res) => {
-  res.status(200).json({ success: true, user: req.user });
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.id, u.full_name, u.username, u.email, u.phone, r.name AS role, c.id AS customer_id
+       FROM users u
+       INNER JOIN roles r ON r.id = u.role_id
+       LEFT JOIN customers c ON c.user_id = u.id
+       WHERE u.id = ?
+       LIMIT 1`,
+      [req.user.id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'User account not found.' });
+    }
+
+    return res.status(200).json({ success: true, user: rows[0] });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Unable to fetch account details.' });
+  }
 };

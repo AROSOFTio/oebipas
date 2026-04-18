@@ -1,29 +1,38 @@
-import React, { createContext, useState, useEffect } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 
-export const AuthContext = createContext();
+export const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+const getHomePath = role => {
+  if (role === 'Branch Manager') return '/manager';
+  if (role === 'Billing Staff') return '/staff';
+  return '/customer';
+};
+
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const storedToken = localStorage.getItem('oebipas_token');
-      if (storedToken) {
-        try {
-          const res = await axiosInstance.get('/auth/me');
-          setUser(res.data.user);
-        } catch (error) {
-          console.error("Token verification failed:", error);
-          localStorage.removeItem('oebipas_token');
-          setUser(null);
-        }
+    const bootstrap = async () => {
+      const token = localStorage.getItem('oebipas_token');
+      if (!token) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const response = await axiosInstance.get('/auth/me');
+        setUser(response.data.user);
+      } catch (error) {
+        localStorage.removeItem('oebipas_token');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    checkUser();
+    bootstrap();
   }, []);
 
   const login = (token, userData) => {
@@ -37,8 +46,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, getHomePath }}>
       {!loading && children}
     </AuthContext.Provider>
   );
-};
+}

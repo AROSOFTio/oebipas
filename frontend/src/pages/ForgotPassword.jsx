@@ -5,48 +5,46 @@ import axiosInstance from '../utils/axiosInstance';
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [tokenPreview, setTokenPreview] = useState('');
 
-  const handleForgot = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axiosInstance.post('/auth/forgot-password', { email });
-      setMessage(res.data.message);
-    } catch (err) {
-      setMessage('Failed to send reset link.');
-    }
+  const handleSubmit = async event => {
+    event.preventDefault();
+    const response = await axiosInstance.post('/auth/forgot-password', { email });
+    setMessage(response.data.message);
+    setTokenPreview(response.data.reset_token || '');
   };
 
   return (
-    <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8 space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Forgot Password</h2>
-          <p className="text-gray-500 mt-2">Enter your email to receive a reset link.</p>
-        </div>
+    <div className="min-h-screen bg-[var(--page-bg)] px-4 py-10">
+      <div className="mx-auto max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <h1 className="text-3xl font-semibold text-slate-900">Forgot password</h1>
+        <p className="mt-2 text-sm text-slate-500">A tokenised reset link is sent through the notification system for email verification.</p>
 
-        {message && <div className="bg-blue-50 text-blue-600 p-3 rounded-lg text-sm text-center">{message}</div>}
-
-        <form onSubmit={handleForgot} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email Address</label>
-            <input 
-              type="email" required
-              value={email} onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-border rounded-lg outline-none focus:border-primary" 
-              placeholder="admin@oebipas.local"
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
+            <input
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
+              value={email}
+              onChange={event => setEmail(event.target.value)}
+              required
             />
-          </div>
-          <button 
-            type="submit"
-            className="w-full py-2.5 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
-          >
-            Send Reset Link
+          </label>
+          <button type="submit" className="w-full rounded-2xl bg-[var(--panel-strong)] px-4 py-3 text-sm font-semibold text-white">
+            Send reset link
           </button>
         </form>
-        
-        <div className="text-center text-sm">
-          <Link to="/login" className="text-primary hover:underline">Back to Login</Link>
-        </div>
+
+        {message ? <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">{message}</div> : null}
+        {tokenPreview ? (
+          <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Demo reset token: <span className="font-mono">{tokenPreview}</span>
+          </div>
+        ) : null}
+
+        <Link to="/login" className="mt-6 inline-block text-sm font-medium text-[var(--panel-strong)]">
+          Return to login
+        </Link>
       </div>
     </div>
   );

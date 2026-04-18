@@ -1,108 +1,77 @@
-# OEBIPAS Standard Operating Procedure (SOP)
+# Standard Operating Procedure
 
-Welcome to the **OEBIPAS (Online Electricity Billing, Integrated Payment, and Analytics System)**. This document is a comprehensive "A to Z" guide designed for absolute beginners and advanced professional users.
+## 1. Purpose
 
----
+This system supports the final year project titled:
 
-## 1. System Overview
-OEBIPAS is a mission-critical utility billing engine designed to automate the lifecycle of electricity consumers—from meter installation and consumption tracking to automated billing and professional revenue collection.
+**Development of an Online Electricity Billing and Payment System: A Case Study of UEDCL**
 
-### Core Architecture
-- **Financial Engine**: Handles tariffs, standing charges, and automated bill generation.
-- **Payment Portal**: Supports MTN Mobile Money, Airtel Money, Visa/Mastercard, and PesaPal.
-- **Analytics Hub**: Provides real-time KPIs on revenue, outstanding debt, and system health.
+It is intentionally limited to the approved scope so every feature is easy to explain during academic defense.
 
----
+## 2. Roles
 
-## 2. User Roles & Access Control (RBAC)
-The system enforces strict security levels to ensure data integrity:
+| Role | Main Access |
+| --- | --- |
+| Branch Manager | Full branch-level control |
+| Billing Staff | Consumption, bills, and payment monitoring |
+| Customer | Personal bills, payments, notifications, and profile |
 
-| Role | Access Level | Responsibilities |
-| :--- | :--- | :--- |
-| **Super Admin** | Full System Access | User management, system settings, audit logs, and tariff overrides. |
-| **Billing Officer** | Field & Billing Ops | Customer onboarding, meter readings, and manual bill generation. |
-| **Finance Officer** | Financial Control | Payment verification, receipting, and financial reporting. |
-| **Support/Viewer** | Read-Only | Viewing dashboards and responding to support tickets. |
-| **Customer** | Portal Access | Viewing bills, usage history, and making secure payments. |
+## 3. Core Workflow
 
----
+### Customer Management
+- Branch Manager creates and updates customer records
+- Customer can update only personal profile details
 
-## 3. Administration & Setup (A-Z)
+### Consumption Entry
+- Billing Staff or Branch Manager enters monthly units consumed
+- The system automatically generates the bill immediately after saving consumption
 
-### [A] Administrative Dashboard
-- **Dashboard**: High-level view of Total Revenue, Active Customers, and Pending Bills.
-- **System Users**: Create, edit, or delete staff accounts.
-- **Audit Logs**: Track every action taken by staff (who did what and when).
-- **Settings**: Configure the global system name and technical gateway keys.
+### Billing
+- Billing formula: `units consumed x rate per unit + fixed charge`
+- Previous unpaid balance is carried forward automatically
 
-### [B] Billing & Invoicing
-- **Bill Search**: Locate bills by Number, Account, or Date.
-- **Professional Invoices**: Click "Download PDF" on any bill to generate a branded, professional tax invoice.
-- **Zero Balance Logic**: Customers with no debt are clearly notified, reducing support queries.
+### Penalties
+- If the due date passes and a balance still exists, the system automatically marks the bill overdue
+- A penalty is applied automatically using the active tariff settings
 
-### [C] Customer Management
-- **Connections**: Every customer can have multiple connections (e.g., House 1, Shop 2).
-- **Meters**: Link physical meters to connections to track consumption accurately.
+### Payments
+- Customer initiates payment from the portal
+- The system records a pending transaction
+- A callback updates the payment to successful or failed
+- On successful callback, the account balance updates automatically
 
-### [F] Finance & Payments
-- **Payment Verification**: Finance officers must verify manual bank transfers.
-- **Smart Receipts**: Automated professional receipts are generated for every payment.
-- **PesaPal**: Integrated for automated settlement without human intervention.
+### Notifications
+- Bill generated
+- Payment successful
+- Payment overdue
+- Password reset request
 
----
+## 4. Reports
 
-## 4. Operational Workflows (Step-by-Step)
+The system provides only these basic reports:
 
-### Workflow 1: Onboarding a New Customer
-1. Navigate to **Customers** -> **Add New Customer**.
-2. Enter the legal name, contact details, and location.
-3. Once created, click on the customer to **Add Connection**.
-4. Link a **Meter Number** and set the initial reading to 0.
+- Daily revenue
+- Monthly billing summary
+- Outstanding payments
 
-### Workflow 2: The Monthly Billing Cycle
-1. **Meter Readings**: Enter the current reading for each meter.
-2. **Billing Engine**: The system calculates: `(Current Reading - Previous Reading) * Tariff Rate + Standing Charge`.
-3. **Generation**: Click "Generate Bill" to create the legal invoice.
-4. **Notification**: The system automatically updates the customer's portal.
+## 5. Password Reset
 
-### Workflow 3: Processing Payments
-1. **Mobile Money**: Customer selects MTN or Airtel on the portal, enters their 10-digit number, and confirms the prompt.
-2. **Manual Settlement**: If a customer pays via bank, the Finance Officer goes to **Payments** -> **Add Payment** to reconcile the account manually.
-3. **Receipting**: Click "Download Receipt" to provide the customer with a branded PDF proof of payment.
+- User requests reset with email
+- System creates a time-limited reset token
+- User submits token and new password
+- System updates password and confirms verification
 
----
+## 6. Demo Guidance
 
-## 5. Technical Maintenance (Pro Guide)
+Use the following sequence during presentation:
 
-### Docker & VPS Commands
-The system runs in isolated containers. Use these commands on your VPS:
-- **View Container Status**: `docker ps`
-- **Restart System**: `docker-compose restart`
-- **Rebuild (After Code Updates)**:
-  ```bash
-  git pull origin main
-  docker-compose build --no-cache
-  docker-compose up -d
-  ```
+1. Show role-based access with the three approved roles
+2. Enter consumption and show automatic bill generation
+3. Show overdue bill and automatic penalty
+4. Process a payment and show callback handling
+5. Show notification records
+6. Show the three basic reports
 
-### Database Management (DBA)
-- Access the database via **phpMyAdmin** at: `http://your-vps-ip:8084`
-- **Credentials**: Root user with your configured database password.
-- **Backups**: Standard MySQL dumps are stored in the `db_data` volume.
+## 7. Scope Discipline
 
-### Environment Variables (`.env`)
-Found in the `backend/` and `docker-compose.yml` files:
-- `JWT_SECRET`: The security key for logging in.
-- `DB_PASSWORD`: The root password for the database.
-- `PESAPAL_KEYS`: Integration keys for automated payments.
-
----
-
-## 6. Troubleshooting
-- **White Screen**: Usually means the backend container is down or the `JWT_SECRET` is missing. Check logs with `docker logs oebipas_backend`.
-- **"Zero Balance" Error**: Ensure the customer actually has an unpaid bill in the system before they attempt to pay.
-- **Logo Not Showing on PDF**: This requires a clean rebuild (`--no-cache`) to ensure the asset is bundled into the container.
-
----
-**Standard Operating Procedure Version 1.0**
-*Prepared for AROSOFT.IO / OEBIPAS Deployment*
+Do not present removed modules such as feedback, audit logs, global search, service connections, advanced settings, or full meter management, because they are outside the approved proposal.

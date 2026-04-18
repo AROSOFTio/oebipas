@@ -2,8 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --page-bg: #f4f1ea;
+  --panel-strong: #143b5d;
+  --panel-soft: #dfe8ef;
+}
+
 @layer base {
   body {
-    @apply bg-background text-gray-900 font-sans;
+    @apply m-0 bg-[var(--page-bg)] text-slate-900;
+    font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
   }
 }
