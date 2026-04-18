@@ -41,7 +41,7 @@ export default function Home() {
               'Automated bill generation',
               'Pesapal payment processing and callback handling',
               'Automatic penalty calculation',
-              'Email notifications',
+              'Live email and SMS notifications',
               'Dashboard and basic reports',
             ].map(item => (
               <div key={item} className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">

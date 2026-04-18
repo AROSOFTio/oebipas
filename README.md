@@ -50,6 +50,33 @@ The implementation follows Pesapal API 3.0 token generation, IPN registration, o
 - Submit Order Request: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/submitorderrequest
 - Get Transaction Status: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/gettransactionstatus
 
+## Live Notification Configuration
+
+The system now attempts live delivery through both email and SMS whenever a bill is generated, a payment succeeds, an overdue balance is detected, or a password reset link is requested.
+
+Set these values in `.env`:
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM_EMAIL`
+- `SMTP_FROM_NAME`
+- `AFRICASTALKING_USERNAME`
+- `AFRICASTALKING_API_KEY`
+- `AFRICASTALKING_SENDER_ID`
+
+Implementation references:
+- Nodemailer SMTP transport: https://nodemailer.com/smtp
+- Africa's Talking SMS getting started: https://help.africastalking.com/en/articles/2258472-how-do-i-start-sending-messages
+
+## Tariff Rules
+
+- Branch Manager can create, edit, and delete tariff records
+- Penalty is percentage-only
+- Fixed-amount penalties are not allowed
+
 ## Default Demo Accounts
 
 The seed now contains the three requested users below. The database stores the exact bcrypt hashes provided for them.

@@ -9,7 +9,6 @@ export default function Notifications() {
     customer_id: '',
     title: '',
     message: '',
-    channel: 'email',
   });
   const [message, setMessage] = useState('');
 
@@ -26,12 +25,12 @@ export default function Notifications() {
     setMessage(response.data.message);
     const notificationsResponse = await axiosInstance.get('/notifications');
     setNotifications(notificationsResponse.data.data);
-    setForm({ customer_id: '', title: '', message: '', channel: 'email' });
+    setForm({ customer_id: '', title: '', message: '' });
   };
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-      <SectionCard title="Send Notification" subtitle="Email is required and SMS can be simulated">
+      <SectionCard title="Send Notification" subtitle="Manual alerts are delivered through both live email and live SMS">
         {message ? <div className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
         <form className="space-y-4" onSubmit={handleSubmit}>
           <label className="block">
@@ -48,17 +47,6 @@ export default function Notifications() {
                   {customer.customer_number} - {customer.full_name}
                 </option>
               ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Channel</span>
-            <select
-              value={form.channel}
-              onChange={event => setForm(current => ({ ...current, channel: event.target.value }))}
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3"
-            >
-              <option value="email">Email</option>
-              <option value="sms">SMS</option>
             </select>
           </label>
           <label className="block">

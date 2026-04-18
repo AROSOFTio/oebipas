@@ -28,7 +28,7 @@ exports.getNotifications = async (req, res) => {
 };
 
 exports.sendNotification = async (req, res) => {
-  const { customer_id, title, message, channel = 'email' } = req.body;
+  const { customer_id, title, message } = req.body;
 
   if (!customer_id || !title || !message) {
     return res.status(400).json({ success: false, message: 'Customer, title and message are required.' });
@@ -51,7 +51,6 @@ exports.sendNotification = async (req, res) => {
       type: 'manual',
       title,
       message,
-      channel,
       recipientEmail: customer.email,
       recipientPhone: customer.phone,
     });
