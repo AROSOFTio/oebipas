@@ -30,9 +30,25 @@ Backend and frontend both enforce this role structure.
 
 - Bill generation occurs automatically after consumption entry
 - Overdue penalties are applied automatically after due date
-- Successful payment callbacks update balances automatically
+- Successful Pesapal callbacks and IPN updates balances automatically
 - Notifications are sent automatically for bill generation, payment success, and overdue bills
 - Password reset uses a token-based flow with email verification logic
+
+## Pesapal Configuration
+
+Set these values in `.env` before deployment:
+
+- `PESAPAL_CONSUMER_KEY`
+- `PESAPAL_CONSUMER_SECRET`
+- `PESAPAL_ENV`
+- `FRONTEND_URL`
+- `BACKEND_PUBLIC_URL`
+
+The implementation follows Pesapal API 3.0 token generation, IPN registration, order submission, and transaction status verification:
+- Authentication: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/authentication
+- Register IPN URL: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/registeripnurl
+- Submit Order Request: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/submitorderrequest
+- Get Transaction Status: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/gettransactionstatus
 
 ## Default Demo Accounts
 

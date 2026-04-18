@@ -5,7 +5,15 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--page-bg)] px-4 py-10">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.2fr_0.8fr]">
         <section className="rounded-[2rem] bg-[var(--panel-strong)] p-8 text-white shadow-xl lg:p-12">
-          <p className="text-sm uppercase tracking-[0.35em] text-slate-200">Final Year Project System</p>
+          <div className="flex items-center gap-4">
+            <div className="rounded-3xl bg-white p-3">
+              <img src="/logo.png" alt="UEDCL logo" className="h-16 w-16 object-contain" />
+            </div>
+            <div>
+              <p className="text-sm uppercase tracking-[0.35em] text-slate-200">Final Year Project System</p>
+              <p className="mt-1 text-sm text-slate-200">UEDCL branded online billing and payment portal</p>
+            </div>
+          </div>
           <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-tight lg:text-5xl">
             Development of an Online Electricity Billing and Payment System: A Case Study of UEDCL
           </h1>
@@ -31,7 +39,7 @@ export default function Home() {
               'Customer management',
               'Consumption entry',
               'Automated bill generation',
-              'Payment processing and callback handling',
+              'Pesapal payment processing and callback handling',
               'Automatic penalty calculation',
               'Email notifications',
               'Dashboard and basic reports',

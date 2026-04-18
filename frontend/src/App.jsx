@@ -21,6 +21,7 @@ import MakePayment from './pages/customer/MakePayment';
 import CustomerPaymentHistory from './pages/customer/CustomerPaymentHistory';
 import CustomerNotifications from './pages/customer/CustomerNotifications';
 import CustomerProfile from './pages/customer/CustomerProfile';
+import PaymentReturn from './pages/customer/PaymentReturn';
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
               <Route path="bills" element={<CustomerBills />} />
               <Route path="pay" element={<MakePayment />} />
               <Route path="payments" element={<CustomerPaymentHistory />} />
+              <Route path="payments/return" element={<PaymentReturn />} />
               <Route path="notifications" element={<CustomerNotifications />} />
             </Route>
           </Route>

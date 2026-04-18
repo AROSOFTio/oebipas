@@ -71,8 +71,16 @@ export default function PortalLayout() {
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="rounded-3xl border border-white/15 bg-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-200">UEDCL</p>
+          <div className="rounded-[2rem] border border-white/15 bg-gradient-to-br from-white/15 to-white/5 p-5 shadow-soft">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-white p-2">
+                <img src="/logo.png" alt="UEDCL logo" className="h-12 w-12 object-contain" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-200">UEDCL</p>
+                <p className="text-xs text-slate-300">Online Billing Portal</p>
+              </div>
+            </div>
             <h1 className="mt-3 text-2xl font-semibold leading-tight">{pageTitle[user?.role] || 'Workspace'}</h1>
             <p className="mt-2 text-sm text-slate-200">{user?.full_name}</p>
           </div>
@@ -108,7 +116,7 @@ export default function PortalLayout() {
         </aside>
 
         <main className="flex-1 px-4 py-4 sm:px-6 lg:px-10 lg:py-8">
-          <header className="mb-6 rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+          <header className="mb-6 rounded-[2rem] border border-slate-200 bg-white/90 px-5 py-4 shadow-soft backdrop-blur">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <button
@@ -118,6 +126,9 @@ export default function PortalLayout() {
                 >
                   <Menu size={18} />
                 </button>
+                <div className="hidden rounded-2xl bg-[var(--panel-soft)] p-2 sm:block">
+                  <img src="/logo.png" alt="UEDCL logo" className="h-10 w-10 object-contain" />
+                </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Online Electricity Billing and Payment System</p>
                   <h2 className="mt-1 text-xl font-semibold text-slate-900">Development of an Online Electricity Billing and Payment System: A Case Study of UEDCL</h2>

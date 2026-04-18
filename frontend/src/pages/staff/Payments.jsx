@@ -10,7 +10,7 @@ export default function Payments() {
   }, []);
 
   return (
-    <SectionCard title="Payment Monitoring" subtitle="Track payment progress and callback outcomes">
+    <SectionCard title="Payment Monitoring" subtitle="Track Pesapal payment progress, order references and verification outcomes">
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead className="text-slate-500">

@@ -10,7 +10,7 @@ export default function CustomerPaymentHistory() {
   }, []);
 
   return (
-    <SectionCard title="Payment History" subtitle="Track successful and failed payment attempts">
+    <SectionCard title="Payment History" subtitle="Track Pesapal payment attempts and confirmed account updates">
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead className="text-slate-500">

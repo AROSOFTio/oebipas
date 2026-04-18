@@ -3,12 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --page-bg: #f4f1ea;
+  --page-bg: #efe9dd;
   --panel-strong: #143b5d;
-  --panel-soft: #dfe8ef;
+  --panel-soft: #d7e2ee;
+  --accent-soft: #f1dfb8;
+  --line-soft: rgba(20, 59, 93, 0.1);
 }
 
 @layer base {
+  html {
+    background:
+      radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 30%),
+      linear-gradient(180deg, #f5efe4 0%, #efe9dd 100%);
+  }
+
   body {
     @apply m-0 bg-[var(--page-bg)] text-slate-900;
     font-family: "Segoe UI", "Trebuchet MS", sans-serif;

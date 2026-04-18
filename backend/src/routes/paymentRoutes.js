@@ -4,7 +4,10 @@ const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddle
 
 const router = express.Router();
 
-router.post('/callback', paymentController.handlePaymentCallback);
+router.get('/verify', paymentController.verifyPesapalPayment);
+router.post('/verify', paymentController.verifyPesapalPayment);
+router.post('/ipn', paymentController.handlePesapalIpn);
+router.get('/ipn', paymentController.handlePesapalIpn);
 
 router.use(authenticateToken);
 

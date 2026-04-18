@@ -30,7 +30,15 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-[var(--page-bg)] px-4 py-10">
       <div className="mx-auto max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Secure Access</p>
+        <div className="flex items-center gap-4">
+          <div className="rounded-3xl bg-[var(--panel-soft)] p-3">
+            <img src="/logo.png" alt="UEDCL logo" className="h-14 w-14 object-contain" />
+          </div>
+          <div>
+            <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Secure Access</p>
+            <p className="mt-1 text-sm text-slate-500">UEDCL Online Billing and Payment System</p>
+          </div>
+        </div>
         <h1 className="mt-4 text-3xl font-semibold text-slate-900">Sign in</h1>
         <p className="mt-2 text-sm text-slate-500">Use your Branch Manager, Billing Staff, or Customer credentials.</p>
 
