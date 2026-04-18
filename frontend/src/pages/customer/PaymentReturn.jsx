@@ -15,26 +15,45 @@ export default function PaymentReturn() {
       return;
     }
 
-    axiosInstance
-      .get(`/payments/verify?orderTrackingId=${encodeURIComponent(orderTrackingId)}`)
-      .then(response => {
-        const paymentStatus = response.data.data?.payment_status_description || 'Pending';
-        const success = String(paymentStatus).toUpperCase() === 'COMPLETED';
-        setState({
-          loading: false,
-          success,
-          message: success
-            ? 'Your Pesapal payment was confirmed and your balance has been updated.'
-            : `Pesapal returned a payment status of ${paymentStatus}.`,
+    let attempts = 0;
+    let timer = null;
+
+    const verify = () => {
+      axiosInstance
+        .get(`/payments/verify?orderTrackingId=${encodeURIComponent(orderTrackingId)}`)
+        .then(response => {
+          const paymentStatus = response.data.data?.payment_status_description || 'Pending';
+          const normalized = response.data.data?.payment_status || 'pending';
+          const success = normalized === 'successful';
+
+          if (normalized === 'pending' && attempts < 4) {
+            attempts += 1;
+            timer = window.setTimeout(verify, 2500);
+            return;
+          }
+
+          setState({
+            loading: false,
+            success,
+            message: success
+              ? 'Your Pesapal payment was confirmed, your bill balance is now updated, and notifications have been sent.'
+              : `Pesapal returned a payment status of ${paymentStatus}.`,
+          });
+        })
+        .catch(error => {
+          setState({
+            loading: false,
+            success: false,
+            message: error.response?.data?.message || 'We could not verify the Pesapal payment yet.',
+          });
         });
-      })
-      .catch(error => {
-        setState({
-          loading: false,
-          success: false,
-          message: error.response?.data?.message || 'We could not verify the Pesapal payment yet.',
-        });
-      });
+    };
+
+    verify();
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
   }, [searchParams]);
 
   return (

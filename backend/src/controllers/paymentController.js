@@ -8,9 +8,43 @@ const buildPaymentReference = () => `PAY-${Date.now()}-${Math.floor(Math.random(
 
 const normalizeStatus = status => {
   const normalized = String(status || '').toUpperCase();
-  if (normalized === 'COMPLETED' || normalized === 'SUCCESSFUL') return 'successful';
-  if (normalized === 'FAILED' || normalized === 'INVALID' || normalized === 'REVERSED') return 'failed';
+  if (
+    normalized.includes('COMPLETED') ||
+    normalized.includes('SUCCESS') ||
+    normalized.includes('PAID')
+  ) {
+    return 'successful';
+  }
+  if (
+    normalized.includes('FAILED') ||
+    normalized.includes('INVALID') ||
+    normalized.includes('REVERSED')
+  ) {
+    return 'failed';
+  }
   return 'pending';
+};
+
+const notifyInternalPaymentReceipt = async ({ billNumber, customerId, amount }) => {
+  const [staffRows] = await pool.query(
+    `SELECT u.id
+     FROM users u
+     INNER JOIN roles r ON r.id = u.role_id
+     WHERE r.name IN ('Branch Manager', 'Billing Staff')
+       AND u.status = 'active'`
+  );
+
+  const title = 'Payment received';
+  const message = `Payment of UGX ${Number(amount).toLocaleString()} has been received for bill ${billNumber}.`;
+
+  for (const staff of staffRows) {
+    await pool.query(
+      `INSERT INTO notifications
+        (user_id, customer_id, notification_type, channel, title, message, recipient_email, recipient_phone, status, sent_at)
+       VALUES (?, ?, 'payment_successful', 'in_app', ?, ?, NULL, NULL, 'sent', NOW())`,
+      [staff.id, customerId, title, message]
+    );
+  }
 };
 
 const settlePayment = async ({ paymentId, status, orderTrackingId = null, confirmationCode = null }) => {
@@ -20,7 +54,7 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
     await conn.beginTransaction();
 
     const [rows] = await conn.query(
-      `SELECT p.*, c.user_id, c.email, c.phone, b.bill_number, b.balance_due, b.due_date
+      `SELECT p.*, c.user_id, c.email, c.phone, b.bill_number, b.balance_due, b.due_date, b.customer_id
        FROM payments p
        INNER JOIN customers c ON c.id = p.customer_id
        INNER JOIN bills b ON b.id = p.bill_id
@@ -76,6 +110,12 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
         message: `Payment for bill ${payment.bill_number} was successful. Your account balance has been updated automatically.`,
         recipientEmail: payment.email,
         recipientPhone: payment.phone,
+      });
+
+      await notifyInternalPaymentReceipt({
+        billNumber: payment.bill_number,
+        customerId: payment.customer_id,
+        amount,
       });
     } else {
       await conn.query(
@@ -251,6 +291,7 @@ const verifyAndPersistPayment = async orderTrackingId => {
     merchant_reference: merchantReference,
     order_tracking_id: orderTrackingId,
     amount: transactionStatus.amount,
+    payment_status: normalizedStatus,
   };
 };
 
