@@ -5,20 +5,20 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('abstract');
 
   return (
-    <div className="min-h-screen bg-[#eaedf5] flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
+    <div className="min-h-screen bg-[#eaedf5] flex flex-col items-center justify-center p-3 sm:p-6 lg:p-8 font-sans">
       
       {/* The Book Cover Container */}
       <div 
-        className="group relative w-full max-w-4xl bg-white min-h-[85vh] rounded-r-[3rem] rounded-l-2xl shadow-[25px_25px_60px_rgba(0,0,0,0.08),-5px_0_15px_rgba(0,0,0,0.03)] p-2 transition-transform duration-700 hover:-translate-y-2 animate-slide-up-fade flex"
+        className="group relative w-full sm:max-w-2xl lg:max-w-4xl bg-white min-h-[90vh] sm:min-h-[85vh] rounded-r-[2rem] sm:rounded-r-[3rem] rounded-l-lg sm:rounded-l-2xl shadow-[15px_15px_40px_rgba(0,0,0,0.08),-3px_0_10px_rgba(0,0,0,0.03)] p-1.5 sm:p-2 transition-transform duration-700 hover:-translate-y-2 animate-slide-up-fade flex"
       >
         {/* Book Spine / Binding Effect */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 md:w-12 bg-gradient-to-r from-slate-200 via-slate-100 to-white rounded-l-2xl border-r border-slate-200/50 z-0" />
+        <div className="absolute left-0 top-0 bottom-0 w-5 md:w-10 bg-gradient-to-r from-slate-200 via-slate-100 to-white rounded-l-lg sm:rounded-l-2xl border-r border-slate-200/50 z-0" />
 
         {/* Outer Page Border (Animated Radius & Border) */}
-        <div className="relative z-10 w-full ml-4 md:ml-8 border-4 border-slate-100 rounded-r-[2.5rem] rounded-l-lg p-1 sm:p-2 transition-all duration-700 ease-in-out group-hover:border-[#3543bb]/30 group-hover:rounded-r-[4rem] overflow-hidden flex flex-col">
+        <div className="relative z-10 w-full ml-3 md:ml-8 border-2 sm:border-4 border-slate-100 rounded-r-[1.75rem] sm:rounded-r-[2.5rem] rounded-l-sm p-0.5 sm:p-2 transition-all duration-700 ease-in-out group-hover:border-[#3543bb]/30 group-hover:rounded-r-[4rem] overflow-hidden flex flex-col">
           
           {/* Inner Page Frame */}
-          <div className="flex-1 w-full border border-slate-200 rounded-r-[2rem] rounded-l-md p-6 sm:p-12 flex flex-col bg-slate-50/30 transition-all duration-700 group-hover:bg-white relative">
+          <div className="flex-1 w-full border border-slate-200 rounded-r-[1.5rem] sm:rounded-r-[2rem] rounded-l-sm p-5 sm:p-8 lg:p-12 flex flex-col bg-slate-50/30 transition-all duration-700 group-hover:bg-white relative">
             
             {/* Top Academic Header */}
             <div className="flex flex-col items-center justify-center pt-4 sm:pt-8 text-center relative z-20">
