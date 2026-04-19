@@ -52,7 +52,7 @@ export default function Home() {
                     activeTab === 'abstract' ? 'border-[#3543bb] text-[#3543bb]' : 'border-transparent text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  System Index
+                  System Features
                 </button>
                 <button
                   onClick={() => setActiveTab('tech')}
@@ -60,7 +60,7 @@ export default function Home() {
                     activeTab === 'tech' ? 'border-[#3543bb] text-[#3543bb]' : 'border-transparent text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  Architecture
+                  Technologies Used
                 </button>
               </div>
 
@@ -69,16 +69,22 @@ export default function Home() {
                 {activeTab === 'abstract' ? (
                   <ul className="space-y-4 font-medium text-sm sm:text-base border-l-2 border-slate-200 pl-6 mx-auto w-fit">
                     <li className="flex items-center gap-4">
-                      <span className="text-[#3543bb] font-bold">01.</span> Dynamic Role Segregation (IAM)
+                      <span className="text-[#3543bb] font-bold">01.</span> User Account Registration and Authentication
                     </li>
                     <li className="flex items-center gap-4">
-                      <span className="text-[#3543bb] font-bold">02.</span> Cross-platform Automated Billing Engine
+                      <span className="text-[#3543bb] font-bold">02.</span> Automated Monthly Bill Generation
                     </li>
                     <li className="flex items-center gap-4">
-                      <span className="text-[#3543bb] font-bold">03.</span> Secure Pesapal Encrypted Gateways
+                      <span className="text-[#3543bb] font-bold">03.</span> Online Payment via Pesapal Gateway
                     </li>
                     <li className="flex items-center gap-4">
-                      <span className="text-[#3543bb] font-bold">04.</span> Instant Live-Ledger Reconciliation
+                      <span className="text-[#3543bb] font-bold">04.</span> Automatic Penalty and Overdue Calculation
+                    </li>
+                    <li className="flex items-center gap-4">
+                      <span className="text-[#3543bb] font-bold">05.</span> Email and SMS Notifications
+                    </li>
+                    <li className="flex items-center gap-4">
+                      <span className="text-[#3543bb] font-bold">06.</span> Role-Based Access for Staff and Customers
                     </li>
                   </ul>
                 ) : (
@@ -108,10 +114,10 @@ export default function Home() {
             <div className="mt-12 sm:mt-16 flex flex-col sm:flex-row items-center justify-center gap-5 w-full z-20 relative pb-4">
                <Link to="/login" className="w-full sm:w-auto relative group overflow-hidden rounded-full bg-[#3543bb] px-10 py-4 text-sm font-bold tracking-widest text-white shadow-lg transition-transform hover:-translate-y-1">
                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                 <span className="relative uppercase">Unlock Portal</span>
+                 <span className="relative uppercase">Login</span>
                </Link>
                <Link to="/register" className="w-full sm:w-auto rounded-full border border-slate-300 bg-white px-10 py-4 text-sm font-bold uppercase tracking-widest text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400 hover:-translate-y-1">
-                 Register Token
+                 Register
                </Link>
             </div>
             
