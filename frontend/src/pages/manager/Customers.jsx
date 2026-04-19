@@ -71,9 +71,9 @@ export default function Customers() {
         <form className="space-y-4" onSubmit={handleSubmit}>
           <p className="text-xs font-bold uppercase tracking-widest text-[var(--panel-strong)]">Personal Information</p>
           {[
-            ['full_name', 'Full name', true],
-            ['email', 'Email Address', true],
-            ['phone', 'Phone Number', false],
+            ['full_name', 'Full name (*)', true],
+            ['email', 'Email Address (*)', true],
+            ['phone', 'Phone Number (*)', true],
           ].map(([name, label, required]) => (
             <label key={name} className="block">
               <span className="mb-1 block text-sm font-medium text-[var(--text-strong)]">{label}</span>

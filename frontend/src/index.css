@@ -17,7 +17,7 @@
 @layer base {
   body {
     @apply m-0 bg-[var(--page-bg)] text-[var(--text-strong)] antialiased;
-    font-family: "Inter", "Segoe UI", sans-serif;
+    font-family: "Outfit", "Inter", "Segoe UI", sans-serif;
   }
 
   * {

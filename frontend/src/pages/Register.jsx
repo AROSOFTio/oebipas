@@ -107,11 +107,11 @@ export default function Register() {
           )}
 
           {[
-            ['full_name', 'Full Name', 'text', true],
-            ['username', 'Username', 'text', true],
-            ['email', 'Email Address', 'email', true],
-            ['phone', 'Phone Number (Optional)', 'text', false],
-            ['password', 'Password', 'password', true],
+            ['full_name', 'Full Name (*)', 'text', true],
+            ['username', 'Username (*)', 'text', true],
+            ['email', 'Email Address (*)', 'email', true],
+            ['phone', 'Phone Number (*)', 'text', true],
+            ['password', 'Password (*)', 'password', true],
           ].map(([name, label, type, required]) => (
             <label key={name} className="block">
               <span className="mb-1 block text-sm font-medium text-[var(--text-strong)]">{label}</span>

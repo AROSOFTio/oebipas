@@ -71,18 +71,16 @@ export default function PortalLayout() {
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="rounded-[2rem] border border-white/15 bg-gradient-to-br from-white/15 to-white/5 p-5 shadow-soft">
+          <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-white p-2">
-                <img src="/logo.png" alt="UEDCL logo" className="h-12 w-12 object-contain" />
+              <div className="rounded-xl bg-white/10 backdrop-blur shadow-sm p-1.5 flex h-12 w-12 items-center justify-center">
+                <img src="/logo.png" alt="Logo" className="max-h-full max-w-full object-contain" />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-200">UEDCL</p>
-                <p className="text-xs text-slate-300">Online Billing Portal</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-blue-300 font-bold">OEBIPAS</p>
+                <p className="text-sm font-semibold text-white tracking-wide">{user?.full_name}</p>
               </div>
             </div>
-            <h1 className="mt-3 text-2xl font-semibold leading-tight">{pageTitle[user?.role] || 'Workspace'}</h1>
-            <p className="mt-2 text-sm text-slate-200">{user?.full_name}</p>
           </div>
 
           <nav className="mt-8 space-y-2">
