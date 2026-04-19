@@ -34,7 +34,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          <Route element={<ProtectedRoute allowedRoles={['Branch Manager']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['System administrators']} />}>
             <Route path="/manager" element={<PortalLayout />}>
               <Route index element={<StaffDashboard />} />
               <Route path="customers" element={<Customers />} />
@@ -47,7 +47,7 @@ function App() {
             </Route>
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={['Billing Staff']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['Billing officers']} />}>
             <Route path="/staff" element={<PortalLayout />}>
               <Route index element={<StaffDashboard />} />
               <Route path="consumption" element={<Consumption />} />
@@ -56,7 +56,7 @@ function App() {
             </Route>
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={['Customer']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['Electricity consumers']} />}>
             <Route path="/customer" element={<PortalLayout />}>
               <Route index element={<CustomerDashboard />} />
               <Route path="profile" element={<CustomerProfile />} />

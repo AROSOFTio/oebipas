@@ -17,7 +17,7 @@ import {
 import { AuthContext } from '../context/AuthContext';
 
 const navConfig = {
-  'Branch Manager': [
+  'System administrators': [
     { to: '/manager', label: 'Dashboard', icon: Home },
     { to: '/manager/customers', label: 'Customers', icon: Users },
     { to: '/manager/consumption', label: 'Consumption', icon: Zap },
@@ -27,13 +27,13 @@ const navConfig = {
     { to: '/manager/notifications', label: 'Notifications', icon: Bell },
     { to: '/manager/tariffs', label: 'Tariffs', icon: Gauge },
   ],
-  'Billing Staff': [
+  'Billing officers': [
     { to: '/staff', label: 'Dashboard', icon: Home },
     { to: '/staff/consumption', label: 'Consumption', icon: Zap },
     { to: '/staff/bills', label: 'Bills', icon: FileText },
     { to: '/staff/payments', label: 'Payments', icon: CreditCard },
   ],
-  Customer: [
+  'Electricity consumers': [
     { to: '/customer', label: 'Dashboard', icon: Home },
     { to: '/customer/profile', label: 'My Profile', icon: User },
     { to: '/customer/bills', label: 'My Bills', icon: FileText },
@@ -44,9 +44,9 @@ const navConfig = {
 };
 
 const pageTitle = {
-  'Branch Manager': 'Branch Manager Workspace',
-  'Billing Staff': 'Billing Staff Workspace',
-  Customer: 'Customer Portal',
+  'System administrators': 'Administration',
+  'Billing officers': 'Billing Officer',
+  'Electricity consumers': 'Customer Portal',
 };
 
 export default function PortalLayout() {
