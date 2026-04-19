@@ -6,7 +6,7 @@ set -e
 echo "Starting deployment for OEBIPAS..."
 
 # Navigate to the deployment directory
-cd /www/www/oebipas.arosoft.io
+cd /www/wwwroot/oebipas.arosoft.io
 
 # Pull the latest changes from the main branch
 echo "Pulling latest changes from git..."
