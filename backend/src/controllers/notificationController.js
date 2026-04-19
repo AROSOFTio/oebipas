@@ -1,9 +1,10 @@
 const pool = require('../config/db');
 const { queueNotification } = require('../services/notificationService');
+const { isCustomerRole } = require('../utils/roles');
 
 exports.getNotifications = async (req, res) => {
   try {
-    if (req.user.role !== 'Customer') {
+    if (!isCustomerRole(req.user.role)) {
       const [rows] = await pool.query(
         `SELECT *
          FROM notifications

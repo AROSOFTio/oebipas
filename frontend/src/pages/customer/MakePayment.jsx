@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import SectionCard from '../../components/SectionCard';
+import { subscribeToPaymentSync } from '../../utils/paymentSync';
 
 export default function MakePayment() {
   const [bills, setBills] = useState([]);
@@ -9,13 +10,14 @@ export default function MakePayment() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ bill_id: '', amount: '' });
 
-  const loadBills = async () => {
-    const response = await axiosInstance.get('/bills/mine');
-    setBills(response.data.data.filter(item => Number(item.balance_due) > 0));
-  };
-
   useEffect(() => {
+    const loadBills = async () => {
+      const response = await axiosInstance.get('/bills/mine');
+      setBills(response.data.data.filter(item => Number(item.balance_due) > 0));
+    };
+
     loadBills();
+    return subscribeToPaymentSync(loadBills);
   }, []);
 
   const handleBillChange = event => {

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import axiosInstance from '../../utils/axiosInstance';
 import SectionCard from '../../components/SectionCard';
+import axiosInstance from '../../utils/axiosInstance';
+import { markPaymentSync } from '../../utils/paymentSync';
 
 export default function PaymentReturn() {
   const [searchParams] = useSearchParams();
@@ -9,6 +10,8 @@ export default function PaymentReturn() {
 
   useEffect(() => {
     const orderTrackingId = searchParams.get('OrderTrackingId') || searchParams.get('orderTrackingId');
+    const orderMerchantReference =
+      searchParams.get('OrderMerchantReference') || searchParams.get('orderMerchantReference');
 
     if (!orderTrackingId) {
       setState({ loading: false, success: false, message: 'No order tracking ID returned from Pesapal.' });
@@ -17,34 +20,51 @@ export default function PaymentReturn() {
 
     let attempts = 0;
     let timer = null;
+    let cancelled = false;
 
     const verify = () => {
       axiosInstance
-        .get(`/payments/verify?orderTrackingId=${encodeURIComponent(orderTrackingId)}`)
+        .get('/payments/verify', {
+          params: {
+            orderTrackingId,
+            ...(orderMerchantReference ? { orderMerchantReference } : {}),
+          },
+        })
         .then(response => {
+          if (cancelled) return;
+
           const paymentStatus = response.data.data?.payment_status_description || 'Pending';
           const normalized = response.data.data?.payment_status || 'pending';
+          const billStatus = response.data.data?.bill_status || 'pending';
           const success = normalized === 'successful';
 
-          if (normalized === 'pending' && attempts < 4) {
+          if (normalized === 'pending' && attempts < 8) {
             attempts += 1;
             timer = window.setTimeout(verify, 2500);
             return;
+          }
+
+          if (success) {
+            markPaymentSync();
           }
 
           setState({
             loading: false,
             success,
             message: success
-              ? 'Payment confirmed. Your bill has been marked as paid and your account is updated.'
-              : `Payment status: ${paymentStatus}. If money was deducted, the system will reconcile automatically.`,
+              ? `Payment confirmed. Bill status is now ${billStatus.replace('_', ' ')} and the portal totals have been refreshed.`
+              : `Payment status: ${paymentStatus}. If Pesapal has just completed the transaction, the system will keep reconciling it on refresh.`,
           });
         })
         .catch(error => {
+          if (cancelled) return;
+
           setState({
             loading: false,
             success: false,
-            message: error.response?.data?.message || 'Payment verification could not be completed. Please check your payment history.',
+            message:
+              error.response?.data?.message ||
+              'Payment verification could not be completed. Please check your payment history.',
           });
         });
     };
@@ -52,6 +72,7 @@ export default function PaymentReturn() {
     verify();
 
     return () => {
+      cancelled = true;
       if (timer) window.clearTimeout(timer);
     };
   }, [searchParams]);
@@ -74,7 +95,7 @@ export default function PaymentReturn() {
           </div>
         ) : (
           <>
-            <p className="font-semibold">{state.success ? '✓ Payment Successful' : '⚠ Payment Pending'}</p>
+            <p className="font-semibold">{state.success ? 'Payment Successful' : 'Payment Pending'}</p>
             <p className="mt-1">{state.message}</p>
           </>
         )}
@@ -82,6 +103,12 @@ export default function PaymentReturn() {
 
       {!state.loading && (
         <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            to="/customer"
+            className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700"
+          >
+            Dashboard
+          </Link>
           <Link
             to="/customer/bills"
             className="rounded-full bg-[var(--panel-strong)] px-5 py-3 text-sm font-semibold text-white"

@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const { applyAutomaticPenalties } = require('../services/automationService');
 const { reconcilePendingPayments } = require('../services/paymentSettlementService');
+const { isCustomerRole } = require('../utils/roles');
 
 const baseBillQuery = `
   SELECT b.*, c.customer_number, c.full_name AS customer_name, c.meter_number
@@ -24,7 +25,7 @@ exports.getBills = async (req, res) => {
 exports.getBillById = async (req, res) => {
   try {
     await applyAutomaticPenalties();
-    await reconcilePendingPayments(req.user.role === 'Customer' ? { customerId: req.user.customer_id } : {});
+    await reconcilePendingPayments(isCustomerRole(req.user.role) ? { customerId: req.user.customer_id } : {});
 
     const [rows] = await pool.query(`${baseBillQuery} WHERE b.id = ? LIMIT 1`, [req.params.id]);
     if (!rows.length) {
@@ -32,7 +33,7 @@ exports.getBillById = async (req, res) => {
     }
 
     const bill = rows[0];
-    if (req.user.role === 'Customer' && req.user.customer_id !== bill.customer_id) {
+    if (isCustomerRole(req.user.role) && req.user.customer_id !== bill.customer_id) {
       return res.status(403).json({ success: false, message: 'You cannot access another customer bill.' });
     }
 

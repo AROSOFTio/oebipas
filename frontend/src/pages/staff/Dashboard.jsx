@@ -3,6 +3,7 @@ import axiosInstance from '../../utils/axiosInstance';
 import { AuthContext } from '../../context/AuthContext';
 import MetricCard from '../../components/MetricCard';
 import SectionCard from '../../components/SectionCard';
+import { subscribeToPaymentSync } from '../../utils/paymentSync';
 
 const paymentBadge = status => {
   const map = {
@@ -18,7 +19,13 @@ export default function StaffDashboard() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    axiosInstance.get('/dashboard').then(response => setData(response.data.data));
+    const loadDashboard = async () => {
+      const response = await axiosInstance.get('/dashboard');
+      setData(response.data.data);
+    };
+
+    loadDashboard();
+    return subscribeToPaymentSync(loadDashboard);
   }, []);
 
   const summary = data?.summary || {};

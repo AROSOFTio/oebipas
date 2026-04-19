@@ -1,17 +1,21 @@
 const pool = require('../config/db');
-const { applyAutomaticPenalties } = require('../services/automationService');
-const { reconcilePendingPayments } = require('../services/paymentSettlementService');
+const automationService = require('../services/automationService');
+const paymentSettlementService = require('../services/paymentSettlementService');
+const { isCustomerRole } = require('../utils/roles');
 
 exports.getDashboard = async (req, res) => {
   try {
-    await applyAutomaticPenalties();
+    await automationService.applyAutomaticPenalties();
 
-    if (req.user.role === 'Customer') {
-      await reconcilePendingPayments({ customerId: req.user.customer_id });
+    if (isCustomerRole(req.user.role)) {
+      await paymentSettlementService.reconcilePendingPayments({ customerId: req.user.customer_id });
 
       const [[totals]] = await pool.query(
-        `SELECT COALESCE(SUM(balance_due), 0) AS outstanding_balance,
-                COUNT(*) AS total_bills
+        `SELECT COUNT(*) AS total_bills,
+                COALESCE(SUM(balance_due), 0) AS outstanding_balance,
+                COALESCE(SUM(amount_paid), 0) AS total_paid_amount,
+                COALESCE(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END), 0) AS paid_bills,
+                COALESCE(SUM(CASE WHEN status <> 'paid' THEN 1 ELSE 0 END), 0) AS pending_bills
          FROM bills
          WHERE customer_id = ?`,
         [req.user.customer_id]
@@ -28,7 +32,7 @@ exports.getDashboard = async (req, res) => {
         `SELECT payment_reference, amount, status, payment_date
          FROM payments
          WHERE customer_id = ?
-         ORDER BY created_at DESC
+         ORDER BY COALESCE(payment_date, created_at) DESC, created_at DESC
          LIMIT 5`,
         [req.user.customer_id]
       );
@@ -39,6 +43,10 @@ exports.getDashboard = async (req, res) => {
          ORDER BY created_at DESC
          LIMIT 5`,
         [req.user.customer_id]
+      );
+
+      console.info(
+        `[Dashboard] Customer ${req.user.customer_id} summary loaded: outstanding=${totals.outstanding_balance}, totalBills=${totals.total_bills}, totalPaid=${totals.total_paid_amount}.`
       );
 
       return res.status(200).json({
@@ -52,12 +60,13 @@ exports.getDashboard = async (req, res) => {
       });
     }
 
-    await reconcilePendingPayments();
+    await paymentSettlementService.reconcilePendingPayments();
 
     const [[summary]] = await pool.query(
       `SELECT
         (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'successful') AS total_revenue,
         (SELECT COALESCE(SUM(balance_due), 0) FROM bills WHERE balance_due > 0) AS outstanding_balances,
+        (SELECT COUNT(*) FROM bills) AS total_bills,
         (SELECT COUNT(*) FROM customers) AS total_customers,
         (SELECT COUNT(*) FROM bills WHERE status = 'overdue') AS overdue_bills`
     );
@@ -66,7 +75,9 @@ exports.getDashboard = async (req, res) => {
       `SELECT 'Bill Generated' AS activity_type, bill_number AS reference, created_at
        FROM bills
        UNION ALL
-       SELECT 'Payment Recorded' AS activity_type, payment_reference AS reference, created_at
+       SELECT CASE WHEN status = 'successful' THEN 'Payment Recorded' ELSE 'Payment Pending' END AS activity_type,
+              payment_reference AS reference,
+              created_at
        FROM payments
        ORDER BY created_at DESC
        LIMIT 8`
@@ -82,8 +93,12 @@ exports.getDashboard = async (req, res) => {
     const [recentPayments] = await pool.query(
       `SELECT payment_reference, customer_id, amount, status, payment_date
        FROM payments
-       ORDER BY created_at DESC
+       ORDER BY COALESCE(payment_date, created_at) DESC, created_at DESC
        LIMIT 5`
+    );
+
+    console.info(
+      `[Dashboard] Staff summary loaded: revenue=${summary.total_revenue}, outstanding=${summary.outstanding_balances}, overdue=${summary.overdue_bills}.`
     );
 
     return res.status(200).json({

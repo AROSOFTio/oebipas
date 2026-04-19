@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 import SectionCard from '../../components/SectionCard';
+import { subscribeToPaymentSync } from '../../utils/paymentSync';
 
 const statusBadge = status => {
   const map = {
@@ -18,7 +19,13 @@ export default function CustomerBills() {
   const [bills, setBills] = useState([]);
 
   useEffect(() => {
-    axiosInstance.get('/bills/mine').then(response => setBills(response.data.data));
+    const loadBills = async () => {
+      const response = await axiosInstance.get('/bills/mine');
+      setBills(response.data.data);
+    };
+
+    loadBills();
+    return subscribeToPaymentSync(loadBills);
   }, []);
 
   return (

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance';
 import MetricCard from '../../components/MetricCard';
 import SectionCard from '../../components/SectionCard';
+import { subscribeToPaymentSync } from '../../utils/paymentSync';
 
 const statusBadge = status => {
   const map = {
@@ -28,7 +29,13 @@ export default function CustomerDashboard() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    axiosInstance.get('/dashboard').then(response => setData(response.data.data));
+    const loadDashboard = async () => {
+      const response = await axiosInstance.get('/dashboard');
+      setData(response.data.data);
+    };
+
+    loadDashboard();
+    return subscribeToPaymentSync(loadDashboard);
   }, []);
 
   const summary = data?.summary || {};

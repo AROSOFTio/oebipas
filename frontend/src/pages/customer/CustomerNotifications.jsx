@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import SectionCard from '../../components/SectionCard';
+import { subscribeToPaymentSync } from '../../utils/paymentSync';
 
 export default function CustomerNotifications() {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    axiosInstance.get('/notifications').then(response => setNotifications(response.data.data));
+    const loadNotifications = async () => {
+      const response = await axiosInstance.get('/notifications');
+      setNotifications(response.data.data);
+    };
+
+    loadNotifications();
+    return subscribeToPaymentSync(loadNotifications);
   }, []);
 
   return (
