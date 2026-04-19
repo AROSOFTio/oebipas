@@ -66,8 +66,8 @@ export default function Login() {
               <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
             </div>
 
-            <h2 className="text-3xl font-bold text-[var(--text-strong)] tracking-tight">Welcome Return</h2>
-            <p className="mt-2 text-[var(--text-muted)] font-medium">Authenticate to access the portal engine.</p>
+            <h2 className="text-3xl font-bold text-[var(--text-strong)] tracking-tight">Login</h2>
+            <p className="mt-2 text-[var(--text-muted)] font-medium">Sign in to your account.</p>
 
             {error && (
               <div className="mt-8 animate-slide-up-fade rounded-2xl bg-rose-50 border border-rose-100 px-5 py-4 text-sm font-medium text-rose-600 shadow-sm">
@@ -99,7 +99,7 @@ export default function Login() {
                 <div className="flex items-center justify-between ml-1">
                   <label className="text-sm font-semibold text-slate-700">Password</label>
                   <Link to="/forgot-password" className="text-sm font-bold text-[var(--panel-strong)] hover:text-[var(--panel-strong-dark)] transition-colors">
-                    Recovery
+                    Forgot Password?
                   </Link>
                 </div>
                 <div className="relative">
@@ -124,11 +124,9 @@ export default function Login() {
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
                 <span className="relative flex items-center justify-center gap-2">
-                  {submitting ? (
-                    'Processing Key...' 
-                  ) : (
+                  {submitting ? 'Please wait...' : (
                     <>
-                      Enter Dashboard
+                      Login
                       <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                     </>
                   )}
@@ -138,9 +136,9 @@ export default function Login() {
 
             <div className="mt-10 pt-8 border-t border-slate-100 text-center">
               <p className="text-sm font-medium text-[var(--text-muted)]">
-                Unregistered consumer?{' '}
+                Don't have an account?{' '}
                 <Link to="/register" className="font-bold text-[var(--panel-strong)] hover:text-[var(--panel-strong-dark)] transition-colors">
-                  Create Account
+                  Register
                 </Link>
               </p>
             </div>
