@@ -3,6 +3,14 @@ const DEFAULT_SANDBOX_URL = 'https://cybqa.pesapal.com/pesapalv3';
 
 let cachedIpn = null;
 
+const hasPesapalError = payload => {
+  if (!payload?.error || typeof payload.error !== 'object') {
+    return false;
+  }
+
+  return Object.values(payload.error).some(value => value !== null && value !== undefined && String(value).trim() !== '');
+};
+
 const getBaseUrl = () => {
   if (process.env.PESAPAL_BASE_URL) {
     return process.env.PESAPAL_BASE_URL.replace(/\/$/, '');
@@ -37,7 +45,7 @@ const pesapalRequest = async (path, options = {}) => {
     throw new Error(`Pesapal returned a non-JSON response: ${text}`);
   }
 
-  if (!response.ok || payload.error) {
+  if (!response.ok || hasPesapalError(payload)) {
     const message = payload?.error?.message || payload?.message || `Pesapal request failed with status ${response.status}`;
     throw new Error(message);
   }
@@ -165,6 +173,7 @@ const getTransactionStatus = async orderTrackingId => {
 };
 
 module.exports = {
+  hasPesapalError,
   submitOrderRequest,
   getTransactionStatus,
 };
