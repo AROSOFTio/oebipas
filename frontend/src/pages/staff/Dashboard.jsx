@@ -26,19 +26,6 @@ export default function StaffDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-[var(--panel-strong)] px-8 py-8 text-white shadow-md flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--panel-soft)]">
-            {isManager ? 'System Administrator' : 'Billing Officer'} — Operations
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">
-            {isManager ? 'Revenue & Billing Overview' : 'Billing & Payment Monitoring'}
-          </h1>
-        </div>
-        <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 backdrop-blur-sm">
-           <span className="text-2xl">🌍</span>
-        </div>
-      </div>
 
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard

@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.get('/', authorizeRoles('Branch Manager', 'Billing Staff'), tariffController.getTariffs);
-router.post('/', authorizeRoles('Branch Manager'), tariffController.createTariff);
-router.put('/:id', authorizeRoles('Branch Manager'), tariffController.updateTariff);
-router.delete('/:id', authorizeRoles('Branch Manager'), tariffController.deleteTariff);
+router.get('/', authorizeRoles('System administrators', 'Billing officers'), tariffController.getTariffs);
+router.post('/', authorizeRoles('System administrators'), tariffController.createTariff);
+router.put('/:id', authorizeRoles('System administrators'), tariffController.updateTariff);
+router.delete('/:id', authorizeRoles('System administrators'), tariffController.deleteTariff);
 
 module.exports = router;

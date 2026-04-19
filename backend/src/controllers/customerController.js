@@ -103,6 +103,16 @@ exports.updateCustomer = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer not found.' });
     }
 
+    if (meter_number) {
+      const [duplicateMeter] = await pool.query(
+        `SELECT id FROM customers WHERE meter_number = ? AND id != ?`,
+        [meter_number, req.params.id]
+      );
+      if (duplicateMeter.length) {
+        return res.status(400).json({ success: false, message: 'This meter number is already assigned to another customer.' });
+      }
+    }
+
     await pool.query(
       `UPDATE customers
        SET full_name = ?, email = ?, phone = ?, address = ?, meter_number = ?, connection_status = ?

@@ -5,7 +5,7 @@ const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddle
 const router = express.Router();
 
 router.use(authenticateToken);
-router.use(authorizeRoles('Branch Manager'));
+router.use(authorizeRoles('System administrators'));
 
 router.get('/daily-revenue', reportController.getDailyRevenue);
 router.get('/monthly-billing-summary', reportController.getMonthlyBillingSummary);

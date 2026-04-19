@@ -12,6 +12,7 @@ import Customers from './pages/manager/Customers';
 import Reports from './pages/manager/Reports';
 import Notifications from './pages/manager/Notifications';
 import Tariffs from './pages/manager/Tariffs';
+import UsersPage from './pages/manager/Users';
 import Consumption from './pages/staff/Consumption';
 import Bills from './pages/staff/Bills';
 import Payments from './pages/staff/Payments';
@@ -42,14 +43,16 @@ function App() {
               <Route path="bills" element={<Bills />} />
               <Route path="payments" element={<Payments />} />
               <Route path="reports" element={<Reports />} />
-              <Route path="notifications" element={<Notifications />} />
+               <Route path="notifications" element={<Notifications />} />
               <Route path="tariffs" element={<Tariffs />} />
+              <Route path="users" element={<UsersPage />} />
             </Route>
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['Billing officers']} />}>
             <Route path="/staff" element={<PortalLayout />}>
-              <Route index element={<StaffDashboard />} />
+               <Route index element={<StaffDashboard />} />
+              <Route path="customers" element={<Customers />} />
               <Route path="consumption" element={<Consumption />} />
               <Route path="bills" element={<Bills />} />
               <Route path="payments" element={<Payments />} />

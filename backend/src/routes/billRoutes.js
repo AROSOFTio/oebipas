@@ -6,8 +6,8 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.get('/mine', authorizeRoles('Customer'), billController.getMyBills);
-router.get('/', authorizeRoles('Branch Manager', 'Billing Staff'), billController.getBills);
+router.get('/mine', authorizeRoles('Electricity consumers'), billController.getMyBills);
+router.get('/', authorizeRoles('System administrators', 'Billing officers'), billController.getBills);
 router.get('/:id', billController.getBillById);
 
 module.exports = router;

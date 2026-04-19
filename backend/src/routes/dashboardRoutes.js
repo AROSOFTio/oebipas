@@ -5,6 +5,6 @@ const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddle
 const router = express.Router();
 
 router.use(authenticateToken);
-router.get('/', authorizeRoles('Branch Manager', 'Billing Staff', 'Customer'), dashboardController.getDashboard);
+router.get('/', authorizeRoles('System administrators', 'Billing officers', 'Electricity consumers'), dashboardController.getDashboard);
 
 module.exports = router;

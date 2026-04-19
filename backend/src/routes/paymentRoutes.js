@@ -11,8 +11,8 @@ router.get('/ipn', paymentController.handlePesapalIpn);
 
 router.use(authenticateToken);
 
-router.get('/mine', authorizeRoles('Customer'), paymentController.getMyPayments);
-router.get('/', authorizeRoles('Branch Manager', 'Billing Staff'), paymentController.getPayments);
-router.post('/initiate', authorizeRoles('Branch Manager', 'Billing Staff', 'Customer'), paymentController.initiatePayment);
+router.get('/mine', authorizeRoles('Electricity consumers'), paymentController.getMyPayments);
+router.get('/', authorizeRoles('System administrators', 'Billing officers'), paymentController.getPayments);
+router.post('/initiate', authorizeRoles('System administrators', 'Billing officers', 'Electricity consumers'), paymentController.initiatePayment);
 
 module.exports = router;

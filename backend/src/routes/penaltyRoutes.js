@@ -5,6 +5,6 @@ const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddle
 const router = express.Router();
 
 router.use(authenticateToken);
-router.get('/', authorizeRoles('Branch Manager', 'Billing Staff'), penaltyController.getPenalties);
+router.get('/', authorizeRoles('System administrators', 'Billing officers'), penaltyController.getPenalties);
 
 module.exports = router;

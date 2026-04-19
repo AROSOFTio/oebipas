@@ -26,9 +26,11 @@ const navConfig = {
     { to: '/manager/reports', label: 'Reports', icon: BarChart3 },
     { to: '/manager/notifications', label: 'Notifications', icon: Bell },
     { to: '/manager/tariffs', label: 'Tariffs', icon: Gauge },
+    { to: '/manager/users', label: 'System Users', icon: Users },
   ],
   'Billing officers': [
     { to: '/staff', label: 'Dashboard', icon: Home },
+    { to: '/staff/customers', label: 'Customers', icon: Users },
     { to: '/staff/consumption', label: 'Consumption', icon: Zap },
     { to: '/staff/bills', label: 'Bills', icon: FileText },
     { to: '/staff/payments', label: 'Payments', icon: CreditCard },
@@ -44,7 +46,7 @@ const navConfig = {
 };
 
 const pageTitle = {
-  'System administrators': 'Administration',
+  'System administrators': 'General Manager',
   'Billing officers': 'Billing Officer',
   'Electricity consumers': 'Customer Portal',
 };
