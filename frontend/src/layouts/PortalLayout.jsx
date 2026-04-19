@@ -114,27 +114,28 @@ export default function PortalLayout() {
         </aside>
 
         <main className="flex-1 px-4 py-4 sm:px-6 lg:px-10 lg:py-8">
-          <header className="mb-6 rounded-[2rem] border border-slate-200 bg-white/90 px-5 py-4 shadow-soft backdrop-blur">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  className="rounded-2xl border border-slate-200 p-2 text-slate-600 lg:hidden"
-                  onClick={() => setMobileOpen(true)}
-                >
-                  <Menu size={18} />
-                </button>
-                <div className="hidden rounded-2xl bg-[var(--panel-soft)] p-2 sm:block">
-                  <img src="/logo.png" alt="UEDCL logo" className="h-10 w-10 object-contain" />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">UEDCL Online Portal</p>
-                  <h2 className="mt-0.5 text-lg font-semibold text-slate-900">Electricity Billing & Payment System</h2>
-                </div>
+          <header className="mb-8 flex items-center justify-between rounded-[2rem] bg-white/70 px-6 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl border border-white/50">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                className="rounded-xl border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50 lg:hidden"
+                onClick={() => setMobileOpen(true)}
+              >
+                <Menu size={20} />
+              </button>
+              <div className="hidden sm:block">
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--text-strong)]">{pageTitle[user?.role] || 'Dashboard'}</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--panel-strong)] mt-0.5">OEBIPAS Platform</p>
               </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-right">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{user?.role}</p>
-                <p className="text-sm font-medium text-slate-700">{user?.email}</p>
+            </div>
+            
+            <div className="flex items-center gap-4 bg-white rounded-full px-2 py-2 pr-6 shadow-sm border border-slate-100">
+              <div className="h-10 w-10 overflow-hidden rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
+                 <User size={18} className="text-[var(--panel-strong)]" />
+              </div>
+              <div className="text-right hidden sm:block">
+                 <p className="text-sm font-bold text-[var(--text-strong)]">{user?.full_name || 'User'}</p>
+                 <p className="text-xs font-medium text-[var(--text-muted)] truncate max-w-[150px]">{user?.email || 'user@example.com'}</p>
               </div>
             </div>
           </header>
