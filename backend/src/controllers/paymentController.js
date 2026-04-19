@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const pool = require('../config/db');
 const { applyAutomaticPenalties } = require('../services/automationService');
 const { submitOrderRequest } = require('../services/pesapalService');
-const { reconcilePendingPayments, verifyAndPersistPayment } = require('../services/paymentSettlementService');
+const { reconcilePendingPayments, verifyAndPersistPayment, verifyUntilSettled } = require('../services/paymentSettlementService');
 const { isCustomerRole } = require('../utils/roles');
 
 const buildPaymentReference = () => `PAY-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -180,8 +180,8 @@ exports.verifyPesapalPayment = async (req, res) => {
   }
 
   try {
-    console.info(`[Payments] Manual verification requested for tracking ${orderTrackingId}.`);
-    const result = await verifyAndPersistPayment(orderTrackingId, orderMerchantReference);
+    console.info(`[Payments] Manual verification requested for tracking ${orderTrackingId}. Waiting for settlement confirmation.`);
+    const result = await verifyUntilSettled(orderTrackingId, orderMerchantReference);
     return res.status(200).json({ success: true, message: 'Payment verified successfully.', data: result });
   } catch (error) {
     console.error(error);

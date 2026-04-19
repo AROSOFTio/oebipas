@@ -64,14 +64,14 @@ const createNotificationRecord = async ({
   return result.insertId;
 };
 
-const sendEmail = async ({ recipientEmail, title, message }) => {
+const sendEmail = async ({ recipientEmail, title, message, html = null }) => {
   const transporter = getEmailTransporter();
   await transporter.sendMail({
     from: transporter.defaultFrom,
     to: recipientEmail,
     subject: title,
     text: message,
-    html: `<p>${message.replace(/\n/g, '<br />')}</p>`,
+    html: html || `<p>${message.replace(/\n/g, '<br />')}</p>`,
   });
 };
 
@@ -90,6 +90,8 @@ const queueNotification = async ({
   type,
   title,
   message,
+  html = null,
+  smsMessage = null,
   recipientEmail = null,
   recipientPhone = null,
 }) => {
@@ -98,7 +100,7 @@ const queueNotification = async ({
 
   if (recipientEmail) {
     try {
-      await sendEmail({ recipientEmail, title, message });
+      await sendEmail({ recipientEmail, title, message, html });
       results.push(
         await createNotificationRecord({
           userId,
@@ -132,14 +134,15 @@ const queueNotification = async ({
 
   if (recipientPhone) {
     try {
-      await sendSms({ recipientPhone, message });
+      const smsBody = smsMessage || message;
+      await sendSms({ recipientPhone, message: smsBody });
       results.push(
         await createNotificationRecord({
           userId,
           customerId,
           type,
           title,
-          message,
+          message: smsBody,
           channel: 'sms',
           recipientEmail,
           recipientPhone,
@@ -154,7 +157,7 @@ const queueNotification = async ({
           customerId,
           type,
           title,
-          message,
+          message: smsMessage || message,
           channel: 'sms',
           recipientEmail,
           recipientPhone,

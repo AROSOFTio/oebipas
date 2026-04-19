@@ -6,7 +6,7 @@ import { markPaymentSync } from '../../utils/paymentSync';
 
 export default function PaymentReturn() {
   const [searchParams] = useSearchParams();
-  const [state, setState] = useState({ loading: true, success: false, message: '' });
+  const [state, setState] = useState({ loading: true, kind: 'loading', message: '' });
 
   useEffect(() => {
     const orderTrackingId = searchParams.get('OrderTrackingId') || searchParams.get('orderTrackingId');
@@ -14,12 +14,10 @@ export default function PaymentReturn() {
       searchParams.get('OrderMerchantReference') || searchParams.get('orderMerchantReference');
 
     if (!orderTrackingId) {
-      setState({ loading: false, success: false, message: 'No order tracking ID returned from Pesapal.' });
+      setState({ loading: false, kind: 'error', message: 'No order tracking ID returned from Pesapal.' });
       return;
     }
 
-    let attempts = 0;
-    let timer = null;
     let cancelled = false;
 
     const verify = () => {
@@ -38,22 +36,18 @@ export default function PaymentReturn() {
           const billStatus = response.data.data?.bill_status || 'pending';
           const success = normalized === 'successful';
 
-          if (normalized === 'pending' && attempts < 8) {
-            attempts += 1;
-            timer = window.setTimeout(verify, 2500);
-            return;
-          }
-
           if (success) {
             markPaymentSync();
           }
 
           setState({
             loading: false,
-            success,
+            kind: success ? 'success' : normalized === 'failed' ? 'error' : 'finalizing',
             message: success
-              ? `Payment confirmed. Bill status is now ${billStatus.replace('_', ' ')} and the portal totals have been refreshed.`
-              : `Payment status: ${paymentStatus}. If Pesapal has just completed the transaction, the system will keep reconciling it on refresh.`,
+              ? `Payment confirmed. Bill status is now ${billStatus.replace('_', ' ')} and your receipt has been sent automatically to your email.`
+              : normalized === 'failed'
+                ? `Payment failed: ${paymentStatus}.`
+                : 'We are still finalizing your payment with Pesapal. Refresh this page in a few moments if it does not change automatically.',
           });
         })
         .catch(error => {
@@ -61,7 +55,7 @@ export default function PaymentReturn() {
 
           setState({
             loading: false,
-            success: false,
+            kind: 'error',
             message:
               error.response?.data?.message ||
               'Payment verification could not be completed. Please check your payment history.',
@@ -73,7 +67,6 @@ export default function PaymentReturn() {
 
     return () => {
       cancelled = true;
-      if (timer) window.clearTimeout(timer);
     };
   }, [searchParams]);
 
@@ -83,19 +76,27 @@ export default function PaymentReturn() {
         className={`rounded-3xl border px-5 py-5 text-sm ${
           state.loading
             ? 'border-slate-200 bg-slate-50 text-slate-600'
-            : state.success
+            : state.kind === 'success'
               ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-              : 'border-amber-200 bg-amber-50 text-amber-800'
+              : state.kind === 'finalizing'
+                ? 'border-blue-200 bg-blue-50 text-blue-800'
+                : 'border-amber-200 bg-amber-50 text-amber-800'
         }`}
       >
         {state.loading ? (
           <div className="flex items-center gap-3">
             <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
-            Verifying payment with Pesapal...
+            Finalizing payment with Pesapal...
           </div>
         ) : (
           <>
-            <p className="font-semibold">{state.success ? 'Payment Successful' : 'Payment Pending'}</p>
+            <p className="font-semibold">
+              {state.kind === 'success'
+                ? 'Payment Successful'
+                : state.kind === 'finalizing'
+                  ? 'Finalizing Payment'
+                  : 'Payment Error'}
+            </p>
             <p className="mt-1">{state.message}</p>
           </>
         )}

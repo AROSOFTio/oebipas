@@ -6,6 +6,12 @@ const SUCCESSFUL_STATUS_CODES = new Set(['1']);
 const FAILED_STATUS_CODES = new Set(['0', '2', '3']);
 const SUCCESSFUL_KEYWORDS = ['COMPLETED', 'SUCCESS', 'PAID'];
 const FAILED_KEYWORDS = ['FAILED', 'INVALID', 'REVERSED', 'CANCELLED', 'CANCELED'];
+const RECEIPT_WAIT_ATTEMPTS = 12;
+const RECEIPT_WAIT_INTERVAL_MS = 2500;
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const formatCurrency = amount => `UGX ${Number(amount || 0).toLocaleString()}`;
+const formatReceiptDate = value => new Date(value || Date.now()).toLocaleString('en-UG', { hour12: true });
 
 const getStatusDescription = payload =>
   String(
@@ -59,6 +65,44 @@ const notifyInternalPaymentReceipt = async ({ billNumber, customerId, amount }) 
       [staff.id, customerId, title, message]
     );
   }
+};
+
+const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus, confirmationCode }) => {
+  const receiptTitle = `Payment receipt for ${payment.bill_number}`;
+  const paymentDate = formatReceiptDate();
+  const receiptMessage = [
+    `Your payment has been received successfully.`,
+    `Bill number: ${payment.bill_number}`,
+    `Payment reference: ${payment.payment_reference}`,
+    `Pesapal reference: ${payment.transaction_reference}`,
+    `Confirmation code: ${confirmationCode || 'Pending confirmation code'}`,
+    `Amount paid: ${formatCurrency(appliedAmount)}`,
+    `Outstanding balance: ${formatCurrency(newBalance)}`,
+    `Bill status: ${newBillStatus.replace('_', ' ')}`,
+    `Receipt date: ${paymentDate}`,
+  ].join('\n');
+
+  const receiptHtml = `
+    <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.6;">
+      <h2 style="margin-bottom: 8px;">Payment Receipt</h2>
+      <p style="margin-top: 0;">Your OEBIPAS payment has been confirmed successfully.</p>
+      <table style="border-collapse: collapse; width: 100%; max-width: 520px; margin-top: 16px;">
+        <tbody>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Bill number</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${payment.bill_number}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Payment reference</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${payment.payment_reference}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Pesapal reference</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${payment.transaction_reference}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Confirmation code</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${confirmationCode || 'Pending confirmation code'}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Amount paid</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(appliedAmount)}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Outstanding balance</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(newBalance)}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Bill status</td><td style="padding: 8px; border: 1px solid #e2e8f0; text-transform: capitalize;">${newBillStatus.replace('_', ' ')}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Receipt date</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${paymentDate}</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top: 16px;">Thank you for paying through Pesapal.</p>
+    </div>
+  `;
+
+  return { receiptTitle, receiptMessage, receiptHtml };
 };
 
 const loadPaymentForSettlement = async (conn, paymentId) => {
@@ -146,12 +190,22 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
       await conn.commit();
 
       if (appliedAmount > 0) {
+        const { receiptTitle, receiptMessage, receiptHtml } = buildReceiptDetails({
+          payment,
+          appliedAmount,
+          newBalance,
+          newBillStatus,
+          confirmationCode,
+        });
+
         await notificationService.queueNotification({
           userId: payment.user_id,
           customerId: payment.customer_id,
           type: 'payment_successful',
-          title: 'Payment confirmed',
-          message: `Payment for bill ${payment.bill_number} was successful. Your account balance has been updated automatically.`,
+          title: receiptTitle,
+          message: receiptMessage,
+          html: receiptHtml,
+          smsMessage: `Payment received for bill ${payment.bill_number}. Amount: ${formatCurrency(appliedAmount)}. Balance: ${formatCurrency(newBalance)}. Status: ${newBillStatus.replace('_', ' ')}.`,
           recipientEmail: payment.email,
           recipientPhone: payment.phone,
         });
@@ -271,6 +325,30 @@ const verifyAndPersistPayment = async (orderTrackingId, merchantReferenceHint = 
   };
 };
 
+const verifyUntilSettled = async (
+  orderTrackingId,
+  merchantReferenceHint = null,
+  {
+    attempts = RECEIPT_WAIT_ATTEMPTS,
+    intervalMs = RECEIPT_WAIT_INTERVAL_MS,
+  } = {}
+) => {
+  let lastResult = null;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    lastResult = await verifyAndPersistPayment(orderTrackingId, merchantReferenceHint);
+    if (lastResult.payment_status !== 'pending') {
+      return lastResult;
+    }
+
+    if (attempt < attempts - 1) {
+      await delay(intervalMs);
+    }
+  }
+
+  return lastResult;
+};
+
 const reconcilePendingPayments = async ({ customerId = null } = {}) => {
   const [pendingRows] = await pool.query(
     `SELECT id, payment_reference, order_tracking_id, transaction_reference
@@ -306,4 +384,5 @@ module.exports = {
   reconcilePendingPayments,
   settlePayment,
   verifyAndPersistPayment,
+  verifyUntilSettled,
 };
