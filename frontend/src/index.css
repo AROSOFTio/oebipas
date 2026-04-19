@@ -3,24 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --page-bg: #f0f5f2;
-  --panel-strong: #335543;
-  --panel-soft: #cde0d5;
-  --accent-soft: #fde8e8;
-  --secondary: #df252a;
-  --line-soft: rgba(51, 85, 67, 0.1);
+  --page-bg: #f6f8ff;
+  --panel-strong: #3543bb;
+  --panel-soft: #cfd6ff;
+  --accent-soft: #e8ebff;
+  --secondary: #4f5cd1;
+  --line-soft: rgba(53, 67, 187, 0.1);
+  --text-strong: #1f285c;
+  --text-muted: #6670a6;
 }
 
 @layer base {
   html {
     background:
-      radial-gradient(circle at top left, rgba(255, 255, 255, 0.65), transparent 35%),
-      linear-gradient(180deg, #eaf3ee 0%, #f0f5f2 100%);
+      radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 30%),
+      linear-gradient(180deg, #ffffff 0%, #f6f8ff 100%);
   }
 
   body {
-    @apply m-0 bg-[var(--page-bg)] text-slate-900;
-    font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+    @apply m-0 bg-[var(--page-bg)] text-[var(--text-strong)];
+    font-family: "Inter", "Segoe UI", sans-serif;
   }
 
   * {

@@ -18,10 +18,10 @@ const signToken = user =>
   );
 
 exports.register = async (req, res) => {
-  const { full_name, username, email, password, phone, address } = req.body;
+  const { customer_type, full_name, username, email, password, phone, address, meter_number } = req.body;
 
-  if (!full_name || !username || !email || !password || !address) {
-    return res.status(400).json({ success: false, message: 'Full name, username, email, password and address are required.' });
+  if (!customer_type || !email || !password) {
+    return res.status(400).json({ success: false, message: 'Type, email, and password are required.' });
   }
 
   const conn = await pool.getConnection();
@@ -37,32 +37,79 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email or username is already in use.' });
     }
 
-    const [[customerRole]] = await conn.query(`SELECT id FROM roles WHERE name = 'Customer' LIMIT 1`);
+    const [[customerRole]] = await conn.query(`SELECT id FROM roles WHERE name = 'Electricity consumers' LIMIT 1`);
+    if (!customerRole) {
+      await conn.rollback();
+      return res.status(500).json({ success: false, message: 'Role not found.' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [userResult] = await conn.query(
-      `INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
-      [customerRole.id, full_name, username, email, hashedPassword, phone || null]
-    );
+    if (customer_type === 'existing') {
+      if (!meter_number) {
+        await conn.rollback();
+        return res.status(400).json({ success: false, message: 'Meter number is required for existing customers.' });
+      }
 
-    const customerNumber = `UEDCL-${String(userResult.insertId).padStart(4, '0')}`;
-    await conn.query(
-      `INSERT INTO customers (user_id, customer_number, full_name, email, phone, address, connection_status)
-       VALUES (?, ?, ?, ?, ?, ?, 'active')`,
-      [userResult.insertId, customerNumber, full_name, email, phone || null, address]
-    );
+      const [existingCustomerRows] = await conn.query(
+        `SELECT id, user_id FROM customers WHERE meter_number = ? LIMIT 1`,
+        [meter_number]
+      );
+
+      if (!existingCustomerRows.length) {
+        await conn.rollback();
+        return res.status(404).json({ success: false, message: 'Meter number not found. Please contact support.' });
+      }
+
+      if (existingCustomerRows[0].user_id) {
+        await conn.rollback();
+        return res.status(400).json({ success: false, message: 'This meter number is already linked to an online account.' });
+      }
+
+      const [userResult] = await conn.query(
+        `INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
+        [customerRole.id, full_name, username, email, hashedPassword, phone || null]
+      );
+
+      await conn.query(
+        `UPDATE customers SET user_id = ? WHERE id = ?`,
+        [userResult.insertId, existingCustomerRows[0].id]
+      );
+
+    } else if (customer_type === 'new') {
+      const [userResult] = await conn.query(
+        `INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
+        [customerRole.id, full_name, username, email, hashedPassword, phone || null]
+      );
+
+      const [customerResult] = await conn.query(
+        `INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status)
+         VALUES (?, 'TEMP', NULL, ?, ?, ?, ?, 'pending')`,
+        [userResult.insertId, full_name, email, phone || null, address]
+      );
+
+      const customerNumber = `UEDCL-${String(customerResult.insertId).padStart(4, '0')}`;
+      await conn.query(
+        `UPDATE customers SET customer_number = ? WHERE id = ?`,
+        [customerNumber, customerResult.insertId]
+      );
+    } else {
+      await conn.rollback();
+      return res.status(400).json({ success: false, message: 'Invalid customer type.' });
+    }
 
     await conn.commit();
 
     return res.status(201).json({
       success: true,
-      message: 'Customer account created successfully.',
+      message: 'Account created successfully. You can now login.',
     });
   } catch (error) {
     await conn.rollback();
     console.error(error);
-    return res.status(500).json({ success: false, message: 'Unable to register customer account.' });
+    return res.status(500).json({ success: false, message: 'Unable to register account.' });
   } finally {
     conn.release();
   }

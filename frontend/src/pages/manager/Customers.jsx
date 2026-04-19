@@ -5,12 +5,11 @@ import SectionCard from '../../components/SectionCard';
 const emptyForm = {
   id: '',
   full_name: '',
-  username: '',
   email: '',
   phone: '',
   address: '',
   meter_number: '',
-  connection_status: 'active',
+  connection_status: 'pending',
 };
 
 export default function Customers() {
@@ -39,10 +38,10 @@ export default function Customers() {
     try {
       if (form.id) {
         await axiosInstance.put(`/customers/${form.id}`, form);
-        setMessage('Customer updated successfully.');
+        setMessage('Customer record updated successfully.');
       } else {
         await axiosInstance.post('/customers', form);
-        setMessage('Customer created. Default password: Password123!');
+        setMessage('Customer created and customer number assigned.');
       }
       setForm(emptyForm);
       loadCustomers();
@@ -52,7 +51,7 @@ export default function Customers() {
   };
 
   const handleDelete = async id => {
-    if (!window.confirm('Remove this customer record?')) return;
+    if (!window.confirm('Remove this customer record entirely?')) return;
     setError('');
     try {
       await axiosInstance.delete(`/customers/${id}`);
@@ -65,147 +64,149 @@ export default function Customers() {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-      <SectionCard title="Customer Record" subtitle="Create or update customer accounts">
-        {message && <div className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div>}
-        {error && <div className="mb-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+      <SectionCard title="Customer Record">
+        {message && <div className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div>}
+        {error && <div className="mb-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* Personal Info */}
-          <p className="text-xs uppercase tracking-widest text-slate-400">Personal Information</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--panel-strong)]">Personal Information</p>
           {[
             ['full_name', 'Full name', true],
-            ['username', 'Username', !form.id],
-            ['email', 'Email', true],
-            ['phone', 'Phone', false],
+            ['email', 'Email Address', true],
+            ['phone', 'Phone Number', false],
           ].map(([name, label, required]) => (
             <label key={name} className="block">
-              <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
+              <span className="mb-1 block text-sm font-medium text-[var(--text-strong)]">{label}</span>
               <input
                 name={name}
                 value={form[name]}
                 onChange={updateField}
-                disabled={Boolean(form.id) && name === 'username'}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)] disabled:bg-slate-50"
+                className="w-full rounded-xl border border-[var(--panel-soft)] px-4 py-3 text-sm outline-none transition focus:border-[var(--secondary)] bg-white"
                 required={required}
               />
             </label>
           ))}
 
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-700">Address</span>
+            <span className="mb-1 block text-sm font-medium text-[var(--text-strong)]">Address</span>
             <textarea
               name="address"
               value={form.address}
               onChange={updateField}
-              className="min-h-20 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
+              className="min-h-[80px] w-full rounded-xl border border-[var(--panel-soft)] px-4 py-3 text-sm outline-none transition focus:border-[var(--secondary)] bg-white"
               required
             />
           </label>
 
-          {/* Account / Meter Settings */}
-          <p className="pt-2 text-xs uppercase tracking-widest text-slate-400">Account Settings</p>
+          <p className="pt-2 text-xs font-bold uppercase tracking-widest text-[var(--panel-strong)]">System Settings</p>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-700">
-              Meter number <span className="text-slate-400 font-normal">(staff-assigned)</span>
+            <span className="mb-1 block text-sm font-medium text-[var(--text-strong)]">
+              Meter Number
             </span>
             <input
               name="meter_number"
-              value={form.meter_number}
+              value={form.meter_number || ''}
               onChange={updateField}
-              placeholder="Assign after registration if needed"
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
+              placeholder="e.g. MTR-9002 (Leave blank if pending)"
+              className="w-full rounded-xl border border-[var(--panel-soft)] bg-[var(--page-bg)] px-4 py-3 text-sm outline-none transition focus:border-[var(--secondary)] focus:bg-white"
             />
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-700">Connection status</span>
+            <span className="mb-1 block text-sm font-medium text-[var(--text-strong)]">Connection status</span>
             <select
               name="connection_status"
               value={form.connection_status}
               onChange={updateField}
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
+              className="w-full rounded-xl border border-[var(--panel-soft)] bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--secondary)]"
             >
+              <option value="pending">Pending setup</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
           </label>
 
-          <div className="flex gap-3 pt-1">
-            <button type="submit" className="rounded-2xl bg-[var(--panel-strong)] px-5 py-3 text-sm font-semibold text-white">
-              {form.id ? 'Update customer' : 'Create customer'}
+          <div className="flex gap-3 pt-2">
+            <button type="submit" className="rounded-xl bg-[var(--panel-strong)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--secondary)]">
+              {form.id ? 'Save Changes' : 'Create Customer'}
             </button>
             <button
               type="button"
               onClick={() => { setForm(emptyForm); setMessage(''); setError(''); }}
-              className="rounded-2xl border border-slate-200 px-5 py-3 text-sm text-slate-700"
+              className="rounded-xl border border-[var(--panel-soft)] px-6 py-3 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-strong)] transition bg-white"
             >
-              Clear
+              Clear Form
             </button>
           </div>
         </form>
       </SectionCard>
 
-      <SectionCard title="Customer List" subtitle="Click a row to load it into the form">
+      <SectionCard title="Customer Directory">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+          <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="pb-3 pr-4 font-medium text-slate-500">Customer</th>
-                <th className="pb-3 pr-4 font-medium text-slate-500">Meter</th>
-                <th className="pb-3 pr-4 font-medium text-slate-500">Status</th>
-                <th className="pb-3 font-medium text-slate-500"></th>
+              <tr className="border-b border-[var(--panel-soft)] text-[var(--text-muted)]">
+                <th className="pb-3 pr-4 font-medium">Customer</th>
+                <th className="pb-3 pr-4 font-medium">Meter</th>
+                <th className="pb-3 pr-4 font-medium">Status</th>
+                <th className="pb-3 font-medium"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[var(--panel-soft)]">
               {customers.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-6 text-slate-400">No customers found.</td>
+                  <td colSpan={4} className="py-6 text-center text-[var(--text-muted)]">No customers recorded.</td>
                 </tr>
               )}
               {customers.map(customer => (
-                <tr key={customer.id} className="border-t border-slate-100 hover:bg-slate-50 transition">
-                  <td className="py-3 pr-4">
+                <tr key={customer.id} className="group transition hover:bg-slate-50">
+                  <td className="py-3.5 pr-4">
                     <button
                       type="button"
-                      className="text-left"
+                      className="text-left flex flex-col group-hover:text-[var(--panel-strong)]"
                       onClick={() =>
                         setForm({
                           id: customer.id,
                           full_name: customer.full_name,
-                          username: customer.email.split('@')[0],
                           email: customer.email,
                           phone: customer.phone || '',
                           address: customer.address || '',
                           meter_number: customer.meter_number || '',
-                          connection_status: customer.connection_status || 'active',
+                          connection_status: customer.connection_status || 'pending',
                         })
                       }
                     >
-                      <p className="font-medium text-slate-900">{customer.full_name}</p>
-                      <p className="text-xs text-slate-400">{customer.customer_number}</p>
+                      <span className="font-semibold text-[var(--text-strong)] group-hover:text-[var(--panel-strong)] transition">{customer.full_name}</span>
+                      <span className="text-xs font-mono text-[var(--text-muted)] mt-0.5">{customer.customer_number}</span>
                     </button>
                   </td>
-                  <td className="py-3 pr-4 text-slate-600">
-                    {customer.meter_number || <span className="text-slate-400 italic">Not assigned</span>}
+                  <td className="py-3.5 pr-4">
+                    {customer.meter_number ? (
+                      <span className="text-[var(--text-strong)]">{customer.meter_number}</span>
+                    ) : (
+                      <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Pending</span>
+                    )}
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3.5 pr-4">
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                      className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-semibold capitalize tracking-wide ${
                         customer.connection_status === 'active'
                           ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-slate-100 text-slate-600'
+                          : customer.connection_status === 'pending'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-rose-100 text-rose-700'
                       }`}
                     >
                       {customer.connection_status}
                     </span>
                   </td>
-                  <td className="py-3">
+                  <td className="py-3.5 text-right">
                     <button
                       type="button"
-                      className="text-sm text-rose-600 hover:underline"
+                      className="text-sm font-medium text-rose-600 hover:text-rose-800 transition px-2"
                       onClick={() => handleDelete(customer.id)}
                     >
-                      Remove
+                      Delete
                     </button>
                   </td>
                 </tr>

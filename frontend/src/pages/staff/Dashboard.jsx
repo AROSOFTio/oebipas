@@ -22,22 +22,25 @@ export default function StaffDashboard() {
   }, []);
 
   const summary = data?.summary || {};
-  const isManager = user?.role === 'Branch Manager';
+  const isManager = user?.role === 'System administrators';
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="rounded-[2rem] bg-[var(--panel-strong)] px-7 py-6 text-white shadow-soft">
-        <p className="text-xs uppercase tracking-[0.35em] text-slate-200">
-          {isManager ? 'Branch Manager' : 'Billing Staff'} — Operations Dashboard
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold">
-          {isManager ? 'Revenue, Billing & Customer Overview' : 'Billing & Payment Monitoring'}
-        </h1>
+      <div className="rounded-3xl bg-[var(--panel-strong)] px-8 py-8 text-white shadow-md flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--panel-soft)]">
+            {isManager ? 'System Administrator' : 'Billing Officer'} — Operations
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight">
+            {isManager ? 'Revenue & Billing Overview' : 'Billing & Payment Monitoring'}
+          </h1>
+        </div>
+        <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 backdrop-blur-sm">
+           <span className="text-2xl">🌍</span>
+        </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Total Revenue"
           value={`UGX ${Number(summary.total_revenue || 0).toLocaleString()}`}
@@ -47,56 +50,55 @@ export default function StaffDashboard() {
           title="Outstanding Balances"
           value={`UGX ${Number(summary.outstanding_balances || 0).toLocaleString()}`}
         />
-        <MetricCard title="Total Customers" value={Number(summary.total_customers || 0)} tone="accent" />
+        <MetricCard title="Active Customers" value={Number(summary.total_customers || 0)} tone="accent" />
         <MetricCard
           title={isManager ? 'Overdue Bills' : 'Recent Payments'}
           value={Number(isManager ? (summary.overdue_bills || 0) : (data?.recentPayments?.length || 0))}
         />
       </div>
 
-      {/* Data Sections */}
       <div className="grid gap-6 xl:grid-cols-2">
         <SectionCard title="Recent Activity">
-          <div className="space-y-2">
+          <div className="space-y-3">
             {(data?.recentActivity || []).length === 0 && (
-              <p className="text-sm text-slate-400">No recent activity.</p>
+              <p className="text-sm text-[var(--text-muted)] py-4 text-center">No recent activity found.</p>
             )}
             {(data?.recentActivity || []).map((item, index) => (
               <div
                 key={`${item.activity_type}-${item.reference}-${index}`}
-                className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm"
+                className="flex items-center justify-between rounded-xl border border-[var(--panel-soft)] bg-white px-4 py-3.5 transition hover:border-[var(--secondary)]"
               >
                 <div>
-                  <p className="font-medium text-slate-900">{item.activity_type}</p>
-                  <p className="mt-0.5 text-slate-500">{item.reference}</p>
+                  <p className="font-semibold text-[var(--text-strong)]">{item.activity_type}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{item.reference}</p>
                 </div>
               </div>
             ))}
           </div>
         </SectionCard>
 
-        <SectionCard title="Recent Payments">
+        <SectionCard title="Recent Transactions">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="text-slate-500">
-                <tr>
-                  <th className="pb-3 pr-4">Reference</th>
-                  <th className="pb-3 pr-4">Amount</th>
-                  <th className="pb-3">Status</th>
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-[var(--panel-soft)] text-[var(--text-muted)]">
+                  <th className="pb-3 pr-4 font-medium">Reference</th>
+                  <th className="pb-3 pr-4 font-medium">Amount</th>
+                  <th className="pb-3 font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[var(--panel-soft)]">
                 {(data?.recentPayments || []).length === 0 && (
                   <tr>
-                    <td colSpan={3} className="py-4 text-slate-400">No payments recorded yet.</td>
+                    <td colSpan={3} className="py-6 text-center text-[var(--text-muted)]">No transactions recorded.</td>
                   </tr>
                 )}
                 {(data?.recentPayments || []).map(payment => (
-                  <tr key={payment.payment_reference} className="border-t border-slate-100">
-                    <td className="py-3 pr-4 font-medium text-slate-900">{payment.payment_reference}</td>
-                    <td className="py-3 pr-4">UGX {Number(payment.amount).toLocaleString()}</td>
-                    <td className="py-3">
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${paymentBadge(payment.status)}`}>
+                  <tr key={payment.payment_reference} className="group transition hover:bg-slate-50">
+                    <td className="py-3.5 pr-4 font-semibold text-[var(--text-strong)] group-hover:text-[var(--panel-strong)]">{payment.payment_reference}</td>
+                    <td className="py-3.5 pr-4 text-[var(--text-muted)]">UGX {Number(payment.amount).toLocaleString()}</td>
+                    <td className="py-3.5">
+                      <span className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-semibold capitalize tracking-wide ${paymentBadge(payment.status)}`}>
                         {payment.status}
                       </span>
                     </td>

@@ -1,11 +1,10 @@
-const bcrypt = require('bcrypt');
 const pool = require('../config/db');
 
 const buildCustomerQuery = `
   SELECT c.id, c.customer_number, c.meter_number, c.full_name, c.email, c.phone, c.address,
          c.connection_status, c.created_at, u.id AS user_id
   FROM customers c
-  INNER JOIN users u ON u.id = c.user_id
+  LEFT JOIN users u ON u.id = c.user_id
 `;
 
 exports.getCustomers = async (req, res) => {
@@ -49,45 +48,41 @@ exports.getCustomerById = async (req, res) => {
 };
 
 exports.createCustomer = async (req, res) => {
-  const { full_name, username, email, phone, address, meter_number } = req.body;
+  const { full_name, email, phone, address, meter_number } = req.body;
 
-  if (!full_name || !username || !email || !address) {
-    return res.status(400).json({ success: false, message: 'Full name, username, email and address are required.' });
+  if (!full_name || !email || !address) {
+    return res.status(400).json({ success: false, message: 'Full name, email and address are required.' });
   }
 
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    const [existing] = await conn.query(
-      `SELECT id FROM users WHERE email = ? OR username = ?`,
-      [email, username]
+    const [existingMeter] = await conn.query(
+      `SELECT id FROM customers WHERE meter_number = ? AND meter_number IS NOT NULL`,
+      [meter_number]
     );
-    if (existing.length) {
+    if (existingMeter.length) {
       await conn.rollback();
-      return res.status(400).json({ success: false, message: 'Email or username is already in use.' });
+      return res.status(400).json({ success: false, message: 'Meter number is already assigned to a customer.' });
     }
 
-    const [[role]] = await conn.query(`SELECT id FROM roles WHERE name = 'Customer' LIMIT 1`);
-    const defaultPassword = await bcrypt.hash('Password123!', 10);
-
-    const [userResult] = await conn.query(
-      `INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
-      [role.id, full_name, username, email, defaultPassword, phone || null]
-    );
-
-    const customerNumber = `UEDCL-${String(userResult.insertId).padStart(4, '0')}`;
     const [customerResult] = await conn.query(
       `INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'active')`,
-      [userResult.insertId, customerNumber, meter_number, full_name, email, phone || null, address]
+       VALUES (NULL, 'TEMP', ?, ?, ?, ?, ?, 'active')`,
+      [meter_number || null, full_name, email, phone || null, address]
+    );
+
+    const customerNumber = `UEDCL-${String(customerResult.insertId).padStart(4, '0')}`;
+    await conn.query(
+      `UPDATE customers SET customer_number = ? WHERE id = ?`,
+      [customerNumber, customerResult.insertId]
     );
 
     await conn.commit();
     return res.status(201).json({
       success: true,
-      message: 'Customer created successfully. Default password is Password123!',
+      message: 'Customer created successfully.',
       data: { id: customerResult.insertId, customer_number: customerNumber },
     });
   } catch (error) {
@@ -112,14 +107,17 @@ exports.updateCustomer = async (req, res) => {
       `UPDATE customers
        SET full_name = ?, email = ?, phone = ?, address = ?, meter_number = ?, connection_status = ?
        WHERE id = ?`,
-      [full_name, email, phone || null, address, meter_number, connection_status || 'active', req.params.id]
+      [full_name, email, phone || null, address, meter_number || null, connection_status || 'active', req.params.id]
     );
-    await pool.query(
-      `UPDATE users
-       SET full_name = ?, email = ?, phone = ?
-       WHERE id = ?`,
-      [full_name, email, phone || null, rows[0].user_id]
-    );
+    
+    if (rows[0].user_id) {
+      await pool.query(
+        `UPDATE users
+         SET full_name = ?, email = ?, phone = ?
+         WHERE id = ?`,
+        [full_name, email, phone || null, rows[0].user_id]
+      );
+    }
 
     return res.status(200).json({ success: true, message: 'Customer updated successfully.' });
   } catch (error) {
@@ -130,12 +128,17 @@ exports.updateCustomer = async (req, res) => {
 
 exports.deleteCustomer = async (req, res) => {
   try {
-    const [rows] = await pool.query(`SELECT user_id FROM customers WHERE id = ? LIMIT 1`, [req.params.id]);
+    const [rows] = await pool.query(`SELECT id, user_id FROM customers WHERE id = ? LIMIT 1`, [req.params.id]);
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Customer not found.' });
     }
 
-    await pool.query(`DELETE FROM users WHERE id = ?`, [rows[0].user_id]);
+    if (rows[0].user_id) {
+      await pool.query(`DELETE FROM users WHERE id = ?`, [rows[0].user_id]);
+    } else {
+      await pool.query(`DELETE FROM customers WHERE id = ?`, [rows[0].id]);
+    }
+
     return res.status(200).json({ success: true, message: 'Customer removed successfully.' });
   } catch (error) {
     console.error(error);

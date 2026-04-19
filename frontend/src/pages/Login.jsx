@@ -28,60 +28,57 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] px-4 py-10">
-      <div className="mx-auto max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="rounded-3xl bg-[var(--panel-soft)] p-3">
-            <img src="/logo.png" alt="UEDCL logo" className="h-14 w-14 object-contain" />
-          </div>
-          <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Secure Access</p>
-            <p className="mt-1 text-sm text-slate-500">UEDCL Online Billing and Payment System</p>
-          </div>
+    <div className="min-h-screen bg-[var(--page-bg)] flex items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-3xl border border-[var(--panel-soft)] bg-white p-10 shadow-sm text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--accent-soft)]">
+          <img src="/logo.png" alt="UEDCL logo" className="h-10 w-10 object-contain" />
         </div>
-        <h1 className="mt-4 text-3xl font-semibold text-slate-900">Sign in</h1>
-        <p className="mt-2 text-sm text-slate-500">Use your Branch Manager, Billing Staff, or Customer credentials.</p>
+        
+        <h1 className="mt-6 text-2xl font-bold text-[var(--text-strong)]">Welcome Back</h1>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">Sign in to your account</p>
 
-        {error ? <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+        {error ? <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700 text-left">{error}</div> : null}
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-5 text-left" onSubmit={handleSubmit}>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Email or username</span>
+            <span className="mb-1.5 block text-sm font-medium text-[var(--text-strong)]">Email or username</span>
             <input
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
+              className="w-full rounded-xl border border-[var(--panel-soft)] bg-[var(--page-bg)] px-4 py-3 text-sm outline-none transition focus:border-[var(--secondary)] focus:bg-white"
               value={email}
               onChange={event => setEmail(event.target.value)}
               required
+              placeholder="Enter your credentials"
             />
           </label>
           <label className="block">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-700">Password</span>
-              <Link to="/forgot-password" className="text-sm text-[var(--panel-strong)]">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-sm font-medium text-[var(--text-strong)]">Password</span>
+              <Link to="/forgot-password" className="text-sm font-medium text-[var(--secondary)] hover:text-[var(--panel-strong)] transition">
                 Forgot password?
               </Link>
             </div>
             <input
               type="password"
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[var(--panel-strong)]"
+              className="w-full rounded-xl border border-[var(--panel-soft)] bg-[var(--page-bg)] px-4 py-3 text-sm outline-none transition focus:border-[var(--secondary)] focus:bg-white"
               value={password}
               onChange={event => setPassword(event.target.value)}
               required
+              placeholder="••••••••"
             />
           </label>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-2xl bg-[var(--panel-strong)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="mt-2 w-full rounded-xl bg-[var(--panel-strong)] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--secondary)] disabled:opacity-60"
           >
-            {submitting ? 'Signing in...' : 'Sign in'}
+            {submitting ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
 
-        <p className="mt-6 text-sm text-slate-500">
-          Need a customer account?{' '}
-          <Link to="/register" className="font-medium text-[var(--panel-strong)]">
+        <p className="mt-8 text-sm text-[var(--text-muted)]">
+          Don't have an account?{' '}
+          <Link to="/register" className="font-semibold text-[var(--secondary)] hover:text-[var(--panel-strong)] transition">
             Register here
           </Link>
         </p>

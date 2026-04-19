@@ -38,14 +38,14 @@ CREATE TABLE users (
 
 CREATE TABLE customers (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL UNIQUE,
+  user_id INT NULL UNIQUE,
   customer_number VARCHAR(50) NOT NULL UNIQUE,
-  meter_number VARCHAR(50) NOT NULL UNIQUE,
+  meter_number VARCHAR(50) NULL UNIQUE,
   full_name VARCHAR(100) NOT NULL,
   email VARCHAR(100) NOT NULL,
   phone VARCHAR(20),
   address TEXT,
-  connection_status ENUM('active', 'inactive') DEFAULT 'active',
+  connection_status ENUM('active', 'inactive', 'pending') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_customers_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -176,40 +176,13 @@ CREATE TABLE password_resets (
 );
 
 INSERT INTO roles (name, description) VALUES
-('Branch Manager', 'Full control over the branch billing system'),
-('Billing Staff', 'Operational role for consumption, billing and payment monitoring'),
-('Customer', 'End user role for bills, payments and profile access');
+('System administrators', 'Full control over the billing and system parameters'),
+('Billing officers', 'Operational role focusing on customer connections and bills'),
+('Electricity consumers', 'End user role for reviewing electricity output and payments');
 
+-- Password is Password123!
 INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at) VALUES
-(1, 'Winnie Nafuna', 'winnie', 'winniemarkie@gmail.com', '$2a$12$REqtjRP0X4Vg3GnlhuZUA.e7ldPtEtZM2W7OOjnz.HRyIwgAdTH6K', '0700000001', 'active', NOW()),
-(2, 'Nimusiima Sylon', 'sylon', 'nsylon256@gmail.com', '$2a$12$sJC0dn3l1zebBRlhLt.Q6eFgqr85mGCOIeKn5Y.0I6GTg9Ea83AFi', '0700000002', 'active', NOW()),
-(3, 'Benjamin Angella', 'benjamin', 'bangella23@gmail.com', '$2a$12$LeJt4UjUiJwU/J5xFj1EMeV5.peFF2GUeAqEaPf.vEy8Fyx5UojJq', '0700000003', 'active', NOW());
-
-INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status) VALUES
-(3, 'UEDCL-0001', 'MTR-0001', 'Benjamin Angella', 'bangella23@gmail.com', '0700000003', 'Kampala Central Division', 'active');
+(1, 'Administrator', 'admin', 'admin@oebipas.com', '$2a$12$REqtjRP0X4Vg3GnlhuZUA.e7ldPtEtZM2W7OOjnz.HRyIwgAdTH6K', '0700000000', 'active', NOW());
 
 INSERT INTO tariffs (rate_per_unit, fixed_charge, penalty_type, penalty_value, due_days, is_active, effective_from, created_by) VALUES
 (850.00, 5000.00, 'percentage', 5.00, 14, 1, '2026-01-01', 1);
-
-INSERT INTO consumption_records (customer_id, billing_month, billing_year, units_consumed, reading_date, entered_by) VALUES
-(1, 3, 2026, 120.00, '2026-03-31', 2);
-
-INSERT INTO bills (
-  bill_number, customer_id, consumption_record_id, tariff_id, billing_month, billing_year, units_consumed,
-  rate_per_unit, fixed_charge, bill_amount, previous_balance, penalty_amount, total_amount,
-  amount_paid, balance_due, due_date, status, generated_by
-) VALUES
-('BILL-202603-0001', 1, 1, 1, 3, 2026, 120.00, 850.00, 5000.00, 107000.00, 0.00, 0.00, 107000.00, 0.00, 107000.00, '2026-04-14', 'overdue', 2);
-
-INSERT INTO penalties (bill_id, customer_id, penalty_type, penalty_amount, reason, applied_date, status) VALUES
-(1, 1, 'percentage', 5350.00, 'Automatic overdue penalty after due date.', '2026-04-15', 'active');
-
-UPDATE bills
-SET penalty_amount = 5350.00, total_amount = 112350.00, balance_due = 112350.00
-WHERE id = 1;
-
-INSERT INTO notifications (
-  user_id, customer_id, notification_type, channel, title, message, recipient_email, recipient_phone, status, sent_at
-) VALUES
-(3, 1, 'bill_generated', 'email', 'Bill Generated', 'Your March 2026 electricity bill has been generated.', 'bangella23@gmail.com', '0700000003', 'sent', NOW()),
-(3, 1, 'payment_overdue', 'email', 'Payment Overdue', 'Your electricity bill is overdue and now includes an automatic penalty.', 'bangella23@gmail.com', '0700000003', 'sent', NOW());
