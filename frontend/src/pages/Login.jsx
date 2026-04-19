@@ -28,10 +28,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-mesh flex items-center justify-center p-4 lg:p-12 relative overflow-hidden">
-      {/* Decorative Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 blur-[120px] animate-float-slow" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[50%] rounded-full bg-purple-400/20 blur-[100px] animate-float-slow" style={{ animationDelay: '2s' }} />
+    <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center p-4 lg:p-12 relative overflow-hidden">
+
 
       <div className="flex w-full max-w-5xl premium-shadow rounded-[3rem] overflow-hidden animate-slide-up-fade bg-white/70 backdrop-blur-2xl border border-white/50">
         
