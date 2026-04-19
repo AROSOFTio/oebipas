@@ -3,18 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --page-bg: #efe9dd;
-  --panel-strong: #143b5d;
-  --panel-soft: #d7e2ee;
-  --accent-soft: #f1dfb8;
-  --line-soft: rgba(20, 59, 93, 0.1);
+  --page-bg: #f0f5f2;
+  --panel-strong: #335543;
+  --panel-soft: #cde0d5;
+  --accent-soft: #fde8e8;
+  --secondary: #df252a;
+  --line-soft: rgba(51, 85, 67, 0.1);
 }
 
 @layer base {
   html {
     background:
-      radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 30%),
-      linear-gradient(180deg, #f5efe4 0%, #efe9dd 100%);
+      radial-gradient(circle at top left, rgba(255, 255, 255, 0.65), transparent 35%),
+      linear-gradient(180deg, #eaf3ee 0%, #f0f5f2 100%);
   }
 
   body {

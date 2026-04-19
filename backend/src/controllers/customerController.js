@@ -51,8 +51,8 @@ exports.getCustomerById = async (req, res) => {
 exports.createCustomer = async (req, res) => {
   const { full_name, username, email, phone, address, meter_number } = req.body;
 
-  if (!full_name || !username || !email || !address || !meter_number) {
-    return res.status(400).json({ success: false, message: 'Full name, username, email, address and meter number are required.' });
+  if (!full_name || !username || !email || !address) {
+    return res.status(400).json({ success: false, message: 'Full name, username, email and address are required.' });
   }
 
   const conn = await pool.getConnection();

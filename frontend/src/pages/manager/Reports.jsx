@@ -21,37 +21,41 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Daily Revenue" subtitle="Basic report required in the proposal">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <SectionCard title="Daily Revenue">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {dailyRevenue.length === 0 && <p className="text-sm text-slate-400">No data available.</p>}
           {dailyRevenue.map(item => (
-            <div key={item.report_date} className="rounded-2xl bg-slate-50 px-4 py-3 text-sm">
-              <p className="font-medium text-slate-900">{item.report_date?.slice(0, 10)}</p>
-              <p className="text-slate-500">UGX {Number(item.total_revenue).toLocaleString()}</p>
+            <div key={item.report_date} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+              <p className="text-xs text-slate-500">{item.report_date?.slice(0, 10)}</p>
+              <p className="mt-1 text-lg font-semibold text-slate-900">
+                UGX {Number(item.total_revenue).toLocaleString()}
+              </p>
             </div>
           ))}
         </div>
       </SectionCard>
 
-      <SectionCard title="Monthly Billing Summary" subtitle="Bills generated and paid by month">
+      <SectionCard title="Monthly Billing Summary">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="text-slate-500">
-              <tr>
-                <th className="pb-3">Period</th>
-                <th className="pb-3">Bills</th>
-                <th className="pb-3">Total billed</th>
-                <th className="pb-3">Total paid</th>
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="pb-3 pr-4 font-medium text-slate-500">Period</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Bills</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Total Billed</th>
+                <th className="pb-3 font-medium text-slate-500">Total Paid</th>
               </tr>
             </thead>
             <tbody>
+              {monthlyBilling.length === 0 && (
+                <tr><td colSpan={4} className="py-6 text-slate-400">No billing data yet.</td></tr>
+              )}
               {monthlyBilling.map(item => (
-                <tr key={`${item.billing_year}-${item.billing_month}`} className="border-t border-slate-100">
-                  <td className="py-3">
-                    {item.billing_month}/{item.billing_year}
-                  </td>
-                  <td className="py-3">{item.bills_generated}</td>
-                  <td className="py-3">UGX {Number(item.total_billed).toLocaleString()}</td>
-                  <td className="py-3">UGX {Number(item.total_paid).toLocaleString()}</td>
+                <tr key={`${item.billing_year}-${item.billing_month}`} className="border-t border-slate-100 hover:bg-slate-50">
+                  <td className="py-3 pr-4 text-slate-700">{item.billing_month}/{item.billing_year}</td>
+                  <td className="py-3 pr-4 text-slate-700">{item.bills_generated}</td>
+                  <td className="py-3 pr-4 font-medium text-slate-900">UGX {Number(item.total_billed).toLocaleString()}</td>
+                  <td className="py-3 text-emerald-700 font-medium">UGX {Number(item.total_paid).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -59,24 +63,33 @@ export default function Reports() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Outstanding Payments" subtitle="Open balances for follow-up">
+      <SectionCard title="Outstanding Payments">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="text-slate-500">
-              <tr>
-                <th className="pb-3">Customer</th>
-                <th className="pb-3">Bill</th>
-                <th className="pb-3">Balance</th>
-                <th className="pb-3">Status</th>
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="pb-3 pr-4 font-medium text-slate-500">Customer</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Bill</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Balance</th>
+                <th className="pb-3 font-medium text-slate-500">Status</th>
               </tr>
             </thead>
             <tbody>
+              {outstanding.length === 0 && (
+                <tr><td colSpan={4} className="py-6 text-slate-400">No outstanding payments.</td></tr>
+              )}
               {outstanding.map(item => (
-                <tr key={`${item.customer_number}-${item.bill_number}`} className="border-t border-slate-100">
-                  <td className="py-3">{item.customer_name}</td>
-                  <td className="py-3">{item.bill_number}</td>
-                  <td className="py-3">UGX {Number(item.balance_due).toLocaleString()}</td>
-                  <td className="py-3 capitalize">{item.status}</td>
+                <tr key={`${item.customer_number}-${item.bill_number}`} className="border-t border-slate-100 hover:bg-slate-50">
+                  <td className="py-3 pr-4 text-slate-700">{item.customer_name}</td>
+                  <td className="py-3 pr-4 text-slate-700">{item.bill_number}</td>
+                  <td className="py-3 pr-4 font-medium text-slate-900">UGX {Number(item.balance_due).toLocaleString()}</td>
+                  <td className="py-3">
+                    <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
+                      item.status === 'overdue' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {item.status.replace('_', ' ')}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

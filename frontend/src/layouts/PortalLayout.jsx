@@ -130,8 +130,8 @@ export default function PortalLayout() {
                   <img src="/logo.png" alt="UEDCL logo" className="h-10 w-10 object-contain" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Online Electricity Billing and Payment System</p>
-                  <h2 className="mt-1 text-xl font-semibold text-slate-900">Development of an Online Electricity Billing and Payment System: A Case Study of UEDCL</h2>
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">UEDCL Online Portal</p>
+                  <h2 className="mt-0.5 text-lg font-semibold text-slate-900">Electricity Billing & Payment System</h2>
                 </div>
               </div>
               <div className="rounded-2xl bg-slate-50 px-4 py-3 text-right">

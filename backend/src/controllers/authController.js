@@ -18,10 +18,10 @@ const signToken = user =>
   );
 
 exports.register = async (req, res) => {
-  const { full_name, username, email, password, phone, address, meter_number } = req.body;
+  const { full_name, username, email, password, phone, address } = req.body;
 
-  if (!full_name || !username || !email || !password || !address || !meter_number) {
-    return res.status(400).json({ success: false, message: 'Full name, username, email, password, address and meter number are required.' });
+  if (!full_name || !username || !email || !password || !address) {
+    return res.status(400).json({ success: false, message: 'Full name, username, email, password and address are required.' });
   }
 
   const conn = await pool.getConnection();
@@ -48,9 +48,9 @@ exports.register = async (req, res) => {
 
     const customerNumber = `UEDCL-${String(userResult.insertId).padStart(4, '0')}`;
     await conn.query(
-      `INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'active')`,
-      [userResult.insertId, customerNumber, meter_number, full_name, email, phone || null, address]
+      `INSERT INTO customers (user_id, customer_number, full_name, email, phone, address, connection_status)
+       VALUES (?, ?, ?, ?, ?, ?, 'active')`,
+      [userResult.insertId, customerNumber, full_name, email, phone || null, address]
     );
 
     await conn.commit();
