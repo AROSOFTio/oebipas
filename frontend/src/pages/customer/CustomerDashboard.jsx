@@ -39,15 +39,15 @@ export default function CustomerDashboard() {
         <MetricCard
           title="Outstanding Balance"
           value={`UGX ${Number(summary.outstanding_balance || 0).toLocaleString()}`}
-          tone="strong"
+          color="yellow"
         />
-        <MetricCard title="Total Bills" value={Number(summary.total_bills || 0)} />
+        <MetricCard title="Total Bills" value={Number(summary.total_bills || 0)} color="slate" />
         <MetricCard
           title="Recent Payments"
           value={Number(data?.recentPayments?.length || 0)}
-          tone="accent"
+          color="green"
         />
-        <MetricCard title="Notifications" value={Number(data?.notifications?.length || 0)} />
+        <MetricCard title="Notifications" value={Number(data?.notifications?.length || 0)} color="purple" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

@@ -44,16 +44,18 @@ export default function StaffDashboard() {
         <MetricCard
           title="Total Revenue"
           value={`UGX ${Number(summary.total_revenue || 0).toLocaleString()}`}
-          tone="strong"
+          color="purple"
         />
         <MetricCard
           title="Outstanding Balances"
           value={`UGX ${Number(summary.outstanding_balances || 0).toLocaleString()}`}
+          color="slate"
         />
-        <MetricCard title="Active Customers" value={Number(summary.total_customers || 0)} tone="accent" />
+        <MetricCard title="Active Customers" value={Number(summary.total_customers || 0)} color="green" />
         <MetricCard
           title={isManager ? 'Overdue Bills' : 'Recent Payments'}
           value={Number(isManager ? (summary.overdue_bills || 0) : (data?.recentPayments?.length || 0))}
+          color="blue"
         />
       </div>
 

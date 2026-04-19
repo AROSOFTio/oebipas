@@ -3,29 +3,63 @@
 @tailwind utilities;
 
 :root {
-  --page-bg: #f6f8ff;
+  --page-bg: #f5f7fa;
   --panel-strong: #3543bb;
+  --panel-strong-dark: #283394;
   --panel-soft: #cfd6ff;
   --accent-soft: #e8ebff;
   --secondary: #4f5cd1;
   --line-soft: rgba(53, 67, 187, 0.1);
-  --text-strong: #1f285c;
-  --text-muted: #6670a6;
+  --text-strong: #111827;
+  --text-muted: #6b7280;
 }
 
 @layer base {
-  html {
-    background:
-      radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 30%),
-      linear-gradient(180deg, #ffffff 0%, #f6f8ff 100%);
-  }
-
   body {
-    @apply m-0 bg-[var(--page-bg)] text-[var(--text-strong)];
+    @apply m-0 bg-[var(--page-bg)] text-[var(--text-strong)] antialiased;
     font-family: "Inter", "Segoe UI", sans-serif;
   }
 
   * {
     box-sizing: border-box;
   }
+}
+
+@layer utilities {
+  .animate-slide-up-fade {
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .animate-float-slow {
+    animation: floatSlow 6s ease-in-out infinite;
+  }
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+  }
+  .premium-shadow {
+    @apply shadow-[0_10px_40px_-10px_rgba(53,67,187,0.15)];
+  }
+}
+
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.bg-mesh {
+  background-color: #f5f7fa;
+  background-image: 
+    radial-gradient(at 40% 20%, hsla(234,100%,74%,1) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsla(189,100%,56%,1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(355,100%,93%,1) 0px, transparent 50%);
 }
