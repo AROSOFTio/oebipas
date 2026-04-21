@@ -90,7 +90,7 @@ const generateBillFromConsumption = async ({ consumptionId, generatedBy }) => {
       customerId: consumption.customer_id,
       type: 'bill_generated',
       title: 'Bill generated',
-      message: `Bill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${bill.due_date}.`,
+      message: `Dear ${consumption.full_name},\n\nBill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${new Date(bill.due_date).toLocaleString('en-US', { timeZone: 'Africa/Kampala', weekday: 'short', month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/,/g, '')} GMT+0300 (East Africa Time).`,
       recipientEmail: consumption.email,
       recipientPhone: consumption.phone,
     });
