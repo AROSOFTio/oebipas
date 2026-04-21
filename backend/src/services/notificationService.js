@@ -21,6 +21,9 @@ const getEmailTransporter = () => {
       user: SMTP_USER,
       pass: SMTP_PASS,
     },
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 
   emailTransporter.defaultFrom = `"${SMTP_FROM_NAME || 'UEDCL OEBIPAS'}" <${SMTP_FROM_EMAIL}>`;
