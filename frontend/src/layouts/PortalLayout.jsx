@@ -9,6 +9,7 @@ import {
   Home,
   LogOut,
   Menu,
+  MessageSquare,
   User,
   Users,
   Wallet,
@@ -27,6 +28,7 @@ const navConfig = {
     { to: '/manager/notifications', label: 'Notifications', icon: Bell },
     { to: '/manager/tariffs', label: 'Tariffs', icon: Gauge },
     { to: '/manager/users', label: 'System Users', icon: Users },
+    { to: '/manager/support', label: 'Support Tickets', icon: MessageSquare },
   ],
   'Billing officers': [
     { to: '/staff', label: 'Dashboard', icon: Home },
@@ -34,6 +36,7 @@ const navConfig = {
     { to: '/staff/consumption', label: 'Consumption', icon: Zap },
     { to: '/staff/bills', label: 'Bills', icon: FileText },
     { to: '/staff/payments', label: 'Payments', icon: CreditCard },
+    { to: '/staff/support', label: 'Support Tickets', icon: MessageSquare },
   ],
   'Electricity consumers': [
     { to: '/customer', label: 'Dashboard', icon: Home },
@@ -42,6 +45,7 @@ const navConfig = {
     { to: '/customer/pay', label: 'Pay Bill', icon: Wallet },
     { to: '/customer/payments', label: 'Payment History', icon: CreditCard },
     { to: '/customer/notifications', label: 'Notifications', icon: Bell },
+    { to: '/customer/support', label: 'Support', icon: MessageSquare },
   ],
 };
 

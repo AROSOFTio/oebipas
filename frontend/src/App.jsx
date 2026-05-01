@@ -2,7 +2,6 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PortalLayout from './layouts/PortalLayout';
-import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -23,13 +22,15 @@ import CustomerPaymentHistory from './pages/customer/CustomerPaymentHistory';
 import CustomerNotifications from './pages/customer/CustomerNotifications';
 import CustomerProfile from './pages/customer/CustomerProfile';
 import PaymentReturn from './pages/customer/PaymentReturn';
+import CustomerSupport from './pages/customer/CustomerSupport';
+import SupportTickets from './pages/manager/SupportTickets';
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -46,6 +47,7 @@ function App() {
                <Route path="notifications" element={<Notifications />} />
               <Route path="tariffs" element={<Tariffs />} />
               <Route path="users" element={<UsersPage />} />
+              <Route path="support" element={<SupportTickets />} />
             </Route>
           </Route>
 
@@ -56,6 +58,7 @@ function App() {
               <Route path="consumption" element={<Consumption />} />
               <Route path="bills" element={<Bills />} />
               <Route path="payments" element={<Payments />} />
+              <Route path="support" element={<SupportTickets />} />
             </Route>
           </Route>
 
@@ -68,10 +71,11 @@ function App() {
               <Route path="payments" element={<CustomerPaymentHistory />} />
               <Route path="payments/return" element={<PaymentReturn />} />
               <Route path="notifications" element={<CustomerNotifications />} />
+              <Route path="support" element={<CustomerSupport />} />
             </Route>
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

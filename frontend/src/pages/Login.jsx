@@ -29,9 +29,15 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center p-4 lg:p-12 relative overflow-hidden">
+      <div className="electric-login-bg" aria-hidden="true">
+        <span className="electric-line electric-line-one" />
+        <span className="electric-line electric-line-two" />
+        <span className="electric-pulse electric-pulse-one" />
+        <span className="electric-pulse electric-pulse-two" />
+      </div>
 
 
-      <div className="flex w-full max-w-5xl premium-shadow rounded-[3rem] overflow-hidden animate-slide-up-fade bg-white/70 backdrop-blur-2xl border border-white/50">
+      <div className="relative z-10 flex w-full max-w-5xl premium-shadow rounded-[3rem] overflow-hidden animate-slide-up-fade bg-white/70 backdrop-blur-2xl border border-white/50">
         
         {/* Left Side: Brand & Visual */}
         <div className="hidden lg:flex lg:w-5/12 bg-[var(--panel-strong)] flex-col justify-between p-12 text-white relative">
@@ -43,7 +49,7 @@ export default function Login() {
               Powering<br/>Intelligent<br/>Billing.
             </h1>
             <p className="mt-6 text-blue-100 max-w-sm leading-relaxed">
-              Securely access your electricity metrics, track payments, and manage your billing cycles entirely online.
+              Securely access your electricity bills, track payments, and manage your account.
             </p>
           </div>
           
@@ -112,7 +118,7 @@ export default function Login() {
                     value={password}
                     onChange={event => setPassword(event.target.value)}
                     required
-                    placeholder="••••••••"
+                    placeholder="Password"
                   />
                 </div>
               </div>

@@ -8,6 +8,7 @@ router.use(authenticateToken);
 
 router.get('/me', authorizeRoles('Electricity consumers'), customerController.getMyProfile);
 router.put('/me', authorizeRoles('Electricity consumers'), customerController.updateMyProfile);
+router.post('/me/deactivate', authorizeRoles('Electricity consumers'), customerController.deactivateMyAccount);
 
 router.get('/', authorizeRoles('System administrators', 'Billing officers'), customerController.getCustomers);
 router.get('/:id', authorizeRoles('System administrators', 'Billing officers'), customerController.getCustomerById);

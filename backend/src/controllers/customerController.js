@@ -194,3 +194,65 @@ exports.updateMyProfile = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Unable to update profile.' });
   }
 };
+
+exports.deactivateMyAccount = async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [customerRows] = await conn.query(
+      `SELECT id, user_id
+       FROM customers
+       WHERE user_id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [req.user.id]
+    );
+
+    if (!customerRows.length) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, message: 'Customer profile not found.' });
+    }
+
+    const customer = customerRows[0];
+    const [outstandingBills] = await conn.query(
+      `SELECT id, bill_number, billing_month, billing_year, balance_due, due_date, status
+       FROM bills
+       WHERE customer_id = ?
+         AND balance_due > 0
+       ORDER BY due_date ASC, id ASC`,
+      [customer.id]
+    );
+
+    const totalOutstanding = Number(
+      outstandingBills.reduce((sum, bill) => sum + Number(bill.balance_due || 0), 0).toFixed(2)
+    );
+
+    if (totalOutstanding > 0) {
+      await conn.rollback();
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot deactivate your account while you have outstanding bills.',
+        total_outstanding: totalOutstanding,
+        outstanding_bills: outstandingBills,
+      });
+    }
+
+    await conn.query(
+      `UPDATE customers
+       SET connection_status = 'inactive'
+       WHERE id = ?`,
+      [customer.id]
+    );
+    await conn.query(`UPDATE users SET status = 'inactive' WHERE id = ?`, [customer.user_id]);
+
+    await conn.commit();
+    return res.status(200).json({ success: true, message: 'Account deactivated successfully.' });
+  } catch (error) {
+    await conn.rollback();
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Unable to deactivate account.' });
+  } finally {
+    conn.release();
+  }
+};

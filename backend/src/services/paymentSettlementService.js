@@ -45,7 +45,7 @@ const normalizePesapalStatus = payload => {
   return 'pending';
 };
 
-const notifyInternalPaymentReceipt = async ({ billNumber, customerId, amount }) => {
+const notifyInternalPaymentReceipt = async ({ billLabel, customerId, amount }) => {
   const [staffRows] = await pool.query(
     `SELECT u.id
      FROM users u
@@ -55,7 +55,7 @@ const notifyInternalPaymentReceipt = async ({ billNumber, customerId, amount }) 
   );
 
   const title = 'Payment received';
-  const message = `Payment of UGX ${Number(amount).toLocaleString()} has been received for bill ${billNumber}.`;
+  const message = `Payment of UGX ${Number(amount).toLocaleString()} has been received for ${billLabel}.`;
 
   for (const staff of staffRows) {
     await pool.query(
@@ -67,18 +67,43 @@ const notifyInternalPaymentReceipt = async ({ billNumber, customerId, amount }) 
   }
 };
 
-const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus, confirmationCode }) => {
-  const receiptTitle = `Payment receipt for ${payment.bill_number}`;
+const statusLabel = status => String(status || '').replace('_', ' ');
+
+const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus, confirmationCode, receiptBills = [] }) => {
+  const multipleBills = receiptBills.length > 1 || !payment.bill_id;
+  const billLabel = multipleBills ? 'Multiple bills' : (receiptBills[0]?.bill_number || payment.bill_number);
+  const billText = receiptBills.length
+    ? receiptBills
+        .map(
+          bill =>
+            `Bill number: ${bill.bill_number}\nAmount applied: ${formatCurrency(bill.appliedAmount)}\nOutstanding balance: ${formatCurrency(bill.newBalance)}\nBill status: ${statusLabel(bill.newBillStatus)}`
+        )
+        .join('\n\n')
+    : `Bill number: ${payment.bill_number}`;
+  const billRowsHtml = receiptBills.length
+    ? receiptBills
+        .map(
+          bill => `
+          <tr>
+            <td style="padding: 8px; border: 1px solid #e2e8f0;">${bill.bill_number}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(bill.appliedAmount)}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(bill.newBalance)}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0; text-transform: capitalize;">${statusLabel(bill.newBillStatus)}</td>
+          </tr>`
+        )
+        .join('')
+    : '';
+  const receiptTitle = `Payment receipt for ${billLabel}`;
   const paymentDate = formatReceiptDate();
   const receiptMessage = [
     `Your payment has been received successfully.`,
-    `Bill number: ${payment.bill_number}`,
+    billText,
     `Payment reference: ${payment.payment_reference}`,
     `Pesapal reference: ${payment.transaction_reference}`,
     `Confirmation code: ${confirmationCode || 'Pending confirmation code'}`,
     `Amount paid: ${formatCurrency(appliedAmount)}`,
     `Outstanding balance: ${formatCurrency(newBalance)}`,
-    `Bill status: ${newBillStatus.replace('_', ' ')}`,
+    `Bill status: ${statusLabel(newBillStatus)}`,
     `Receipt date: ${paymentDate}`,
   ].join('\n');
 
@@ -88,16 +113,31 @@ const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus
       <p style="margin-top: 0;">Your OEBIPAS payment has been confirmed successfully.</p>
       <table style="border-collapse: collapse; width: 100%; max-width: 520px; margin-top: 16px;">
         <tbody>
-          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Bill number</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${payment.bill_number}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Bill number</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${billLabel}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Payment reference</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${payment.payment_reference}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Pesapal reference</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${payment.transaction_reference}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Confirmation code</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${confirmationCode || 'Pending confirmation code'}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Amount paid</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(appliedAmount)}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Outstanding balance</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(newBalance)}</td></tr>
-          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Bill status</td><td style="padding: 8px; border: 1px solid #e2e8f0; text-transform: capitalize;">${newBillStatus.replace('_', ' ')}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Bill status</td><td style="padding: 8px; border: 1px solid #e2e8f0; text-transform: capitalize;">${statusLabel(newBillStatus)}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">Receipt date</td><td style="padding: 8px; border: 1px solid #e2e8f0;">${paymentDate}</td></tr>
         </tbody>
       </table>
+      ${
+        receiptBills.length
+          ? `<table style="border-collapse: collapse; width: 100%; max-width: 720px; margin-top: 16px;">
+              <thead>
+                <tr>
+                  <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Bill number</th>
+                  <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Amount applied</th>
+                  <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Outstanding balance</th>
+                  <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Status</th>
+                </tr>
+              </thead>
+              <tbody>${billRowsHtml}</tbody>
+            </table>`
+          : ''
+      }
       <p style="margin-top: 16px;">Thank you for paying through Pesapal.</p>
     </div>
   `;
@@ -108,10 +148,10 @@ const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus
 const loadPaymentForSettlement = async (conn, paymentId) => {
   const [rows] = await conn.query(
     `SELECT p.*, c.user_id, c.email, c.phone, b.bill_number, b.balance_due, b.amount_paid, b.total_amount,
-            b.due_date, b.customer_id, b.status AS bill_status
+            b.due_date, b.customer_id AS bill_customer_id, b.status AS bill_status
      FROM payments p
      INNER JOIN customers c ON c.id = p.customer_id
-     INNER JOIN bills b ON b.id = p.bill_id
+     LEFT JOIN bills b ON b.id = p.bill_id
      WHERE p.id = ?
      LIMIT 1
      FOR UPDATE`,
@@ -125,18 +165,64 @@ const loadPaymentForSettlement = async (conn, paymentId) => {
   return rows[0];
 };
 
+const loadPaymentAllocations = async (conn, payment) => {
+  const [allocationRows] = await conn.query(
+    `SELECT pba.bill_id, pba.allocated_amount, b.bill_number, b.balance_due, b.amount_paid,
+            b.total_amount, b.due_date, b.customer_id, b.status AS bill_status
+     FROM payment_bill_allocations pba
+     INNER JOIN bills b ON b.id = pba.bill_id
+     WHERE pba.payment_id = ?
+     ORDER BY pba.id ASC
+     FOR UPDATE`,
+    [payment.id]
+  );
+
+  if (allocationRows.length) {
+    return allocationRows;
+  }
+
+  if (!payment.bill_id) {
+    return [];
+  }
+
+  const [fallbackRows] = await conn.query(
+    `SELECT b.id AS bill_id, ? AS allocated_amount, b.bill_number, b.balance_due, b.amount_paid,
+            b.total_amount, b.due_date, b.customer_id, b.status AS bill_status
+     FROM bills b
+     WHERE b.id = ?
+     LIMIT 1
+     FOR UPDATE`,
+    [payment.amount, payment.bill_id]
+  );
+
+  return fallbackRows;
+};
+
+const summarizeBillStatus = receiptBills => {
+  if (receiptBills.every(bill => bill.newBillStatus === 'paid')) {
+    return 'paid';
+  }
+
+  if (receiptBills.some(bill => bill.newBillStatus === 'overdue')) {
+    return 'overdue';
+  }
+
+  return 'partially_paid';
+};
+
 const buildSettlementResponse = (payment, overrides = {}) => ({
   paymentId: payment.id,
   paymentReference: payment.payment_reference,
   paymentStatus: overrides.paymentStatus || payment.status,
   callbackStatus: overrides.callbackStatus || payment.callback_status,
   billId: payment.bill_id,
-  billNumber: payment.bill_number,
+  billNumber: payment.bill_id ? payment.bill_number : 'Multiple bills',
   billStatus: overrides.billStatus || payment.bill_status,
   balanceDue:
     overrides.balanceDue !== undefined ? Number(overrides.balanceDue) : Number(payment.balance_due),
   appliedAmount:
     overrides.appliedAmount !== undefined ? Number(overrides.appliedAmount) : 0,
+  allocations: overrides.allocations || [],
   duplicate: Boolean(overrides.duplicate),
 });
 
@@ -157,12 +243,10 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
     }
 
     if (status === 'successful') {
-      const amount = Number(payment.amount);
-      const currentBalance = Number(payment.balance_due);
-      const appliedAmount = Number(Math.min(amount, currentBalance).toFixed(2));
-      const newBalance = Number(Math.max(0, currentBalance - appliedAmount).toFixed(2));
-      const isOverdue = payment.due_date && new Date(payment.due_date) < new Date();
-      const newBillStatus = newBalance === 0 ? 'paid' : isOverdue ? 'overdue' : 'partially_paid';
+      const allocations = await loadPaymentAllocations(conn, payment);
+      if (!allocations.length) {
+        throw new Error('No bill allocation records found for this payment.');
+      }
 
       await conn.query(
         `UPDATE payments
@@ -174,18 +258,45 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
          WHERE id = ?`,
         [orderTrackingId, confirmationCode, paymentId]
       );
-      await conn.query(
-        `UPDATE bills
-         SET amount_paid = amount_paid + ?,
-             balance_due = ?,
-             status = ?
-         WHERE id = ?`,
-        [appliedAmount, newBalance, newBillStatus, payment.bill_id]
-      );
 
-      if (newBalance === 0) {
-        await conn.query(`UPDATE penalties SET status = 'cleared' WHERE bill_id = ?`, [payment.bill_id]);
+      const receiptBills = [];
+      let appliedAmount = 0;
+      let totalBalanceDue = 0;
+
+      for (const allocation of allocations) {
+        const currentBalance = Number(allocation.balance_due);
+        const allocationAmount = Number(allocation.allocated_amount);
+        const billAppliedAmount = Number(Math.min(allocationAmount, currentBalance).toFixed(2));
+        const newBalance = Number(Math.max(0, currentBalance - billAppliedAmount).toFixed(2));
+        const isOverdue = allocation.due_date && new Date(allocation.due_date) < new Date();
+        const newBillStatus = newBalance === 0 ? 'paid' : isOverdue ? 'overdue' : 'partially_paid';
+
+        await conn.query(
+          `UPDATE bills
+           SET amount_paid = amount_paid + ?,
+               balance_due = ?,
+               status = ?
+           WHERE id = ?`,
+          [billAppliedAmount, newBalance, newBillStatus, allocation.bill_id]
+        );
+
+        if (newBalance === 0) {
+          await conn.query(`UPDATE penalties SET status = 'cleared' WHERE bill_id = ?`, [allocation.bill_id]);
+        }
+
+        appliedAmount = Number((appliedAmount + billAppliedAmount).toFixed(2));
+        totalBalanceDue = Number((totalBalanceDue + newBalance).toFixed(2));
+        receiptBills.push({
+          bill_id: allocation.bill_id,
+          bill_number: allocation.bill_number,
+          appliedAmount: billAppliedAmount,
+          newBalance,
+          newBillStatus,
+        });
       }
+
+      const newBillStatus = summarizeBillStatus(receiptBills);
+      const billLabel = receiptBills.length > 1 ? 'Multiple bills' : `bill ${receiptBills[0].bill_number}`;
 
       await conn.commit();
 
@@ -193,9 +304,10 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
         const { receiptTitle, receiptMessage, receiptHtml } = buildReceiptDetails({
           payment,
           appliedAmount,
-          newBalance,
+          newBalance: totalBalanceDue,
           newBillStatus,
           confirmationCode,
+          receiptBills,
         });
 
         await notificationService.queueNotification({
@@ -205,28 +317,29 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
           title: receiptTitle,
           message: receiptMessage,
           html: receiptHtml,
-          smsMessage: `Payment received for bill ${payment.bill_number}. Amount: ${formatCurrency(appliedAmount)}. Balance: ${formatCurrency(newBalance)}. Status: ${newBillStatus.replace('_', ' ')}.`,
+          smsMessage: `Payment received for ${billLabel}. Amount: ${formatCurrency(appliedAmount)}. Balance: ${formatCurrency(totalBalanceDue)}. Status: ${statusLabel(newBillStatus)}.`,
           recipientEmail: payment.email,
           recipientPhone: payment.phone,
         });
 
         await notifyInternalPaymentReceipt({
-          billNumber: payment.bill_number,
+          billLabel,
           customerId: payment.customer_id,
           amount: appliedAmount,
         });
       }
 
       console.info(
-        `[Payments] Reconciled ${payment.payment_reference} as successful. Bill ${payment.bill_number} is now ${newBillStatus} with balance ${newBalance}.`
+        `[Payments] Reconciled ${payment.payment_reference} as successful across ${receiptBills.length} bill(s).`
       );
 
       return buildSettlementResponse(payment, {
         paymentStatus: 'successful',
         callbackStatus: 'received',
         billStatus: newBillStatus,
-        balanceDue: newBalance,
+        balanceDue: totalBalanceDue,
         appliedAmount,
+        allocations: receiptBills,
       });
     }
 
@@ -318,6 +431,7 @@ const verifyAndPersistPayment = async (orderTrackingId, merchantReferenceHint = 
     bill_number: settlement.billNumber,
     bill_status: settlement.billStatus,
     bill_balance_due: settlement.balanceDue,
+    bill_allocations: settlement.allocations,
     applied_amount: settlement.appliedAmount,
     duplicate: settlement.duplicate,
     status_code: transactionStatus.status_code,

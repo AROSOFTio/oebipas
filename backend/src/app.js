@@ -16,6 +16,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const tariffRoutes = require('./routes/tariffRoutes');
 const userRoutes = require('./routes/userRoutes');
+const supportRoutes = require('./routes/supportRoutes');
 const { applyAutomaticPenalties } = require('./services/automationService');
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/tariffs', tariffRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/support', supportRoutes);
 
 setInterval(() => {
   applyAutomaticPenalties().catch(error => {

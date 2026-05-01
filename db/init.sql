@@ -4,6 +4,8 @@ USE oebipas;
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS password_resets;
 DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS support_tickets;
+DROP TABLE IF EXISTS payment_bill_allocations;
 DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS penalties;
 DROP TABLE IF EXISTS bills;
@@ -128,7 +130,7 @@ CREATE TABLE payments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   payment_reference VARCHAR(50) NOT NULL UNIQUE,
   customer_id INT NOT NULL,
-  bill_id INT NOT NULL,
+  bill_id INT NULL,
   amount DECIMAL(12,2) NOT NULL,
   payment_method ENUM('pesapal') NOT NULL DEFAULT 'pesapal',
   transaction_reference VARCHAR(100) NOT NULL UNIQUE,
@@ -145,6 +147,33 @@ CREATE TABLE payments (
   CONSTRAINT fk_payments_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
   CONSTRAINT fk_payments_bill FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE,
   CONSTRAINT fk_payments_user FOREIGN KEY (initiated_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE payment_bill_allocations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  payment_id INT NOT NULL,
+  bill_id INT NOT NULL,
+  allocated_amount DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_payment_bill_allocations_payment FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
+  CONSTRAINT fk_payment_bill_allocations_bill FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_payment_bill_allocation (payment_id, bill_id)
+);
+
+CREATE TABLE support_tickets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  customer_id INT NOT NULL,
+  user_id INT NOT NULL,
+  subject VARCHAR(150) NOT NULL,
+  category ENUM('complaint', 'feedback', 'billing', 'payment', 'technical', 'other') NOT NULL DEFAULT 'other',
+  message TEXT NOT NULL,
+  status ENUM('open', 'in_progress', 'resolved', 'closed') NOT NULL DEFAULT 'open',
+  staff_response TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  resolved_at DATETIME NULL,
+  CONSTRAINT fk_support_tickets_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  CONSTRAINT fk_support_tickets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE notifications (

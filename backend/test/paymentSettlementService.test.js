@@ -116,6 +116,20 @@ test('verifyAndPersistPayment settles the bill and stays idempotent on duplicate
         }]];
       }
 
+      if (sql.includes('FROM payment_bill_allocations')) {
+        return [[{
+          bill_id: state.bill.id,
+          allocated_amount: state.payment.amount,
+          bill_number: state.bill.bill_number,
+          balance_due: state.bill.balance_due,
+          amount_paid: state.bill.amount_paid,
+          total_amount: state.bill.total_amount,
+          due_date: state.bill.due_date,
+          customer_id: state.payment.customer_id,
+          bill_status: state.bill.status,
+        }]];
+      }
+
       if (sql.includes('UPDATE payments') && sql.includes("status = 'successful'")) {
         state.payment.status = 'successful';
         state.payment.callback_status = 'received';

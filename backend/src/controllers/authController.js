@@ -17,11 +17,84 @@ const signToken = user =>
     { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
   );
 
-exports.register = async (req, res) => {
-  const { customer_type, full_name, username, email, password, phone, address, meter_number } = req.body;
+const cleanText = value => String(value || '').trim();
 
-  if (!customer_type || !email || !password) {
-    return res.status(400).json({ success: false, message: 'Type, email, and password are required.' });
+const buildUsernameBase = ({ username, email, meterNumber }) => {
+  const preferred = cleanText(username) || cleanText(email).split('@')[0] || cleanText(meterNumber) || 'customer';
+  return preferred.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 44) || 'customer';
+};
+
+const generateAvailableUsername = async (conn, values) => {
+  const base = buildUsernameBase(values);
+
+  for (let index = 0; index < 100; index += 1) {
+    const candidate = index === 0 ? base : `${base}${index + 1}`;
+    const [rows] = await conn.query(`SELECT id FROM users WHERE username = ? LIMIT 1`, [candidate]);
+    if (!rows.length) {
+      return candidate;
+    }
+  }
+
+  return `${base}${Date.now()}`.slice(0, 50);
+};
+
+exports.meterLookup = async (req, res) => {
+  const meterNumber = cleanText(req.params.meter_number);
+
+  if (!meterNumber) {
+    return res.status(400).json({ success: false, message: 'Meter number is required.' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT customer_number, meter_number, full_name, email, phone, address, connection_status, user_id
+       FROM customers
+       WHERE meter_number = ?
+       LIMIT 1`,
+      [meterNumber]
+    );
+
+    if (!rows.length) {
+      return res.status(200).json({
+        success: true,
+        found: false,
+        registered: false,
+        customer: null,
+      });
+    }
+
+    const customer = rows[0];
+    return res.status(200).json({
+      success: true,
+      found: true,
+      registered: Boolean(customer.user_id),
+      customer: {
+        customer_number: customer.customer_number,
+        meter_number: customer.meter_number,
+        full_name: customer.full_name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address,
+        connection_status: customer.connection_status,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Unable to look up meter number.' });
+  }
+};
+
+exports.register = async (req, res) => {
+  const { username, email, password, phone, address, meter_number } = req.body;
+  const fullName = cleanText(req.body.full_name || req.body.name);
+  const meterNumber = cleanText(meter_number);
+  const emailAddress = cleanText(email);
+
+  if (!meterNumber || !fullName || !emailAddress || !password || !phone || !address) {
+    return res.status(400).json({
+      success: false,
+      message: 'Meter number, name, email, phone, address and password are required.',
+    });
   }
 
   const conn = await pool.getConnection();
@@ -29,12 +102,12 @@ exports.register = async (req, res) => {
     await conn.beginTransaction();
 
     const [existingUsers] = await conn.query(
-      `SELECT id FROM users WHERE email = ? OR username = ?`,
-      [email, username]
+      `SELECT id FROM users WHERE email = ?`,
+      [emailAddress]
     );
     if (existingUsers.length) {
       await conn.rollback();
-      return res.status(400).json({ success: false, message: 'Email or username is already in use.' });
+      return res.status(400).json({ success: false, message: 'Email is already in use.' });
     }
 
     const [[customerRole]] = await conn.query(`SELECT id FROM roles WHERE name = 'Electricity consumers' LIMIT 1`);
@@ -44,50 +117,47 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const generatedUsername = await generateAvailableUsername(conn, {
+      username,
+      email: emailAddress,
+      meterNumber,
+    });
 
-    if (customer_type === 'existing') {
-      if (!meter_number) {
-        await conn.rollback();
-        return res.status(400).json({ success: false, message: 'Meter number is required for existing customers.' });
-      }
+    const [existingCustomerRows] = await conn.query(
+      `SELECT id, user_id FROM customers WHERE meter_number = ? LIMIT 1`,
+      [meterNumber]
+    );
 
-      const [existingCustomerRows] = await conn.query(
-        `SELECT id, user_id FROM customers WHERE meter_number = ? LIMIT 1`,
-        [meter_number]
-      );
-
-      if (!existingCustomerRows.length) {
-        await conn.rollback();
-        return res.status(404).json({ success: false, message: 'Meter number not found. Please contact support.' });
-      }
-
+    if (existingCustomerRows.length) {
       if (existingCustomerRows[0].user_id) {
         await conn.rollback();
-        return res.status(400).json({ success: false, message: 'This meter number is already linked to an online account.' });
+        return res.status(400).json({ success: false, message: 'This meter is already registered. Please login.' });
       }
 
       const [userResult] = await conn.query(
         `INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at)
          VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
-        [customerRole.id, full_name, username, email, hashedPassword, phone || null]
+        [customerRole.id, fullName, generatedUsername, emailAddress, hashedPassword, phone || null]
       );
 
       await conn.query(
-        `UPDATE customers SET user_id = ? WHERE id = ?`,
-        [userResult.insertId, existingCustomerRows[0].id]
+        `UPDATE customers
+         SET user_id = ?, full_name = ?, email = ?, phone = ?, address = ?
+         WHERE id = ?`,
+        [userResult.insertId, fullName, emailAddress, phone || null, address, existingCustomerRows[0].id]
       );
 
-    } else if (customer_type === 'new') {
+    } else {
       const [userResult] = await conn.query(
         `INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at)
          VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
-        [customerRole.id, full_name, username, email, hashedPassword, phone || null]
+        [customerRole.id, fullName, generatedUsername, emailAddress, hashedPassword, phone || null]
       );
 
       const [customerResult] = await conn.query(
         `INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status)
-         VALUES (?, 'TEMP', NULL, ?, ?, ?, ?, 'pending')`,
-        [userResult.insertId, full_name, email, phone || null, address]
+         VALUES (?, 'TEMP', ?, ?, ?, ?, ?, 'pending')`,
+        [userResult.insertId, meterNumber, fullName, emailAddress, phone || null, address]
       );
 
       const customerNumber = `UEDCL-${String(customerResult.insertId).padStart(4, '0')}`;
@@ -95,9 +165,6 @@ exports.register = async (req, res) => {
         `UPDATE customers SET customer_number = ? WHERE id = ?`,
         [customerNumber, customerResult.insertId]
       );
-    } else {
-      await conn.rollback();
-      return res.status(400).json({ success: false, message: 'Invalid customer type.' });
     }
 
     await conn.commit();
