@@ -32,7 +32,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#303dac] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
       <div className="electric-login-bg" aria-hidden="true">
         <span className="electric-line electric-line-one" />
         <span className="electric-line electric-line-two" />

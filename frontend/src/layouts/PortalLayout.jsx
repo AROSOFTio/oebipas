@@ -56,9 +56,9 @@ const pageTitle = {
 };
 
 const sidebarRoleClass = {
-  'System administrators': 'bg-[linear-gradient(155deg,var(--panel-strong-dark)_0%,var(--panel-strong)_62%,var(--panel-strong-dark)_100%)]',
-  'Billing officers': 'bg-[linear-gradient(155deg,var(--secondary)_0%,var(--panel-strong)_100%)]',
-  'Electricity consumers': 'bg-[var(--panel-strong)]',
+  'System administrators': 'sidebar-admin',
+  'Billing officers': 'sidebar-billing',
+  'Electricity consumers': 'sidebar-customer',
 };
 
 export default function PortalLayout() {
