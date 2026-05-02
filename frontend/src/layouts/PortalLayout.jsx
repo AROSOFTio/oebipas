@@ -55,33 +55,21 @@ const pageTitle = {
   'Electricity consumers': 'Customer Portal',
 };
 
-const roleDisplay = {
-  'System administrators': {
-    label: 'Admin',
-    shellClass: 'portal-admin',
-    sidebarClass: 'bg-[linear-gradient(155deg,var(--panel-strong-dark)_0%,var(--panel-strong)_62%,var(--panel-strong-dark)_100%)]',
-  },
-  'Billing officers': {
-    label: 'Billing',
-    shellClass: 'portal-billing',
-    sidebarClass: 'bg-[linear-gradient(155deg,var(--secondary)_0%,var(--panel-strong)_100%)]',
-  },
-  'Electricity consumers': {
-    label: 'Customer',
-    shellClass: 'portal-customer',
-    sidebarClass: 'bg-[var(--panel-strong)]',
-  },
+const sidebarRoleClass = {
+  'System administrators': 'bg-[linear-gradient(155deg,var(--panel-strong-dark)_0%,var(--panel-strong)_62%,var(--panel-strong-dark)_100%)]',
+  'Billing officers': 'bg-[linear-gradient(155deg,var(--secondary)_0%,var(--panel-strong)_100%)]',
+  'Electricity consumers': 'bg-[var(--panel-strong)]',
 };
 
 export default function PortalLayout() {
-  const { user, role, logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const items = useMemo(() => navConfig[role] || [], [role]);
-  const currentRole = roleDisplay[role] || roleDisplay['Electricity consumers'];
+  const items = useMemo(() => navConfig[user?.role] || [], [user?.role]);
+  const sidebarClass = sidebarRoleClass[user?.role] || sidebarRoleClass['Electricity consumers'];
 
   return (
-    <div className={`min-h-screen bg-[var(--page-bg)] text-slate-900 ${currentRole.shellClass}`}>
+    <div className="min-h-screen bg-[var(--page-bg)] text-slate-900">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         {mobileOpen ? (
           <button
@@ -92,7 +80,7 @@ export default function PortalLayout() {
         ) : null}
 
         <aside
-          className={`fixed inset-y-0 left-0 z-30 w-72 border-r border-white/20 px-6 py-8 text-white transition-transform lg:static lg:translate-x-0 ${currentRole.sidebarClass} ${
+          className={`fixed inset-y-0 left-0 z-30 w-72 border-r border-white/20 px-6 py-8 text-white transition-transform lg:static lg:translate-x-0 ${sidebarClass} ${
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -106,9 +94,6 @@ export default function PortalLayout() {
                 <p className="text-sm font-semibold text-white tracking-wide">{user?.full_name}</p>
               </div>
             </div>
-          </div>
-          <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-100">
-            {currentRole.label}
           </div>
 
           <nav className="mt-8 space-y-2">
@@ -152,7 +137,7 @@ export default function PortalLayout() {
                 <Menu size={20} />
               </button>
               <div className="hidden sm:block">
-                <h2 className="text-2xl font-bold tracking-tight text-[var(--text-strong)]">{pageTitle[role] || 'Dashboard'}</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-[var(--text-strong)]">{pageTitle[user?.role] || 'Dashboard'}</h2>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--panel-strong)] mt-0.5">OEBIPAS Platform</p>
               </div>
             </div>
