@@ -79,9 +79,9 @@ Implementation references:
 
 ## Default Demo Accounts
 
-The seed now contains the three requested users below. The database stores the exact bcrypt hashes provided for them.
+The seed and startup repair both keep the three requested users below available. Existing database data is not dropped.
 
-Note: bcrypt hashes are one-way. That means the original plain-text passwords cannot be read back from the hashes.
+Default password for all demo accounts: `Password123!`
 
 | Role | Username | Email |
 | --- | --- | --- |

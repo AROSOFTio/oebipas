@@ -22,7 +22,10 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    const requestUrl = error.config?.url || '';
+    const isAuthAttempt = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/forgot-password') || requestUrl.includes('/auth/reset-password');
+
+    if (error.response && error.response.status === 401 && !isAuthAttempt) {
       // Token expired or invalid
       localStorage.removeItem('oebipas_token');
       localStorage.removeItem('oebipas_user');

@@ -41,6 +41,110 @@
   .electric-login-bg {
     @apply pointer-events-none absolute inset-0 overflow-hidden;
   }
+  .login-shell {
+    position: relative;
+    isolation: isolate;
+  }
+  .electric-video {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(34, 211, 238, 0.24), transparent 28rem),
+      radial-gradient(circle at 82% 72%, rgba(245, 158, 11, 0.16), transparent 24rem),
+      linear-gradient(135deg, #040714 0%, #071224 48%, #0c1730 100%);
+  }
+  .electric-video::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background-image:
+      linear-gradient(rgba(125, 211, 252, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(125, 211, 252, 0.08) 1px, transparent 1px);
+    background-size: 72px 72px;
+    transform: perspective(700px) rotateX(62deg) translateY(8rem);
+    animation: gridDrift 12s linear infinite;
+  }
+  .electric-video::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    animation: videoScan 4.5s ease-in-out infinite;
+  }
+  .electric-horizon {
+    position: absolute;
+    left: -10%;
+    right: -10%;
+    top: 55%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.85), rgba(251, 191, 36, 0.75), transparent);
+    box-shadow: 0 0 34px rgba(34, 211, 238, 0.55);
+    animation: horizonPulse 3s ease-in-out infinite;
+  }
+  .electric-bolt {
+    position: absolute;
+    width: 30rem;
+    height: 14rem;
+    clip-path: polygon(0 44%, 32% 44%, 25% 10%, 72% 58%, 45% 58%, 55% 96%);
+    background: linear-gradient(90deg, transparent, rgba(125, 211, 252, 0.95), rgba(251, 191, 36, 0.85), transparent);
+    filter: drop-shadow(0 0 22px rgba(34, 211, 238, 0.62));
+    opacity: 0;
+    animation: lightningFlash 4.8s ease-in-out infinite;
+  }
+  .electric-bolt-one {
+    left: 5%;
+    top: 15%;
+  }
+  .electric-bolt-two {
+    right: 3%;
+    top: 36%;
+    transform: rotate(180deg) scale(0.78);
+    animation-delay: 1.7s;
+  }
+  .electric-bolt-three {
+    left: 42%;
+    bottom: 8%;
+    transform: rotate(-14deg) scale(0.62);
+    animation-delay: 3s;
+  }
+  .electric-ring {
+    position: absolute;
+    border-radius: 9999px;
+    border: 1px solid rgba(125, 211, 252, 0.18);
+    box-shadow: inset 0 0 34px rgba(34, 211, 238, 0.1), 0 0 38px rgba(34, 211, 238, 0.12);
+    animation: electricPulse 5.6s ease-out infinite;
+  }
+  .electric-ring-one {
+    width: 28rem;
+    height: 28rem;
+    left: -8rem;
+    top: -6rem;
+  }
+  .electric-ring-two {
+    width: 34rem;
+    height: 34rem;
+    right: -9rem;
+    bottom: -10rem;
+    animation-delay: 1.9s;
+  }
+  .spark-field {
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(255, 255, 255, 0.75) 0 1px, transparent 1.5px),
+      radial-gradient(circle, rgba(34, 211, 238, 0.7) 0 1px, transparent 1.4px);
+    background-size: 110px 130px, 170px 150px;
+    animation: sparkRise 10s linear infinite;
+  }
+  .spark-field-two {
+    opacity: 0.5;
+    animation-duration: 16s;
+    animation-direction: reverse;
+  }
+  .login-stage {
+    min-height: min(720px, calc(100vh - 4rem));
+  }
   .electric-line {
     position: absolute;
     height: 1px;
@@ -119,5 +223,57 @@
     opacity: 0;
     transform: scale(1.25);
   }
+}
+
+@keyframes gridDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 72px 72px; }
+}
+
+@keyframes videoScan {
+  0%, 100% {
+    transform: translateX(-80%);
+    opacity: 0;
+  }
+  45%, 55% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(80%);
+  }
+}
+
+@keyframes horizonPulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scaleX(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes lightningFlash {
+  0%, 78%, 100% {
+    opacity: 0;
+  }
+  81% {
+    opacity: 0.95;
+  }
+  83% {
+    opacity: 0.2;
+  }
+  86% {
+    opacity: 0.8;
+  }
+  89% {
+    opacity: 0;
+  }
+}
+
+@keyframes sparkRise {
+  0% { transform: translateY(4rem); }
+  100% { transform: translateY(-8rem); }
 }
 

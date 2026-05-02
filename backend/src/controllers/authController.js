@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const { queueNotification } = require('../services/notificationService');
+const { normalizeRoleName } = require('../utils/roles');
 
 const signToken = user =>
   jwt.sign(
@@ -18,6 +19,9 @@ const signToken = user =>
   );
 
 const cleanText = value => String(value || '').trim();
+const normalizeIdentifier = value => cleanText(value).toLowerCase();
+
+const isSchemaMismatch = error => ['ER_BAD_FIELD_ERROR', 'ER_NO_SUCH_TABLE'].includes(error?.code);
 
 const buildUsernameBase = ({ username, email, meterNumber }) => {
   const preferred = cleanText(username) || cleanText(email).split('@')[0] || cleanText(meterNumber) || 'customer';
@@ -36,6 +40,79 @@ const generateAvailableUsername = async (conn, values) => {
   }
 
   return `${base}${Date.now()}`.slice(0, 50);
+};
+
+const findLoginUser = async identifier => {
+  const normalizedIdentifier = normalizeIdentifier(identifier);
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.id, u.full_name, u.username, u.email, u.password, u.status, r.name AS role, c.id AS customer_id
+       FROM users u
+       INNER JOIN roles r ON r.id = u.role_id
+       LEFT JOIN customers c ON c.user_id = u.id
+       WHERE LOWER(TRIM(u.email)) = ?
+          OR LOWER(TRIM(u.username)) = ?
+          OR LOWER(TRIM(c.customer_number)) = ?
+          OR LOWER(TRIM(c.meter_number)) = ?
+       LIMIT 1`,
+      [normalizedIdentifier, normalizedIdentifier, normalizedIdentifier, normalizedIdentifier]
+    );
+    return rows;
+  } catch (error) {
+    if (!isSchemaMismatch(error)) {
+      throw error;
+    }
+  }
+
+  const [rows] = await pool.query(
+    `SELECT u.id, u.full_name, u.username, u.email, u.password, u.status, r.name AS role, c.id AS customer_id
+     FROM users u
+     LEFT JOIN user_roles ur ON ur.user_id = u.id
+     LEFT JOIN roles r ON r.id = ur.role_id
+     LEFT JOIN customers c ON c.user_id = u.id
+     LEFT JOIN meters m ON m.customer_id = c.id
+     WHERE LOWER(TRIM(u.email)) = ?
+        OR LOWER(TRIM(u.username)) = ?
+        OR LOWER(TRIM(c.customer_number)) = ?
+        OR LOWER(TRIM(m.meter_number)) = ?
+     ORDER BY ur.role_id ASC
+     LIMIT 1`,
+    [normalizedIdentifier, normalizedIdentifier, normalizedIdentifier, normalizedIdentifier]
+  );
+  return rows;
+};
+
+const findUserById = async id => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.id, u.full_name, u.username, u.email, u.phone, r.name AS role, c.id AS customer_id
+       FROM users u
+       INNER JOIN roles r ON r.id = u.role_id
+       LEFT JOIN customers c ON c.user_id = u.id
+       WHERE u.id = ?
+       LIMIT 1`,
+      [id]
+    );
+    return rows;
+  } catch (error) {
+    if (!isSchemaMismatch(error)) {
+      throw error;
+    }
+  }
+
+  const [rows] = await pool.query(
+    `SELECT u.id, u.full_name, u.username, u.email, u.phone, r.name AS role, c.id AS customer_id
+     FROM users u
+     LEFT JOIN user_roles ur ON ur.user_id = u.id
+     LEFT JOIN roles r ON r.id = ur.role_id
+     LEFT JOIN customers c ON c.user_id = u.id
+     WHERE u.id = ?
+     ORDER BY ur.role_id ASC
+     LIMIT 1`,
+    [id]
+  );
+  return rows;
 };
 
 exports.meterLookup = async (req, res) => {
@@ -183,22 +260,15 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const identifier = cleanText(req.body.email || req.body.username || req.body.identifier);
+  const { password } = req.body;
 
-  if (!email || !password) {
+  if (!identifier || !password) {
     return res.status(400).json({ success: false, message: 'Email or username and password are required.' });
   }
 
   try {
-    const [rows] = await pool.query(
-      `SELECT u.id, u.full_name, u.username, u.email, u.password, u.status, r.name AS role, c.id AS customer_id
-       FROM users u
-       INNER JOIN roles r ON r.id = u.role_id
-       LEFT JOIN customers c ON c.user_id = u.id
-       WHERE u.email = ? OR u.username = ?
-       LIMIT 1`,
-      [email, email]
-    );
+    const rows = await findLoginUser(identifier);
 
     if (!rows.length) {
       return res.status(401).json({ success: false, message: 'Invalid login credentials.' });
@@ -206,12 +276,13 @@ exports.login = async (req, res) => {
 
     const user = rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
+    const role = normalizeRoleName(user.role);
 
-    if (!isMatch || user.status !== 'active') {
+    if (!isMatch || user.status !== 'active' || !role) {
       return res.status(401).json({ success: false, message: 'Invalid login credentials.' });
     }
 
-    const token = signToken(user);
+    const token = signToken({ ...user, role });
 
     return res.status(200).json({
       success: true,
@@ -221,7 +292,7 @@ exports.login = async (req, res) => {
         full_name: user.full_name,
         username: user.username,
         email: user.email,
-        role: user.role,
+        role,
         customer_id: user.customer_id,
       },
     });
@@ -323,21 +394,19 @@ exports.resetPassword = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT u.id, u.full_name, u.username, u.email, u.phone, r.name AS role, c.id AS customer_id
-       FROM users u
-       INNER JOIN roles r ON r.id = u.role_id
-       LEFT JOIN customers c ON c.user_id = u.id
-       WHERE u.id = ?
-       LIMIT 1`,
-      [req.user.id]
-    );
+    const rows = await findUserById(req.user.id);
 
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'User account not found.' });
     }
 
-    return res.status(200).json({ success: true, user: rows[0] });
+    return res.status(200).json({
+      success: true,
+      user: {
+        ...rows[0],
+        role: normalizeRoleName(rows[0].role),
+      },
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Unable to fetch account details.' });
