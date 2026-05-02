@@ -211,9 +211,9 @@ INSERT INTO roles (name, description) VALUES
 
 -- Default demo password for all accounts below: Password123!
 INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at) VALUES
-(1, 'Winnie Nafuna', 'winnie', 'winniemarkie@gmail.com', '$2b$12$Tp6hNAVpcD4DBKLOGMcdBuBkXrPiAlJIeKUirwUrKELtyUY8p1QIG', '0700000001', 'active', NOW()),
-(2, 'Nimusiima Sylon', 'sylon', 'nsylon256@gmail.com', '$2b$12$Tp6hNAVpcD4DBKLOGMcdBuBkXrPiAlJIeKUirwUrKELtyUY8p1QIG', '0700000002', 'active', NOW()),
-(3, 'Benjamin Angella', 'benjamin', 'bangella23@gmail.com', '$2b$12$Tp6hNAVpcD4DBKLOGMcdBuBkXrPiAlJIeKUirwUrKELtyUY8p1QIG', '0700000003', 'active', NOW());
+(1, 'Winnie Nafuna', 'Winnie', 'winniemarky@gmail.com', '$2a$12$F5wzqMdp/sEQj7YNqepMmedgsecsIKTZHHN/uqOWOgE3PbGd9b3Pi', '0778740243', 'active', NOW()),
+(2, 'Nimusiima Sylon', 'Sylon', 'nsylon256@gmail.com', '$2a$12$6JKDKQnpBvvOkLePvmXYZ.BjWvgeK2/tvYYaY4D16vVDLVJriCZ8q', '0783650001', 'active', NOW()),
+(3, 'Benjamin Angella', 'Benjamin', 'bangella23@gmail.com', '$2a$12$EQGzjS2/DW6y2/WNSh0iZe.R/zFv9GtMK/xSBU8Iwpz/lx3/03xUu', '0787726388', 'active', NOW());
 
 INSERT INTO customers (user_id, customer_number, meter_number, full_name, email, phone, address, connection_status) VALUES
 (3, 'UEDCL-0001', 'MTR-0001', 'Benjamin Angella', 'bangella23@gmail.com', '0700000003', 'Kampala Central Division', 'active');

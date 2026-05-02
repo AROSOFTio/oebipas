@@ -7,7 +7,7 @@ const colorMap = {
   white: 'bg-white border hover:border-blue-200 border-slate-200 text-slate-800 shadow-sm',
 };
 
-export default function MetricCard({ title, value, note, color = 'white', icon }) {
+export default function MetricCard({ title, value, note, color = 'white', icon, className = '' }) {
   const isWhite = color === 'white';
   const gradientClass = colorMap[color] || colorMap.white;
 
@@ -15,7 +15,7 @@ export default function MetricCard({ title, value, note, color = 'white', icon }
     <div
       className={`group relative overflow-hidden rounded-[1.5rem] p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
         !isWhite ? 'bg-gradient-to-br' : ''
-      } ${gradientClass}`}
+      } ${gradientClass} ${className}`}
     >
       {/* Decorative Blur behind the card for solid gradient blocks */}
       {!isWhite && (

@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
 export default function ProtectedRoute({ allowedRoles }) {
-  const { user, loading, getHomePath } = useContext(AuthContext);
+  const { user, role, loading, getHomePath } = useContext(AuthContext);
 
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center text-slate-600">Loading portal...</div>;
@@ -13,8 +13,8 @@ export default function ProtectedRoute({ allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={getHomePath(user.role)} replace />;
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to={getHomePath(role)} replace />;
   }
 
   return <Outlet />;
