@@ -40,19 +40,19 @@
   }
   .electric-login-bg {
     @apply pointer-events-none absolute inset-0 overflow-hidden;
-    background: #f5f7fa;
+    background: linear-gradient(135deg, #eef2ff 0%, #f8fbff 42%, #eef4ff 100%);
   }
   .electric-login-bg::before {
     content: "";
     position: absolute;
     inset: -3rem;
     background-image:
-      linear-gradient(110deg, rgba(245, 247, 250, 0.18), rgba(255, 255, 255, 0.8) 50%, rgba(232, 235, 255, 0.28)),
+      linear-gradient(110deg, rgba(53, 67, 187, 0.16), rgba(255, 255, 255, 0.64) 48%, rgba(79, 92, 209, 0.18)),
       url("https://images.pexels.com/photos/7574218/pexels-photo-7574218.jpeg?auto=compress&cs=tinysrgb&w=1800");
     background-size: cover;
     background-position: center;
     filter: saturate(1.08) contrast(0.96);
-    opacity: 0.55;
+    opacity: 0.68;
     animation: mediaFloat 18s ease-in-out infinite alternate;
   }
   .electric-login-bg::after {
@@ -60,9 +60,9 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(circle at 18% 20%, rgba(53, 67, 187, 0.18), transparent 20rem),
-      radial-gradient(circle at 86% 78%, rgba(79, 92, 209, 0.16), transparent 22rem),
-      linear-gradient(90deg, rgba(245, 247, 250, 0.82), rgba(245, 247, 250, 0.58), rgba(245, 247, 250, 0.9));
+      radial-gradient(circle at 26% 18%, rgba(53, 67, 187, 0.22), transparent 19rem),
+      radial-gradient(circle at 78% 84%, rgba(79, 92, 209, 0.2), transparent 21rem),
+      linear-gradient(135deg, rgba(53, 67, 187, 0.22), rgba(255, 255, 255, 0.7) 46%, rgba(79, 92, 209, 0.18));
   }
   .electric-line {
     position: absolute;

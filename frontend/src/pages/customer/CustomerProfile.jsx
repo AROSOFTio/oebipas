@@ -18,6 +18,7 @@ export default function CustomerProfile() {
   const [deactivateError, setDeactivateError] = useState('');
   const [outstandingTotal, setOutstandingTotal] = useState(0);
   const [deactivating, setDeactivating] = useState(false);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
   useEffect(() => {
     axiosInstance.get('/customers/me').then(response => {
@@ -31,10 +32,17 @@ export default function CustomerProfile() {
     setMessage(response.data.message);
   };
 
-  const handleDeactivate = async () => {
-    const confirmed = window.confirm('Deactivate your account? You will be signed out if the account has no outstanding bills.');
-    if (!confirmed) return;
+  const openDeactivateModal = () => {
+    setDeactivateError('');
+    setShowDeactivateModal(true);
+  };
 
+  const closeDeactivateModal = () => {
+    if (deactivating) return;
+    setShowDeactivateModal(false);
+  };
+
+  const handleDeactivate = async () => {
     setDeactivating(true);
     setDeactivateError('');
     setOutstandingTotal(0);
@@ -46,11 +54,7 @@ export default function CustomerProfile() {
     } catch (err) {
       const total = Number(err.response?.data?.total_outstanding || 0);
       setOutstandingTotal(total);
-      setDeactivateError(
-        total > 0
-          ? `You cannot deactivate because you have outstanding bills totaling UGX ${total.toLocaleString()}.`
-          : err.response?.data?.message || 'Unable to deactivate account.'
-      );
+      setDeactivateError(err.response?.data?.message || 'Unable to deactivate account.');
     } finally {
       setDeactivating(false);
     }
@@ -108,11 +112,11 @@ export default function CustomerProfile() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
-            onClick={handleDeactivate}
+            onClick={openDeactivateModal}
             disabled={deactivating}
             className="rounded-2xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {deactivating ? 'Checking account...' : 'Deactivate / Unsubscribe'}
+            Deactivate / Unsubscribe
           </button>
           {outstandingTotal > 0 ? (
             <button
@@ -125,6 +129,55 @@ export default function CustomerProfile() {
           ) : null}
         </div>
       </SectionCard>
+
+      {showDeactivateModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="deactivate-account-title"
+            className="w-full max-w-md animate-slide-up-fade rounded-[2rem] border border-white/70 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+              </svg>
+            </div>
+            <h3 id="deactivate-account-title" className="mt-5 text-xl font-bold text-slate-950">
+              Deactivate / Unsubscribe Account
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Your account can only be deactivated if you have no outstanding bills.
+            </p>
+            {deactivateError ? (
+              <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                <p>{deactivateError}</p>
+                {outstandingTotal > 0 ? (
+                  <p className="mt-1 text-rose-600">Outstanding balance: UGX {outstandingTotal.toLocaleString()}</p>
+                ) : null}
+              </div>
+            ) : null}
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeDeactivateModal}
+                disabled={deactivating}
+                className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeactivate}
+                disabled={deactivating}
+                className="rounded-2xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-600/20 transition hover:bg-rose-700 disabled:opacity-60"
+              >
+                {deactivating ? 'Checking account...' : 'Confirm Deactivation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
