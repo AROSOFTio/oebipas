@@ -79,20 +79,43 @@ const upsertCurrentUser = async (conn, account, roleId) => {
   );
 
   if (existing.length) {
+    const userId = existing[0].id;
+    const [[usernameConflict]] = await conn.query(
+      `SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id <> ? LIMIT 1`,
+      [account.username, userId]
+    );
+    const [[emailConflict]] = await conn.query(
+      `SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id <> ? LIMIT 1`,
+      [account.email, userId]
+    );
+    const updates = [
+      'role_id = ?',
+      'full_name = ?',
+      'password = ?',
+      'phone = ?',
+      "status = 'active'",
+      'email_verified_at = COALESCE(email_verified_at, NOW())',
+    ];
+    const params = [roleId, account.fullName, DEFAULT_PASSWORD_HASH, account.phone];
+
+    if (!usernameConflict) {
+      updates.push('username = ?');
+      params.push(account.username);
+    }
+
+    if (!emailConflict) {
+      updates.push('email = ?');
+      params.push(account.email);
+    }
+
+    params.push(userId);
     await conn.query(
       `UPDATE users
-       SET role_id = ?,
-           full_name = ?,
-           username = ?,
-           email = ?,
-           password = ?,
-           phone = ?,
-           status = 'active',
-           email_verified_at = COALESCE(email_verified_at, NOW())
+       SET ${updates.join(', ')}
        WHERE id = ?`,
-      [roleId, account.fullName, account.username, account.email, DEFAULT_PASSWORD_HASH, account.phone, existing[0].id]
+      params
     );
-    return existing[0].id;
+    return userId;
   }
 
   const [result] = await conn.query(
@@ -166,22 +189,45 @@ const upsertLegacyUser = async (conn, account, roleId) => {
   );
 
   if (existing.length) {
+    const userId = existing[0].id;
+    const [[usernameConflict]] = await conn.query(
+      `SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id <> ? LIMIT 1`,
+      [account.username, userId]
+    );
+    const [[emailConflict]] = await conn.query(
+      `SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id <> ? LIMIT 1`,
+      [account.email, userId]
+    );
+    const updates = [
+      'full_name = ?',
+      'password = ?',
+      'phone = ?',
+      "status = 'active'",
+    ];
+    const params = [account.fullName, DEFAULT_PASSWORD_HASH, account.phone];
+
+    if (!usernameConflict) {
+      updates.push('username = ?');
+      params.push(account.username);
+    }
+
+    if (!emailConflict) {
+      updates.push('email = ?');
+      params.push(account.email);
+    }
+
+    params.push(userId);
     await conn.query(
       `UPDATE users
-       SET full_name = ?,
-           username = ?,
-           email = ?,
-           password = ?,
-           phone = ?,
-           status = 'active'
+       SET ${updates.join(', ')}
        WHERE id = ?`,
-      [account.fullName, account.username, account.email, DEFAULT_PASSWORD_HASH, account.phone, existing[0].id]
+      params
     );
     await conn.query(
       `INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)`,
-      [existing[0].id, roleId]
+      [userId, roleId]
     );
-    return existing[0].id;
+    return userId;
   }
 
   const [result] = await conn.query(
@@ -259,20 +305,33 @@ const ensureDemoAccounts = async () => {
       );
     }
 
+    const customerRepairs = [];
+
     for (const account of DEMO_ACCOUNTS) {
       const roleId = await getRoleId(conn, account.role, hasLegacyRoles);
       const userId = hasCurrentRoles
         ? await upsertCurrentUser(conn, account, roleId)
         : await upsertLegacyUser(conn, account, roleId);
 
-      if (hasCurrentRoles) {
-        await ensureCurrentCustomer(conn, account, userId);
-      } else {
-        await ensureLegacyCustomer(conn, account, userId, customerColumns);
+      if (account.customer) {
+        customerRepairs.push({ account, userId });
       }
     }
 
     await conn.commit();
+
+    for (const repair of customerRepairs) {
+      try {
+        if (hasCurrentRoles) {
+          await ensureCurrentCustomer(conn, repair.account, repair.userId);
+        } else {
+          await ensureLegacyCustomer(conn, repair.account, repair.userId, customerColumns);
+        }
+      } catch (error) {
+        console.warn(`[Startup] Demo customer profile repair skipped for ${repair.account.username}: ${error.message}`);
+      }
+    }
+
     console.log('[Startup] Demo login accounts are ready. Default password: Password123!');
   } catch (error) {
     await conn.rollback();
