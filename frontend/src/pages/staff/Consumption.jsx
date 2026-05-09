@@ -33,6 +33,8 @@ export default function Consumption() {
   const [records, setRecords] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
+  const [saving, setSaving] = useState(false);
 
   const loadPage = async () => {
     const [customerResponse, recordResponse] = await Promise.all([
@@ -49,16 +51,36 @@ export default function Consumption() {
 
   const handleSubmit = async event => {
     event.preventDefault();
-    const response = await axiosInstance.post('/consumption', form);
-    setMessage(`${response.data.message} Bill number: ${response.data.data.bill.bill_number}`);
-    setForm(emptyForm);
-    loadPage();
+    setSaving(true);
+    setMessageType('success');
+    setMessage('Saving consumption and generating bill...');
+
+    try {
+      const response = await axiosInstance.post('/consumption', form);
+      setMessage(`${response.data.message} Bill number: ${response.data.data.bill.bill_number}`);
+      setForm(emptyForm);
+      await loadPage();
+    } catch (error) {
+      setMessageType('error');
+      setMessage(error.response?.data?.message || 'Unable to save consumption. Please try again.');
+      loadPage();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
       <SectionCard title="Enter Consumption" subtitle="Billing entry automatically generates a bill">
-        {message ? <div className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
+        {message ? (
+          <div
+            className={`mb-4 rounded-2xl px-4 py-3 text-sm ${
+              messageType === 'error' ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'
+            }`}
+          >
+            {message}
+          </div>
+        ) : null}
         <form className="space-y-4" onSubmit={handleSubmit}>
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">Customer</span>
@@ -121,8 +143,12 @@ export default function Consumption() {
               </label>
             ))}
           </div>
-          <button type="submit" className="rounded-2xl bg-[var(--panel-strong)] px-5 py-3 text-sm font-semibold text-white">
-            Save consumption
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-2xl bg-[var(--panel-strong)] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {saving ? 'Saving...' : 'Save consumption'}
           </button>
         </form>
       </SectionCard>

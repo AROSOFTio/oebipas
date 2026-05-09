@@ -6,6 +6,37 @@ const { createInvoicePdfBuffer } = require('./documentService');
 const buildBillNumber = (billingYear, billingMonth, customerId) =>
   `BILL-${billingYear}${String(billingMonth).padStart(2, '0')}-${String(customerId).padStart(4, '0')}`;
 
+const sendBillGeneratedNotification = async ({ consumption, bill }) => {
+  const invoicePdf = await createInvoicePdfBuffer({
+    bill,
+    customer: consumption,
+  });
+
+  const dueDateText = new Date(bill.due_date).toLocaleString('en-US', { timeZone: 'Africa/Kampala', weekday: 'short', month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/,/g, '');
+
+  const result = await queueNotification({
+    userId: consumption.user_id,
+    customerId: consumption.customer_id,
+    type: 'bill_generated',
+    title: 'Bill generated',
+    message: `Dear ${consumption.full_name},\n\nBill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${dueDateText} GMT+0300 (East Africa Time). Your PDF invoice is attached.`,
+    smsMessage: `Bill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${dueDateText} GMT+0300 (East Africa Time).`,
+    attachments: [
+      {
+        filename: `${bill.bill_number}.pdf`,
+        content: invoicePdf,
+        contentType: 'application/pdf',
+      },
+    ],
+    recipientEmail: consumption.email,
+    recipientPhone: consumption.phone,
+  });
+
+  if (result.errors.length) {
+    console.warn(`[Billing] Bill ${bill.bill_number} notification completed with errors: ${result.errors.join('; ')}`);
+  }
+};
+
 const generateBillFromConsumption = async ({ consumptionId, generatedBy }) => {
   const conn = await pool.getConnection();
   let committed = false;
@@ -89,29 +120,8 @@ const generateBillFromConsumption = async ({ consumptionId, generatedBy }) => {
     await conn.commit();
     committed = true;
 
-    const invoicePdf = await createInvoicePdfBuffer({
-      bill,
-      customer: consumption,
-    });
-
-    const dueDateText = new Date(bill.due_date).toLocaleString('en-US', { timeZone: 'Africa/Kampala', weekday: 'short', month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/,/g, '');
-
-    await queueNotification({
-      userId: consumption.user_id,
-      customerId: consumption.customer_id,
-      type: 'bill_generated',
-      title: 'Bill generated',
-      message: `Dear ${consumption.full_name},\n\nBill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${dueDateText} GMT+0300 (East Africa Time). Your PDF invoice is attached.`,
-      smsMessage: `Bill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${dueDateText} GMT+0300 (East Africa Time).`,
-      attachments: [
-        {
-          filename: `${bill.bill_number}.pdf`,
-          content: invoicePdf,
-          contentType: 'application/pdf',
-        },
-      ],
-      recipientEmail: consumption.email,
-      recipientPhone: consumption.phone,
+    sendBillGeneratedNotification({ consumption, bill }).catch(error => {
+      console.error(`[Billing] Bill ${bill.bill_number} notification failed after bill generation:`, error.message);
     });
 
     return bill;

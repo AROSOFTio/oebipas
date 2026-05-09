@@ -17,6 +17,9 @@ const getEmailTransporter = () => {
     host: SMTP_HOST,
     port: Number(SMTP_PORT),
     secure: String(process.env.SMTP_SECURE || 'false') === 'true',
+    connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 15000),
+    greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 15000),
+    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 20000),
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS,
