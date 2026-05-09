@@ -4,6 +4,24 @@ const AfricasTalking = require('africastalking');
 
 let emailTransporter = null;
 let smsClient = null;
+let smtpVerificationPromise = null;
+let smtpVerificationStatus = 'pending';
+
+const summarizeDeliveryError = error => ({
+  message: error?.message,
+  code: error?.code,
+  response: error?.response,
+  command: error?.command,
+  stack: error?.stack,
+});
+
+const logEmailFailure = ({ recipientEmail, type, error }) => {
+  console.error('[Notifications] Email delivery failed', {
+    recipientEmail,
+    type,
+    ...summarizeDeliveryError(error),
+  });
+};
 
 const getEmailTransporter = () => {
   if (emailTransporter) return emailTransporter;
@@ -14,9 +32,12 @@ const getEmailTransporter = () => {
   }
 
   emailTransporter = nodemailer.createTransport({
+    pool: true,
     host: SMTP_HOST,
     port: Number(SMTP_PORT),
     secure: String(process.env.SMTP_SECURE || 'false') === 'true',
+    maxConnections: Number(process.env.SMTP_MAX_CONNECTIONS || 3),
+    maxMessages: Number(process.env.SMTP_MAX_MESSAGES || 100),
     connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 15000),
     greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 15000),
     socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 20000),
@@ -31,6 +52,30 @@ const getEmailTransporter = () => {
 
   emailTransporter.defaultFrom = `"${SMTP_FROM_NAME || 'UEDCL OEBIPAS'}" <${SMTP_FROM_EMAIL}>`;
   return emailTransporter;
+};
+
+const verifyEmailTransporter = async () => {
+  if (smtpVerificationStatus === 'verified') return true;
+  if (smtpVerificationStatus === 'failed') return false;
+  if (smtpVerificationPromise) return smtpVerificationPromise;
+
+  smtpVerificationPromise = (async () => {
+    try {
+      const transporter = getEmailTransporter();
+      await transporter.verify();
+      smtpVerificationStatus = 'verified';
+      console.info('[Notifications] SMTP transport verified.');
+      return true;
+    } catch (error) {
+      smtpVerificationStatus = 'failed';
+      console.error('[Notifications] SMTP transport verification failed', summarizeDeliveryError(error));
+      return false;
+    } finally {
+      smtpVerificationPromise = null;
+    }
+  })();
+
+  return smtpVerificationPromise;
 };
 
 const getSmsService = () => {
@@ -70,8 +115,9 @@ const createNotificationRecord = async ({
   return result.insertId;
 };
 
-const sendEmail = async ({ recipientEmail, title, message, html = null, attachments = [] }) => {
+const sendEmail = async ({ recipientEmail, title, message, html = null, attachments = [], type = 'unknown' }) => {
   const transporter = getEmailTransporter();
+  await verifyEmailTransporter();
   await transporter.sendMail({
     from: transporter.defaultFrom,
     to: recipientEmail,
@@ -105,79 +151,99 @@ const queueNotification = async ({
 }) => {
   const results = [];
   const errors = [];
+  const tasks = [];
 
   if (recipientEmail) {
-    try {
-      await sendEmail({ recipientEmail, title, message, html, attachments });
-      console.info(`[Notifications] Email sent to ${recipientEmail} for ${type} with ${attachments.length} attachment(s).`);
-      results.push(
-        await createNotificationRecord({
-          userId,
-          customerId,
-          type,
-          title,
-          message,
+    tasks.push((async () => {
+      try {
+        await sendEmail({ recipientEmail, title, message, html, attachments, type });
+        console.info(`[Notifications] Email sent to ${recipientEmail} for ${type} with ${attachments.length} attachment(s).`);
+        return {
           channel: 'email',
-          recipientEmail,
-          recipientPhone,
-          status: 'sent',
-        })
-      );
-    } catch (error) {
-      errors.push(`email: ${error.message}`);
-      console.error(`[Notifications] Email failed for ${recipientEmail} (${type}):`, error.message);
-      results.push(
-        await createNotificationRecord({
-          userId,
-          customerId,
-          type,
-          title,
-          message,
+          id: await createNotificationRecord({
+            userId,
+            customerId,
+            type,
+            title,
+            message,
+            channel: 'email',
+            recipientEmail,
+            recipientPhone,
+            status: 'sent',
+          }),
+        };
+      } catch (error) {
+        logEmailFailure({ recipientEmail, type, error });
+        return {
           channel: 'email',
-          recipientEmail,
-          recipientPhone,
-          status: 'failed',
-        })
-      );
-    }
+          error: `email: ${error.message}`,
+          id: await createNotificationRecord({
+            userId,
+            customerId,
+            type,
+            title,
+            message,
+            channel: 'email',
+            recipientEmail,
+            recipientPhone,
+            status: 'failed',
+          }),
+        };
+      }
+    })());
   }
 
   if (recipientPhone) {
-    try {
+    tasks.push((async () => {
       const smsBody = smsMessage || message;
-      await sendSms({ recipientPhone, message: smsBody });
-      console.info(`[Notifications] SMS sent to ${recipientPhone} for ${type}.`);
-      results.push(
-        await createNotificationRecord({
-          userId,
-          customerId,
-          type,
-          title,
-          message: smsBody,
+      try {
+        await sendSms({ recipientPhone, message: smsBody });
+        console.info(`[Notifications] SMS sent to ${recipientPhone} for ${type}.`);
+        return {
           channel: 'sms',
-          recipientEmail,
-          recipientPhone,
-          status: 'sent',
-        })
-      );
-    } catch (error) {
-      errors.push(`sms: ${error.message}`);
-      console.error(`[Notifications] SMS failed for ${recipientPhone} (${type}):`, error.message);
-      results.push(
-        await createNotificationRecord({
-          userId,
-          customerId,
-          type,
-          title,
-          message: smsMessage || message,
+          id: await createNotificationRecord({
+            userId,
+            customerId,
+            type,
+            title,
+            message: smsBody,
+            channel: 'sms',
+            recipientEmail,
+            recipientPhone,
+            status: 'sent',
+          }),
+        };
+      } catch (error) {
+        console.error(`[Notifications] SMS failed for ${recipientPhone} (${type}):`, error.message);
+        return {
           channel: 'sms',
-          recipientEmail,
-          recipientPhone,
-          status: 'failed',
-        })
-      );
-    }
+          error: `sms: ${error.message}`,
+          id: await createNotificationRecord({
+            userId,
+            customerId,
+            type,
+            title,
+            message: smsBody,
+            channel: 'sms',
+            recipientEmail,
+            recipientPhone,
+            status: 'failed',
+          }),
+        };
+      }
+    })());
   }
+
+  const settled = await Promise.allSettled(tasks);
+  settled.forEach(result => {
+    if (result.status === 'fulfilled') {
+      results.push(result.value.id);
+      if (result.value.error) errors.push(result.value.error);
+      return;
+    }
+
+    errors.push(result.reason?.message || String(result.reason));
+  });
 
   return { results, errors };
 };
@@ -185,4 +251,5 @@ const queueNotification = async ({
 module.exports = {
   queueNotification,
   sendEmail,
+  verifyEmailTransporter,
 };
