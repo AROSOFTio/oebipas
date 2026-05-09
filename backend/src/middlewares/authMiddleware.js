@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { normalizeRoleName } = require('../utils/roles');
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization || '';
@@ -10,6 +11,7 @@ const authenticateToken = (req, res, next) => {
 
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey2026');
+    req.user.role = normalizeRoleName(req.user.role);
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Invalid or expired authentication token.' });
@@ -21,10 +23,14 @@ const authorizeRoles = (...roles) => (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Access denied.' });
   }
 
-  if (!roles.includes(req.user.role)) {
+  const userRole = normalizeRoleName(req.user.role);
+  const allowedRoles = roles.map(normalizeRoleName);
+
+  if (!allowedRoles.includes(userRole)) {
     return res.status(403).json({ success: false, message: `The ${req.user.role} role cannot access this resource.` });
   }
 
+  req.user.role = userRole;
   next();
 };
 

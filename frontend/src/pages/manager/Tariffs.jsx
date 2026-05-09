@@ -65,7 +65,7 @@ export default function Tariffs() {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-      <SectionCard title="Simple Tariff Setup" subtitle="Branch Manager can create, edit and delete tariff settings">
+      <SectionCard title="Simple Tariff Setup" subtitle="System administrator can create, edit and delete tariff settings">
         {message ? <div className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
         <form className="space-y-4" onSubmit={handleSubmit}>
           {[

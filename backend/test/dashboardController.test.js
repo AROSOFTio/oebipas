@@ -16,7 +16,7 @@ test.afterEach(() => {
   paymentSettlementService.reconcilePendingPayments = originalReconcilePendingPayments;
 });
 
-test('getDashboard returns customer-scoped summary for Electricity consumers', async () => {
+test('getDashboard returns customer-scoped summary for Customer', async () => {
   let reconcileArgs = null;
 
   automationService.applyAutomaticPenalties = async () => {};
@@ -70,7 +70,7 @@ test('getDashboard returns customer-scoped summary for Electricity consumers', a
 
   const req = {
     user: {
-      role: 'Electricity consumers',
+      role: 'Customer',
       customer_id: 7,
     },
   };

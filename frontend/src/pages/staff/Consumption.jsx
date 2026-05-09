@@ -10,11 +10,31 @@ const emptyForm = {
   reading_date: '',
 };
 
+const monthOptions = [
+  ['1', 'January'],
+  ['2', 'February'],
+  ['3', 'March'],
+  ['4', 'April'],
+  ['5', 'May'],
+  ['6', 'June'],
+  ['7', 'July'],
+  ['8', 'August'],
+  ['9', 'September'],
+  ['10', 'October'],
+  ['11', 'November'],
+  ['12', 'December'],
+];
+
+const currentYear = new Date().getFullYear();
+const yearOptions = Array.from({ length: 6 }, (_, index) => String(currentYear - 4 + index));
+
 export default function Consumption() {
   const [customers, setCustomers] = useState([]);
   const [records, setRecords] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
+  const [saving, setSaving] = useState(false);
 
   const loadPage = async () => {
     const [customerResponse, recordResponse] = await Promise.all([
@@ -31,16 +51,36 @@ export default function Consumption() {
 
   const handleSubmit = async event => {
     event.preventDefault();
-    const response = await axiosInstance.post('/consumption', form);
-    setMessage(`${response.data.message} Bill number: ${response.data.data.bill.bill_number}`);
-    setForm(emptyForm);
-    loadPage();
+    setSaving(true);
+    setMessageType('success');
+    setMessage('Saving consumption and generating bill...');
+
+    try {
+      const response = await axiosInstance.post('/consumption', form);
+      setMessage(`${response.data.message} Bill number: ${response.data.data.bill.bill_number}`);
+      setForm(emptyForm);
+      await loadPage();
+    } catch (error) {
+      setMessageType('error');
+      setMessage(error.response?.data?.message || 'Unable to save consumption. Please try again.');
+      loadPage();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
       <SectionCard title="Enter Consumption" subtitle="Billing entry automatically generates a bill">
-        {message ? <div className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
+        {message ? (
+          <div
+            className={`mb-4 rounded-2xl px-4 py-3 text-sm ${
+              messageType === 'error' ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'
+            }`}
+          >
+            {message}
+          </div>
+        ) : null}
         <form className="space-y-4" onSubmit={handleSubmit}>
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">Customer</span>
@@ -59,9 +99,35 @@ export default function Consumption() {
             </select>
           </label>
           <div className="grid gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">Billing month</span>
+              <select
+                value={form.billing_month}
+                onChange={event => setForm(current => ({ ...current, billing_month: event.target.value }))}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3"
+                required
+              >
+                <option value="">Select month</option>
+                {monthOptions.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">Billing year</span>
+              <select
+                value={form.billing_year}
+                onChange={event => setForm(current => ({ ...current, billing_year: event.target.value }))}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3"
+                required
+              >
+                <option value="">Select year</option>
+                {yearOptions.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </label>
             {[
-              ['billing_month', 'Billing month'],
-              ['billing_year', 'Billing year'],
               ['units_consumed', 'Units consumed'],
               ['reading_date', 'Reading date'],
             ].map(([name, label]) => (
@@ -77,8 +143,12 @@ export default function Consumption() {
               </label>
             ))}
           </div>
-          <button type="submit" className="rounded-2xl bg-[var(--panel-strong)] px-5 py-3 text-sm font-semibold text-white">
-            Save consumption
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-2xl bg-[var(--panel-strong)] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {saving ? 'Saving...' : 'Save consumption'}
           </button>
         </form>
       </SectionCard>

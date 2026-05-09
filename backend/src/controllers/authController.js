@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const { queueNotification } = require('../services/notificationService');
-const { normalizeRoleName } = require('../utils/roles');
+const { CUSTOMER_ROLE_NAME, normalizeRoleName, roleAliasesFor } = require('../utils/roles');
 
 const signToken = user =>
   jwt.sign(
@@ -187,7 +187,10 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email is already in use.' });
     }
 
-    const [[customerRole]] = await conn.query(`SELECT id FROM roles WHERE name = 'Electricity consumers' LIMIT 1`);
+    const [[customerRole]] = await conn.query(
+      `SELECT id FROM roles WHERE name IN (?) ORDER BY name = ? DESC, id ASC LIMIT 1`,
+      [roleAliasesFor(CUSTOMER_ROLE_NAME), CUSTOMER_ROLE_NAME]
+    );
     if (!customerRole) {
       await conn.rollback();
       return res.status(500).json({ success: false, message: 'Role not found.' });

@@ -2,6 +2,7 @@ require('dotenv').config();
 const app = require('./app');
 const pool = require('./config/db');
 const { ensureDemoAccounts } = require('./services/demoAccountService');
+const { repairRoleLabels } = require('./services/roleRepairService');
 
 const PORT = process.env.PORT || 5000;
 
@@ -11,6 +12,7 @@ pool.getConnection()
     console.log('Successfully connected to the database.');
     connection.release();
 
+    await repairRoleLabels();
     await ensureDemoAccounts();
 
     app.listen(PORT, () => {

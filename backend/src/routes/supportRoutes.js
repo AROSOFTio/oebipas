@@ -6,10 +6,10 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.post('/tickets', authorizeRoles('Electricity consumers'), supportController.createTicket);
-router.get('/tickets/mine', authorizeRoles('Electricity consumers'), supportController.getMyTickets);
-router.get('/tickets', authorizeRoles('System administrators', 'Billing officers'), supportController.getTickets);
-router.get('/tickets/:id', authorizeRoles('System administrators', 'Billing officers'), supportController.getTicketById);
-router.put('/tickets/:id', authorizeRoles('System administrators', 'Billing officers'), supportController.updateTicket);
+router.post('/tickets', authorizeRoles('Customer'), supportController.createTicket);
+router.get('/tickets/mine', authorizeRoles('Customer'), supportController.getMyTickets);
+router.get('/tickets', authorizeRoles('System administrator', 'Billing Officer'), supportController.getTickets);
+router.get('/tickets/:id', authorizeRoles('System administrator', 'Billing Officer'), supportController.getTicketById);
+router.put('/tickets/:id', authorizeRoles('System administrator', 'Billing Officer'), supportController.updateTicket);
 
 module.exports = router;

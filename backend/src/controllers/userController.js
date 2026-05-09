@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const bcrypt = require('bcrypt');
+const { CANONICAL_ROLE_NAMES, normalizeRoleName } = require('../utils/roles');
 
 exports.getUsers = async (req, res) => {
   try {
@@ -10,7 +11,10 @@ exports.getUsers = async (req, res) => {
       INNER JOIN roles r ON r.id = u.role_id
       ORDER BY u.created_at DESC
     `);
-    return res.status(200).json({ success: true, data: rows });
+    return res.status(200).json({
+      success: true,
+      data: rows.map(row => ({ ...row, role_name: normalizeRoleName(row.role_name) })),
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Unable to load system users.' });
@@ -20,7 +24,17 @@ exports.getUsers = async (req, res) => {
 exports.getRoles = async (req, res) => {
   try {
     const [rows] = await pool.query(`SELECT id, name, description FROM roles ORDER BY id ASC`);
-    return res.status(200).json({ success: true, data: rows });
+    const canonicalRows = [];
+    const seen = new Set();
+
+    for (const row of rows) {
+      const name = normalizeRoleName(row.name);
+      if (!CANONICAL_ROLE_NAMES.includes(name) || seen.has(name)) continue;
+      seen.add(name);
+      canonicalRows.push({ ...row, name });
+    }
+
+    return res.status(200).json({ success: true, data: canonicalRows });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Unable to load roles.' });

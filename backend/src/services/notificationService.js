@@ -17,6 +17,9 @@ const getEmailTransporter = () => {
     host: SMTP_HOST,
     port: Number(SMTP_PORT),
     secure: String(process.env.SMTP_SECURE || 'false') === 'true',
+    connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 15000),
+    greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 15000),
+    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 20000),
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS,
@@ -67,7 +70,7 @@ const createNotificationRecord = async ({
   return result.insertId;
 };
 
-const sendEmail = async ({ recipientEmail, title, message, html = null }) => {
+const sendEmail = async ({ recipientEmail, title, message, html = null, attachments = [] }) => {
   const transporter = getEmailTransporter();
   await transporter.sendMail({
     from: transporter.defaultFrom,
@@ -75,6 +78,7 @@ const sendEmail = async ({ recipientEmail, title, message, html = null }) => {
     subject: title,
     text: message,
     html: html || `<p>${message.replace(/\n/g, '<br />')}</p>`,
+    attachments,
   });
 };
 
@@ -94,6 +98,7 @@ const queueNotification = async ({
   title,
   message,
   html = null,
+  attachments = [],
   smsMessage = null,
   recipientEmail = null,
   recipientPhone = null,
@@ -103,7 +108,8 @@ const queueNotification = async ({
 
   if (recipientEmail) {
     try {
-      await sendEmail({ recipientEmail, title, message, html });
+      await sendEmail({ recipientEmail, title, message, html, attachments });
+      console.info(`[Notifications] Email sent to ${recipientEmail} for ${type} with ${attachments.length} attachment(s).`);
       results.push(
         await createNotificationRecord({
           userId,
@@ -119,6 +125,7 @@ const queueNotification = async ({
       );
     } catch (error) {
       errors.push(`email: ${error.message}`);
+      console.error(`[Notifications] Email failed for ${recipientEmail} (${type}):`, error.message);
       results.push(
         await createNotificationRecord({
           userId,
@@ -139,6 +146,7 @@ const queueNotification = async ({
     try {
       const smsBody = smsMessage || message;
       await sendSms({ recipientPhone, message: smsBody });
+      console.info(`[Notifications] SMS sent to ${recipientPhone} for ${type}.`);
       results.push(
         await createNotificationRecord({
           userId,
@@ -154,6 +162,7 @@ const queueNotification = async ({
       );
     } catch (error) {
       errors.push(`sms: ${error.message}`);
+      console.error(`[Notifications] SMS failed for ${recipientPhone} (${type}):`, error.message);
       results.push(
         await createNotificationRecord({
           userId,
@@ -175,4 +184,5 @@ const queueNotification = async ({
 
 module.exports = {
   queueNotification,
+  sendEmail,
 };

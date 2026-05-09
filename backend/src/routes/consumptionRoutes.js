@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.get('/mine', authorizeRoles('Electricity consumers'), consumptionController.getMyConsumption);
-router.get('/', authorizeRoles('System administrators', 'Billing officers'), consumptionController.getConsumptionRecords);
-router.post('/', authorizeRoles('System administrators', 'Billing officers'), consumptionController.createConsumptionRecord);
-router.put('/:id', authorizeRoles('System administrators', 'Billing officers'), consumptionController.updateConsumptionRecord);
+router.get('/mine', authorizeRoles('Customer'), consumptionController.getMyConsumption);
+router.get('/', authorizeRoles('System administrator', 'Billing Officer'), consumptionController.getConsumptionRecords);
+router.post('/', authorizeRoles('System administrator', 'Billing Officer'), consumptionController.createConsumptionRecord);
+router.put('/:id', authorizeRoles('System administrator', 'Billing Officer'), consumptionController.updateConsumptionRecord);
 
 module.exports = router;

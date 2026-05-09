@@ -7,6 +7,45 @@ export default function Reports() {
   const [monthlyBilling, setMonthlyBilling] = useState([]);
   const [outstanding, setOutstanding] = useState([]);
 
+  const downloadReport = async (reportPath, format) => {
+    const response = await axiosInstance.get(`/reports/${reportPath}/${format}`, {
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], {
+      type: format === 'pdf' ? 'application/pdf' : 'text/csv;charset=utf-8',
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const disposition = response.headers['content-disposition'] || '';
+    const filename = disposition.match(/filename="([^"]+)"/)?.[1] || `${reportPath}.${format}`;
+
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const ExportButtons = ({ reportPath }) => (
+    <div className="mb-4 flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => downloadReport(reportPath, 'pdf')}
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+      >
+        Download PDF
+      </button>
+      <button
+        type="button"
+        onClick={() => downloadReport(reportPath, 'csv')}
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+      >
+        Download CSV
+      </button>
+    </div>
+  );
+
   useEffect(() => {
     Promise.all([
       axiosInstance.get('/reports/daily-revenue'),
@@ -22,6 +61,7 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       <SectionCard title="Daily Revenue">
+        <ExportButtons reportPath="daily-revenue" />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {dailyRevenue.length === 0 && <p className="text-sm text-slate-400">No data available.</p>}
           {dailyRevenue.map(item => (
@@ -36,6 +76,7 @@ export default function Reports() {
       </SectionCard>
 
       <SectionCard title="Monthly Billing Summary">
+        <ExportButtons reportPath="monthly-billing-summary" />
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
@@ -64,6 +105,7 @@ export default function Reports() {
       </SectionCard>
 
       <SectionCard title="Outstanding Payments">
+        <ExportButtons reportPath="outstanding-payments" />
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
