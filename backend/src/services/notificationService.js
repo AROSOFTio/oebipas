@@ -109,6 +109,7 @@ const queueNotification = async ({
   if (recipientEmail) {
     try {
       await sendEmail({ recipientEmail, title, message, html, attachments });
+      console.info(`[Notifications] Email sent to ${recipientEmail} for ${type} with ${attachments.length} attachment(s).`);
       results.push(
         await createNotificationRecord({
           userId,
@@ -124,6 +125,7 @@ const queueNotification = async ({
       );
     } catch (error) {
       errors.push(`email: ${error.message}`);
+      console.error(`[Notifications] Email failed for ${recipientEmail} (${type}):`, error.message);
       results.push(
         await createNotificationRecord({
           userId,
@@ -144,6 +146,7 @@ const queueNotification = async ({
     try {
       const smsBody = smsMessage || message;
       await sendSms({ recipientPhone, message: smsBody });
+      console.info(`[Notifications] SMS sent to ${recipientPhone} for ${type}.`);
       results.push(
         await createNotificationRecord({
           userId,
@@ -159,6 +162,7 @@ const queueNotification = async ({
       );
     } catch (error) {
       errors.push(`sms: ${error.message}`);
+      console.error(`[Notifications] SMS failed for ${recipientPhone} (${type}):`, error.message);
       results.push(
         await createNotificationRecord({
           userId,

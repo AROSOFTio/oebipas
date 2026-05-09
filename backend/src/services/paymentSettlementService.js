@@ -323,7 +323,7 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
           allocations: receiptBills,
         });
 
-        await notificationService.queueNotification({
+        const notificationResult = await notificationService.queueNotification({
           userId: payment.user_id,
           customerId: payment.customer_id,
           type: 'payment_successful',
@@ -341,6 +341,12 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
           recipientEmail: payment.email,
           recipientPhone: payment.phone,
         });
+
+        if (notificationResult?.errors?.length) {
+          console.warn(
+            `[Payments] Receipt notification for ${payment.payment_reference} completed with errors: ${notificationResult.errors.join('; ')}`
+          );
+        }
 
         await notifyInternalPaymentReceipt({
           billLabel,

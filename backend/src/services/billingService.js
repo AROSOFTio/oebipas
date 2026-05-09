@@ -120,9 +120,11 @@ const generateBillFromConsumption = async ({ consumptionId, generatedBy }) => {
     await conn.commit();
     committed = true;
 
-    sendBillGeneratedNotification({ consumption, bill }).catch(error => {
-      console.error(`[Billing] Bill ${bill.bill_number} notification failed after bill generation:`, error.message);
-    });
+    try {
+      await sendBillGeneratedNotification({ consumption, bill });
+    } catch (error) {
+      console.error(`[Billing] Bill ${bill.bill_number} invoice notification failed after bill generation:`, error.message);
+    }
 
     return bill;
   } catch (error) {
