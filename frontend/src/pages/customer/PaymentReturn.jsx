@@ -44,7 +44,7 @@ export default function PaymentReturn() {
             loading: false,
             kind: success ? 'success' : normalized === 'failed' ? 'error' : 'finalizing',
             message: success
-              ? `Payment confirmed. Bill status is now ${billStatus.replace('_', ' ')} and your receipt has been sent automatically to your email.`
+              ? `Payment confirmed. Bill status is now ${billStatus.replace('_', ' ')} and a PDF receipt has been emailed to you.`
               : normalized === 'failed'
                 ? `Payment failed: ${paymentStatus}.`
                 : 'We are still finalizing your payment with Pesapal. Refresh this page in a few moments if it does not change automatically.',

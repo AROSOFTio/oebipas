@@ -1,58 +1,59 @@
-const pool = require('../config/db');
-const { applyAutomaticPenalties } = require('../services/automationService');
+const { Parser } = require('json2csv');
+const { createReportPdfBuffer } = require('../services/documentService');
+const { REPORTS, prepareRowsForExport } = require('../services/reportService');
 
-exports.getDailyRevenue = async (req, res) => {
+const sendReportJson = report => async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT DATE(payment_date) AS report_date, COALESCE(SUM(amount), 0) AS total_revenue
-       FROM payments
-       WHERE status = 'successful'
-       GROUP BY DATE(payment_date)
-       ORDER BY report_date DESC
-       LIMIT 14`
-    );
-
-    return res.status(200).json({ success: true, data: rows.reverse() });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ success: false, message: 'Unable to load daily revenue report.' });
-  }
-};
-
-exports.getMonthlyBillingSummary = async (req, res) => {
-  try {
-    const [rows] = await pool.query(
-      `SELECT billing_year, billing_month,
-              COUNT(*) AS bills_generated,
-              COALESCE(SUM(total_amount), 0) AS total_billed,
-              COALESCE(SUM(amount_paid), 0) AS total_paid
-       FROM bills
-       GROUP BY billing_year, billing_month
-       ORDER BY billing_year DESC, billing_month DESC
-       LIMIT 12`
-    );
-
-    return res.status(200).json({ success: true, data: rows.reverse() });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ success: false, message: 'Unable to load monthly billing summary.' });
-  }
-};
-
-exports.getOutstandingPayments = async (req, res) => {
-  try {
-    await applyAutomaticPenalties();
-    const [rows] = await pool.query(
-      `SELECT c.customer_number, c.full_name AS customer_name, b.bill_number, b.balance_due, b.status, b.due_date
-       FROM bills b
-       INNER JOIN customers c ON c.id = b.customer_id
-       WHERE b.balance_due > 0
-       ORDER BY b.due_date ASC`
-    );
-
+    const rows = await report.load();
     return res.status(200).json({ success: true, data: rows });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: 'Unable to load outstanding payments report.' });
+    return res.status(500).json({ success: false, message: `Unable to load ${report.title.toLowerCase()} report.` });
   }
 };
+
+const sendReportPdf = report => async (req, res) => {
+  try {
+    const rows = prepareRowsForExport(report, await report.load());
+    const pdf = await createReportPdfBuffer({
+      title: report.title,
+      columns: report.columns,
+      rows,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${report.filename}.pdf"`);
+    return res.status(200).send(pdf);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: `Unable to export ${report.title.toLowerCase()} PDF.` });
+  }
+};
+
+const sendReportCsv = report => async (req, res) => {
+  try {
+    const rows = prepareRowsForExport(report, await report.load());
+    const parser = new Parser({
+      fields: report.columns.map(column => ({ label: column.label, value: column.key })),
+    });
+    const csv = `\ufeff${parser.parse(rows)}`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${report.filename}.csv"`);
+    return res.status(200).send(csv);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: `Unable to export ${report.title.toLowerCase()} CSV.` });
+  }
+};
+
+exports.getDailyRevenue = sendReportJson(REPORTS.dailyRevenue);
+exports.getMonthlyBillingSummary = sendReportJson(REPORTS.monthlyBillingSummary);
+exports.getOutstandingPayments = sendReportJson(REPORTS.outstandingPayments);
+
+exports.downloadDailyRevenuePdf = sendReportPdf(REPORTS.dailyRevenue);
+exports.downloadDailyRevenueCsv = sendReportCsv(REPORTS.dailyRevenue);
+exports.downloadMonthlyBillingSummaryPdf = sendReportPdf(REPORTS.monthlyBillingSummary);
+exports.downloadMonthlyBillingSummaryCsv = sendReportCsv(REPORTS.monthlyBillingSummary);
+exports.downloadOutstandingPaymentsPdf = sendReportPdf(REPORTS.outstandingPayments);
+exports.downloadOutstandingPaymentsCsv = sendReportCsv(REPORTS.outstandingPayments);

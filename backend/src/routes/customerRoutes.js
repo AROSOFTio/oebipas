@@ -6,14 +6,14 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.get('/me', authorizeRoles('Electricity consumers'), customerController.getMyProfile);
-router.put('/me', authorizeRoles('Electricity consumers'), customerController.updateMyProfile);
-router.post('/me/deactivate', authorizeRoles('Electricity consumers'), customerController.deactivateMyAccount);
+router.get('/me', authorizeRoles('Customer'), customerController.getMyProfile);
+router.put('/me', authorizeRoles('Customer'), customerController.updateMyProfile);
+router.post('/me/deactivate', authorizeRoles('Customer'), customerController.deactivateMyAccount);
 
-router.get('/', authorizeRoles('System administrators', 'Billing officers'), customerController.getCustomers);
-router.get('/:id', authorizeRoles('System administrators', 'Billing officers'), customerController.getCustomerById);
-router.post('/', authorizeRoles('System administrators', 'Billing officers'), customerController.createCustomer);
-router.put('/:id', authorizeRoles('System administrators', 'Billing officers'), customerController.updateCustomer);
-router.delete('/:id', authorizeRoles('System administrators', 'Billing officers'), customerController.deleteCustomer);
+router.get('/', authorizeRoles('System administrator', 'Billing Officer'), customerController.getCustomers);
+router.get('/:id', authorizeRoles('System administrator', 'Billing Officer'), customerController.getCustomerById);
+router.post('/', authorizeRoles('System administrator', 'Billing Officer'), customerController.createCustomer);
+router.put('/:id', authorizeRoles('System administrator', 'Billing Officer'), customerController.updateCustomer);
+router.delete('/:id', authorizeRoles('System administrator', 'Billing Officer'), customerController.deleteCustomer);
 
 module.exports = router;

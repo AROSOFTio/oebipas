@@ -205,9 +205,9 @@ CREATE TABLE password_resets (
 );
 
 INSERT INTO roles (name, description) VALUES
-('System administrators', 'Full control over the billing and system parameters'),
-('Billing officers', 'Operational role focusing on customer connections and bills'),
-('Electricity consumers', 'End user role for reviewing electricity output and payments');
+('System administrator', 'Full control over the billing and system parameters'),
+('Billing Officer', 'Operational role focusing on customer connections and bills'),
+('Customer', 'End user role for reviewing electricity output and payments');
 
 -- Default demo password for all accounts below: Password123!
 INSERT INTO users (role_id, full_name, username, email, password, phone, status, email_verified_at) VALUES

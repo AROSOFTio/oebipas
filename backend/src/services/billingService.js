@@ -1,18 +1,20 @@
 const pool = require('../config/db');
 const { getActiveTariff } = require('./automationService');
 const { queueNotification } = require('./notificationService');
+const { createInvoicePdfBuffer } = require('./documentService');
 
 const buildBillNumber = (billingYear, billingMonth, customerId) =>
   `BILL-${billingYear}${String(billingMonth).padStart(2, '0')}-${String(customerId).padStart(4, '0')}`;
 
 const generateBillFromConsumption = async ({ consumptionId, generatedBy }) => {
   const conn = await pool.getConnection();
+  let committed = false;
 
   try {
     await conn.beginTransaction();
 
     const [consumptionRows] = await conn.query(
-      `SELECT cr.*, c.full_name, c.email, c.phone, c.user_id
+      `SELECT cr.*, c.full_name, c.email, c.phone, c.user_id, c.customer_number, c.meter_number
        FROM consumption_records cr
        INNER JOIN customers c ON c.id = cr.customer_id
        WHERE cr.id = ?`,
@@ -77,27 +79,46 @@ const generateBillFromConsumption = async ({ consumptionId, generatedBy }) => {
     );
 
     const [[bill]] = await conn.query(
-      `SELECT id, bill_number, total_amount, balance_due, due_date, bill_amount, previous_balance
+      `SELECT id, bill_number, billing_month, billing_year, units_consumed, rate_per_unit,
+              fixed_charge, total_amount, balance_due, due_date, bill_amount, previous_balance, status
        FROM bills
        WHERE id = ?`,
       [insertResult.insertId]
     );
 
     await conn.commit();
+    committed = true;
+
+    const invoicePdf = await createInvoicePdfBuffer({
+      bill,
+      customer: consumption,
+    });
+
+    const dueDateText = new Date(bill.due_date).toLocaleString('en-US', { timeZone: 'Africa/Kampala', weekday: 'short', month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/,/g, '');
 
     await queueNotification({
       userId: consumption.user_id,
       customerId: consumption.customer_id,
       type: 'bill_generated',
       title: 'Bill generated',
-      message: `Dear ${consumption.full_name},\n\nBill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${new Date(bill.due_date).toLocaleString('en-US', { timeZone: 'Africa/Kampala', weekday: 'short', month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/,/g, '')} GMT+0300 (East Africa Time).`,
+      message: `Dear ${consumption.full_name},\n\nBill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${dueDateText} GMT+0300 (East Africa Time). Your PDF invoice is attached.`,
+      smsMessage: `Bill ${bill.bill_number} for UGX ${Number(bill.total_amount).toLocaleString()} has been generated and is due on ${dueDateText} GMT+0300 (East Africa Time).`,
+      attachments: [
+        {
+          filename: `${bill.bill_number}.pdf`,
+          content: invoicePdf,
+          contentType: 'application/pdf',
+        },
+      ],
       recipientEmail: consumption.email,
       recipientPhone: consumption.phone,
     });
 
     return bill;
   } catch (error) {
-    await conn.rollback();
+    if (!committed) {
+      await conn.rollback();
+    }
     throw error;
   } finally {
     conn.release();

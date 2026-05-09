@@ -1,6 +1,8 @@
 const pool = require('../config/db');
 const notificationService = require('./notificationService');
 const pesapalService = require('./pesapalService');
+const { BILLING_OFFICER_ROLE_NAME, SYSTEM_ADMIN_ROLE_NAME, roleAliasesFor } = require('../utils/roles');
+const { createReceiptPdfBuffer } = require('./documentService');
 
 const SUCCESSFUL_STATUS_CODES = new Set(['1']);
 const FAILED_STATUS_CODES = new Set(['0', '2', '3']);
@@ -50,8 +52,9 @@ const notifyInternalPaymentReceipt = async ({ billLabel, customerId, amount }) =
     `SELECT u.id
      FROM users u
      INNER JOIN roles r ON r.id = u.role_id
-     WHERE r.name IN ('System administrators', 'Billing officers')
-       AND u.status = 'active'`
+     WHERE r.name IN (?)
+       AND u.status = 'active'`,
+    [[...roleAliasesFor(SYSTEM_ADMIN_ROLE_NAME), ...roleAliasesFor(BILLING_OFFICER_ROLE_NAME)]]
   );
 
   const title = 'Payment received';
@@ -138,11 +141,12 @@ const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus
             </table>`
           : ''
       }
-      <p style="margin-top: 16px;">Thank you for paying through Pesapal.</p>
+      <p style="margin-top: 16px;">Your PDF receipt is attached to this email.</p>
+      <p>Thank you for paying through Pesapal.</p>
     </div>
   `;
 
-  return { receiptTitle, receiptMessage, receiptHtml };
+  return { receiptTitle, receiptMessage, receiptHtml, paymentDate };
 };
 
 const loadPaymentForSettlement = async (conn, paymentId) => {
@@ -301,7 +305,7 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
       await conn.commit();
 
       if (appliedAmount > 0) {
-        const { receiptTitle, receiptMessage, receiptHtml } = buildReceiptDetails({
+        const { receiptTitle, receiptMessage, receiptHtml, paymentDate } = buildReceiptDetails({
           payment,
           appliedAmount,
           newBalance: totalBalanceDue,
@@ -309,14 +313,30 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
           confirmationCode,
           receiptBills,
         });
+        const receiptPdf = await createReceiptPdfBuffer({
+          payment,
+          appliedAmount,
+          outstandingBalance: totalBalanceDue,
+          billStatus: newBillStatus,
+          confirmationCode,
+          receiptDate: paymentDate,
+          allocations: receiptBills,
+        });
 
         await notificationService.queueNotification({
           userId: payment.user_id,
           customerId: payment.customer_id,
           type: 'payment_successful',
           title: receiptTitle,
-          message: receiptMessage,
+          message: `${receiptMessage}\n\nA PDF receipt is attached to this email.`,
           html: receiptHtml,
+          attachments: [
+            {
+              filename: `${payment.payment_reference}-receipt.pdf`,
+              content: receiptPdf,
+              contentType: 'application/pdf',
+            },
+          ],
           smsMessage: `Payment received for ${billLabel}. Amount: ${formatCurrency(appliedAmount)}. Balance: ${formatCurrency(totalBalanceDue)}. Status: ${statusLabel(newBillStatus)}.`,
           recipientEmail: payment.email,
           recipientPhone: payment.phone,

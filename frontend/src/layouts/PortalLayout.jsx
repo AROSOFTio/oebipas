@@ -18,7 +18,7 @@ import {
 import { AuthContext } from '../context/AuthContext';
 
 const navConfig = {
-  'System administrators': [
+  'System administrator': [
     { to: '/manager', label: 'Dashboard', icon: Home },
     { to: '/manager/customers', label: 'Customers', icon: Users },
     { to: '/manager/consumption', label: 'Consumption', icon: Zap },
@@ -30,7 +30,7 @@ const navConfig = {
     { to: '/manager/users', label: 'System Users', icon: Users },
     { to: '/manager/support', label: 'Support Tickets', icon: MessageSquare },
   ],
-  'Billing officers': [
+  'Billing Officer': [
     { to: '/staff', label: 'Dashboard', icon: Home },
     { to: '/staff/customers', label: 'Customers', icon: Users },
     { to: '/staff/consumption', label: 'Consumption', icon: Zap },
@@ -38,7 +38,7 @@ const navConfig = {
     { to: '/staff/payments', label: 'Payments', icon: CreditCard },
     { to: '/staff/support', label: 'Support Tickets', icon: MessageSquare },
   ],
-  'Electricity consumers': [
+  Customer: [
     { to: '/customer', label: 'Dashboard', icon: Home },
     { to: '/customer/profile', label: 'My Profile', icon: User },
     { to: '/customer/bills', label: 'My Bills', icon: FileText },
@@ -50,15 +50,15 @@ const navConfig = {
 };
 
 const pageTitle = {
-  'System administrators': 'General Manager',
-  'Billing officers': 'Billing Officer',
-  'Electricity consumers': 'Customer Portal',
+  'System administrator': 'System administrator',
+  'Billing Officer': 'Billing Officer',
+  Customer: 'Customer Portal',
 };
 
 const sidebarRoleClass = {
-  'System administrators': 'sidebar-admin',
-  'Billing officers': 'sidebar-billing',
-  'Electricity consumers': 'sidebar-customer',
+  'System administrator': 'sidebar-admin',
+  'Billing Officer': 'sidebar-billing',
+  Customer: 'sidebar-customer',
 };
 
 export default function PortalLayout() {
@@ -66,7 +66,7 @@ export default function PortalLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const items = useMemo(() => navConfig[user?.role] || [], [user?.role]);
-  const sidebarClass = sidebarRoleClass[user?.role] || sidebarRoleClass['Electricity consumers'];
+  const sidebarClass = sidebarRoleClass[user?.role] || sidebarRoleClass.Customer;
 
   return (
     <div className="min-h-screen bg-[var(--page-bg)] text-slate-900">

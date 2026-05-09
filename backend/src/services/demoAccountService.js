@@ -1,36 +1,42 @@
 const pool = require('../config/db');
+const {
+  SYSTEM_ADMIN_ROLE_NAME,
+  BILLING_OFFICER_ROLE_NAME,
+  CUSTOMER_ROLE_NAME,
+} = require('../utils/roles');
+const { ROLE_DESCRIPTIONS } = require('./roleRepairService');
 
 const DEFAULT_PASSWORD_HASH = '$2b$12$Tp6hNAVpcD4DBKLOGMcdBuBkXrPiAlJIeKUirwUrKELtyUY8p1QIG'; // Password123!
 
 const CURRENT_ROLES = [
-  ['System administrators', 'Full control over the billing and system parameters'],
-  ['Billing officers', 'Operational role focusing on customer connections and bills'],
-  ['Electricity consumers', 'End user role for reviewing electricity output and payments'],
+  [SYSTEM_ADMIN_ROLE_NAME, ROLE_DESCRIPTIONS[SYSTEM_ADMIN_ROLE_NAME]],
+  [BILLING_OFFICER_ROLE_NAME, ROLE_DESCRIPTIONS[BILLING_OFFICER_ROLE_NAME]],
+  [CUSTOMER_ROLE_NAME, ROLE_DESCRIPTIONS[CUSTOMER_ROLE_NAME]],
 ];
 
 const LEGACY_ROLE_NAMES = {
-  'System administrators': 'Super Admin',
-  'Billing officers': 'Billing Officer',
-  'Electricity consumers': 'Customer',
+  [SYSTEM_ADMIN_ROLE_NAME]: 'Super Admin',
+  [BILLING_OFFICER_ROLE_NAME]: 'Billing Officer',
+  [CUSTOMER_ROLE_NAME]: 'Customer',
 };
 
 const DEMO_ACCOUNTS = [
   {
-    role: 'System administrators',
+    role: SYSTEM_ADMIN_ROLE_NAME,
     fullName: 'Winnie Nafuna',
     username: 'winnie',
     email: 'winniemarkie@gmail.com',
     phone: '0700000001',
   },
   {
-    role: 'Billing officers',
+    role: BILLING_OFFICER_ROLE_NAME,
     fullName: 'Nimusiima Sylon',
     username: 'sylon',
     email: 'nsylon256@gmail.com',
     phone: '0700000002',
   },
   {
-    role: 'Electricity consumers',
+    role: CUSTOMER_ROLE_NAME,
     fullName: 'Benjamin Angella',
     username: 'benjamin',
     email: 'bangella23@gmail.com',

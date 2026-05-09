@@ -7,6 +7,6 @@ const router = express.Router();
 router.use(authenticateToken);
 
 router.get('/', notificationController.getNotifications);
-router.post('/', authorizeRoles('System administrators'), notificationController.sendNotification);
+router.post('/', authorizeRoles('System administrator'), notificationController.sendNotification);
 
 module.exports = router;

@@ -29,7 +29,7 @@ export default function StaffDashboard() {
   }, []);
 
   const summary = data?.summary || {};
-  const isManager = user?.role === 'System administrators';
+  const isManager = user?.role === 'System administrator';
 
   return (
     <div className="space-y-6">

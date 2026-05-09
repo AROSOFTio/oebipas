@@ -188,6 +188,9 @@ test('verifyAndPersistPayment settles the bill and stays idempotent on duplicate
   assert.match(queuedNotifications[0].title, /Payment receipt/i);
   assert.match(queuedNotifications[0].message, /Bill number:/i);
   assert.match(queuedNotifications[0].html, /Payment Receipt/i);
+  assert.equal(queuedNotifications[0].attachments.length, 1);
+  assert.equal(queuedNotifications[0].attachments[0].contentType, 'application/pdf');
+  assert.equal(queuedNotifications[0].attachments[0].content.slice(0, 4).toString(), '%PDF');
   assert.equal(internalNotifications.length, 1);
 
   const duplicateResult = await paymentSettlementService.verifyAndPersistPayment(

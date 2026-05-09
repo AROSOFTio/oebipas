@@ -67,7 +67,7 @@ const createNotificationRecord = async ({
   return result.insertId;
 };
 
-const sendEmail = async ({ recipientEmail, title, message, html = null }) => {
+const sendEmail = async ({ recipientEmail, title, message, html = null, attachments = [] }) => {
   const transporter = getEmailTransporter();
   await transporter.sendMail({
     from: transporter.defaultFrom,
@@ -75,6 +75,7 @@ const sendEmail = async ({ recipientEmail, title, message, html = null }) => {
     subject: title,
     text: message,
     html: html || `<p>${message.replace(/\n/g, '<br />')}</p>`,
+    attachments,
   });
 };
 
@@ -94,6 +95,7 @@ const queueNotification = async ({
   title,
   message,
   html = null,
+  attachments = [],
   smsMessage = null,
   recipientEmail = null,
   recipientPhone = null,
@@ -103,7 +105,7 @@ const queueNotification = async ({
 
   if (recipientEmail) {
     try {
-      await sendEmail({ recipientEmail, title, message, html });
+      await sendEmail({ recipientEmail, title, message, html, attachments });
       results.push(
         await createNotificationRecord({
           userId,
@@ -175,4 +177,5 @@ const queueNotification = async ({
 
 module.exports = {
   queueNotification,
+  sendEmail,
 };

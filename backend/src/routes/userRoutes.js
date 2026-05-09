@@ -5,7 +5,7 @@ const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddle
 const router = express.Router();
 
 router.use(authenticateToken);
-router.use(authorizeRoles('System administrators'));
+router.use(authorizeRoles('System administrator'));
 
 router.get('/', userController.getUsers);
 router.get('/roles', userController.getRoles);

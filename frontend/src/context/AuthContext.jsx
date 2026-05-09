@@ -4,8 +4,8 @@ import axiosInstance from '../utils/axiosInstance';
 export const AuthContext = createContext(null);
 
 const getHomePath = role => {
-  if (role === 'System administrators') return '/manager';
-  if (role === 'Billing officers') return '/staff';
+  if (role === 'System administrator') return '/manager';
+  if (role === 'Billing Officer') return '/staff';
   return '/customer';
 };
 
