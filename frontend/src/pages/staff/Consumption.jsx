@@ -10,6 +10,24 @@ const emptyForm = {
   reading_date: '',
 };
 
+const monthOptions = [
+  ['1', 'January'],
+  ['2', 'February'],
+  ['3', 'March'],
+  ['4', 'April'],
+  ['5', 'May'],
+  ['6', 'June'],
+  ['7', 'July'],
+  ['8', 'August'],
+  ['9', 'September'],
+  ['10', 'October'],
+  ['11', 'November'],
+  ['12', 'December'],
+];
+
+const currentYear = new Date().getFullYear();
+const yearOptions = Array.from({ length: 6 }, (_, index) => String(currentYear - 4 + index));
+
 export default function Consumption() {
   const [customers, setCustomers] = useState([]);
   const [records, setRecords] = useState([]);
@@ -59,9 +77,35 @@ export default function Consumption() {
             </select>
           </label>
           <div className="grid gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">Billing month</span>
+              <select
+                value={form.billing_month}
+                onChange={event => setForm(current => ({ ...current, billing_month: event.target.value }))}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3"
+                required
+              >
+                <option value="">Select month</option>
+                {monthOptions.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-700">Billing year</span>
+              <select
+                value={form.billing_year}
+                onChange={event => setForm(current => ({ ...current, billing_year: event.target.value }))}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3"
+                required
+              >
+                <option value="">Select year</option>
+                {yearOptions.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </label>
             {[
-              ['billing_month', 'Billing month'],
-              ['billing_year', 'Billing year'],
               ['units_consumed', 'Units consumed'],
               ['reading_date', 'Reading date'],
             ].map(([name, label]) => (
