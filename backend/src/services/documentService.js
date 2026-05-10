@@ -149,7 +149,6 @@ const createInvoicePdfBuffer = ({ bill, customer }) => collectPdf(doc => {
     ['Energy charge', formatCurrency(energyCharge(bill))],
     ['Fixed charge', formatCurrency(bill.fixed_charge)],
     ['Bill amount', formatCurrency(bill.bill_amount)],
-    ['Previous balance', formatCurrency(bill.previous_balance)],
     ['Total amount', formatCurrency(bill.total_amount)],
     ['Balance due', formatCurrency(bill.balance_due)],
     ['Due date', formatDate(bill.due_date)],

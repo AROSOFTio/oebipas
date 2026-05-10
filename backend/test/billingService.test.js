@@ -79,12 +79,11 @@ test('generateBillFromConsumption returns after commit and dispatches notificati
         }]];
       }
 
-      if (sql.includes('SELECT COALESCE(SUM(balance_due), 0) AS previous_balance')) {
-        return [[{ previous_balance: '2500.00' }]];
-      }
-
       if (sql.includes('INSERT INTO bills')) {
         assert.equal(params[13], '2026-05-14');
+        assert.equal(params[10], 0);
+        assert.equal(params[11], 90000);
+        assert.equal(params[12], 90000);
         return [{ insertId: 55 }];
       }
 
@@ -103,9 +102,13 @@ test('generateBillFromConsumption returns after commit and dispatches notificati
   assert.equal(notificationPayloads.length, 0);
   assert.equal(bill.id, 55);
   assert.equal(bill.bill_number, 'BILL-202604-0007');
-  assert.equal(bill.total_amount, 92500);
+  assert.equal(bill.bill_amount, 90000);
+  assert.equal(bill.previous_balance, 0);
+  assert.equal(bill.total_amount, 90000);
+  assert.equal(bill.balance_due, 90000);
   assert.equal(bill.due_date, '2026-05-14');
   assert.equal(sqlStatements.some(sql => sql.includes('SELECT id FROM bills WHERE consumption_record_id')), false);
+  assert.equal(sqlStatements.some(sql => sql.includes('SELECT COALESCE(SUM(balance_due), 0) AS previous_balance')), false);
   assert.equal(sqlStatements.some(sql => sql.includes('FROM bills') && sql.includes('WHERE id = ?')), false);
 
   await flushImmediate();
@@ -147,10 +150,6 @@ test('duplicate bill insert returns the existing business error without pre-chec
         }]];
       }
 
-      if (sql.includes('SELECT COALESCE(SUM(balance_due), 0) AS previous_balance')) {
-        return [[{ previous_balance: '0.00' }]];
-      }
-
       if (sql.includes('INSERT INTO bills')) {
         const error = new Error('Duplicate entry');
         error.code = 'ER_DUP_ENTRY';
@@ -171,4 +170,5 @@ test('duplicate bill insert returns the existing business error without pre-chec
 
   assert.equal(rolledBack, true);
   assert.equal(sqlStatements.some(sql => sql.includes('SELECT id FROM bills WHERE consumption_record_id')), false);
+  assert.equal(sqlStatements.some(sql => sql.includes('SELECT COALESCE(SUM(balance_due), 0) AS previous_balance')), false);
 });

@@ -112,18 +112,8 @@ const generateBillFromConsumption = async ({ consumptionId, generatedBy }) => {
     const tariff = await getActiveTariff(conn);
     const units = Number(consumption.units_consumed);
     const billAmount = Number((units * Number(tariff.rate_per_unit) + Number(tariff.fixed_charge)).toFixed(2));
-
-    const [[previousBill]] = await conn.query(
-      `SELECT COALESCE(SUM(balance_due), 0) AS previous_balance
-       FROM bills
-       WHERE customer_id = ?
-         AND balance_due > 0
-         AND (billing_year < ? OR (billing_year = ? AND billing_month < ?))`,
-      [consumption.customer_id, consumption.billing_year, consumption.billing_year, consumption.billing_month]
-    );
-
-    const previousBalance = Number(previousBill?.previous_balance || 0);
-    const totalAmount = Number((billAmount + previousBalance).toFixed(2));
+    const previousBalance = 0;
+    const totalAmount = billAmount;
     const billNumber = buildBillNumber(consumption.billing_year, consumption.billing_month, consumption.customer_id);
     const dueDate = addDaysToDateString(consumption.reading_date, tariff.due_days);
 
