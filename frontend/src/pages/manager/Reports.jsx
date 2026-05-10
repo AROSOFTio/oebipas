@@ -83,18 +83,24 @@ export default function Reports() {
               <tr className="border-b border-slate-100">
                 <th className="pb-3 pr-4 font-medium text-slate-500">Period</th>
                 <th className="pb-3 pr-4 font-medium text-slate-500">Bills</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Units</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Energy Charge</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Fixed Charges</th>
                 <th className="pb-3 pr-4 font-medium text-slate-500">Total Billed</th>
                 <th className="pb-3 font-medium text-slate-500">Total Paid</th>
               </tr>
             </thead>
             <tbody>
               {monthlyBilling.length === 0 && (
-                <tr><td colSpan={4} className="py-6 text-slate-400">No billing data yet.</td></tr>
+                <tr><td colSpan={7} className="py-6 text-slate-400">No billing data yet.</td></tr>
               )}
               {monthlyBilling.map(item => (
                 <tr key={`${item.billing_year}-${item.billing_month}`} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="py-3 pr-4 text-slate-700">{item.billing_month}/{item.billing_year}</td>
                   <td className="py-3 pr-4 text-slate-700">{item.bills_generated}</td>
+                  <td className="py-3 pr-4 text-slate-700">{Number(item.total_units || 0).toLocaleString()} kWh</td>
+                  <td className="py-3 pr-4 text-slate-700">UGX {Number(item.energy_charge || 0).toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-slate-700">UGX {Number(item.fixed_charges || 0).toLocaleString()}</td>
                   <td className="py-3 pr-4 font-medium text-slate-900">UGX {Number(item.total_billed).toLocaleString()}</td>
                   <td className="py-3 text-emerald-700 font-medium">UGX {Number(item.total_paid).toLocaleString()}</td>
                 </tr>
@@ -112,18 +118,24 @@ export default function Reports() {
               <tr className="border-b border-slate-100">
                 <th className="pb-3 pr-4 font-medium text-slate-500">Customer</th>
                 <th className="pb-3 pr-4 font-medium text-slate-500">Bill</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Units</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Rate</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Energy Charge</th>
                 <th className="pb-3 pr-4 font-medium text-slate-500">Balance</th>
                 <th className="pb-3 font-medium text-slate-500">Status</th>
               </tr>
             </thead>
             <tbody>
               {outstanding.length === 0 && (
-                <tr><td colSpan={4} className="py-6 text-slate-400">No outstanding payments.</td></tr>
+                <tr><td colSpan={7} className="py-6 text-slate-400">No outstanding payments.</td></tr>
               )}
               {outstanding.map(item => (
                 <tr key={`${item.customer_number}-${item.bill_number}`} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="py-3 pr-4 text-slate-700">{item.customer_name}</td>
                   <td className="py-3 pr-4 text-slate-700">{item.bill_number}</td>
+                  <td className="py-3 pr-4 text-slate-700">{Number(item.units_consumed || 0).toLocaleString()} kWh</td>
+                  <td className="py-3 pr-4 text-slate-700">UGX {Number(item.rate_per_unit || 0).toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-slate-700">UGX {Number(item.energy_charge || 0).toLocaleString()}</td>
                   <td className="py-3 pr-4 font-medium text-slate-900">UGX {Number(item.balance_due).toLocaleString()}</td>
                   <td className="py-3">
                     <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${

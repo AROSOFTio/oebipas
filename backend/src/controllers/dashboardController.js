@@ -14,6 +14,8 @@ exports.getDashboard = async (req, res) => {
         `SELECT COUNT(*) AS total_bills,
                 COALESCE(SUM(balance_due), 0) AS outstanding_balance,
                 COALESCE(SUM(amount_paid), 0) AS total_paid_amount,
+                COALESCE(SUM(units_consumed), 0) AS total_units_consumed,
+                COALESCE(SUM(units_consumed * rate_per_unit), 0) AS total_energy_charge,
                 COALESCE(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END), 0) AS paid_bills,
                 COALESCE(SUM(CASE WHEN status <> 'paid' THEN 1 ELSE 0 END), 0) AS pending_bills
          FROM bills
@@ -21,7 +23,8 @@ exports.getDashboard = async (req, res) => {
         [req.user.customer_id]
       );
       const [recentBills] = await pool.query(
-        `SELECT bill_number, total_amount, balance_due, status, due_date
+        `SELECT bill_number, billing_month, billing_year, units_consumed, rate_per_unit,
+                fixed_charge, bill_amount, total_amount, balance_due, status, due_date
          FROM bills
          WHERE customer_id = ?
          ORDER BY billing_year DESC, billing_month DESC
@@ -66,6 +69,8 @@ exports.getDashboard = async (req, res) => {
       `SELECT
         (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'successful') AS total_revenue,
         (SELECT COALESCE(SUM(balance_due), 0) FROM bills WHERE balance_due > 0) AS outstanding_balances,
+        (SELECT COALESCE(SUM(units_consumed), 0) FROM bills) AS total_units_consumed,
+        (SELECT COALESCE(SUM(units_consumed * rate_per_unit), 0) FROM bills) AS total_energy_charge,
         (SELECT COUNT(*) FROM bills) AS total_bills,
         (SELECT COUNT(*) FROM customers) AS total_customers,
         (SELECT COUNT(*) FROM bills WHERE status = 'overdue') AS overdue_bills`
@@ -84,7 +89,8 @@ exports.getDashboard = async (req, res) => {
     );
 
     const [recentBills] = await pool.query(
-      `SELECT bill_number, customer_id, total_amount, balance_due, status, due_date
+      `SELECT bill_number, customer_id, units_consumed, rate_per_unit, fixed_charge,
+              bill_amount, total_amount, balance_due, status, due_date
        FROM bills
        ORDER BY created_at DESC
        LIMIT 5`

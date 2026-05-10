@@ -34,11 +34,16 @@ export default function StaffDashboard() {
   return (
     <div className="space-y-6">
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
         <MetricCard
           title="Total Revenue"
           value={`UGX ${Number(summary.total_revenue || 0).toLocaleString()}`}
           color="purple"
+        />
+        <MetricCard
+          title="Units Billed"
+          value={`${Number(summary.total_units_consumed || 0).toLocaleString()} kWh`}
+          color="blue"
         />
         <MetricCard
           title="Outstanding Balances"

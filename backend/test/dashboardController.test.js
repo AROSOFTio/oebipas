@@ -32,14 +32,22 @@ test('getDashboard returns customer-scoped summary for Customer', async () => {
         total_bills: 1,
         outstanding_balance: 0,
         total_paid_amount: 500,
+        total_units_consumed: 25,
+        total_energy_charge: 21250,
         paid_bills: 1,
         pending_bills: 0,
       }]];
     }
 
-    if (sql.includes('SELECT bill_number, total_amount, balance_due, status, due_date')) {
+    if (sql.includes('SELECT bill_number, billing_month, billing_year, units_consumed, rate_per_unit')) {
       return [[{
         bill_number: 'BILL-203604-0001',
+        billing_month: 4,
+        billing_year: 2036,
+        units_consumed: 25,
+        rate_per_unit: 850,
+        fixed_charge: 5000,
+        bill_amount: 26250,
         total_amount: 500,
         balance_due: 0,
         status: 'paid',
@@ -96,6 +104,9 @@ test('getDashboard returns customer-scoped summary for Customer', async () => {
   assert.equal(response.payload.data.summary.total_bills, 1);
   assert.equal(response.payload.data.summary.outstanding_balance, 0);
   assert.equal(response.payload.data.summary.total_paid_amount, 500);
+  assert.equal(response.payload.data.summary.total_units_consumed, 25);
+  assert.equal(response.payload.data.recentBills[0].units_consumed, 25);
+  assert.equal(response.payload.data.recentBills[0].rate_per_unit, 850);
   assert.equal(response.payload.data.recentBills[0].status, 'paid');
   assert.equal(response.payload.data.recentPayments[0].status, 'successful');
   assert.equal(response.payload.data.notifications.length, 1);

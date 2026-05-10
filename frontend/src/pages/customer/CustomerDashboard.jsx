@@ -25,6 +25,8 @@ const paymentBadge = status => {
   return map[status] || 'bg-slate-100 text-slate-600';
 };
 
+const energyCharge = bill => Number((Number(bill?.units_consumed || 0) * Number(bill?.rate_per_unit || 0)).toFixed(2));
+
 export default function CustomerDashboard() {
   const [data, setData] = useState(null);
 
@@ -48,13 +50,17 @@ export default function CustomerDashboard() {
           value={`UGX ${Number(summary.outstanding_balance || 0).toLocaleString()}`}
           color="yellow"
         />
+        <MetricCard
+          title="Units Consumed"
+          value={`${Number(summary.total_units_consumed || 0).toLocaleString()} kWh`}
+          color="blue"
+        />
         <MetricCard title="Total Bills" value={Number(summary.total_bills || 0)} color="slate" />
         <MetricCard
-          title="Recent Payments"
-          value={Number(data?.recentPayments?.length || 0)}
+          title="Energy Charges"
+          value={`UGX ${Number(summary.total_energy_charge || 0).toLocaleString()}`}
           color="green"
         />
-        <MetricCard title="Notifications" value={Number(data?.notifications?.length || 0)} color="purple" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -84,6 +90,9 @@ export default function CustomerDashboard() {
               <div key={bill.bill_number} className="flex items-center justify-between rounded-xl border border-[var(--panel-soft)] bg-white px-4 py-3.5 transition hover:border-[var(--secondary)]">
                 <div>
                   <p className="font-semibold text-[var(--text-strong)]">{bill.bill_number}</p>
+                  <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+                    {Number(bill.units_consumed || 0).toLocaleString()} kWh @ UGX {Number(bill.rate_per_unit || 0).toLocaleString()} = UGX {energyCharge(bill).toLocaleString()}
+                  </p>
                   <p className="mt-0.5 text-sm text-[var(--text-muted)]">Balance: UGX {Number(bill.balance_due).toLocaleString()}</p>
                 </div>
                 <span className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-semibold capitalize tracking-wide ${statusBadge(bill.status)}`}>

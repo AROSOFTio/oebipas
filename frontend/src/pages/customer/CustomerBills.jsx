@@ -15,6 +15,8 @@ const statusBadge = status => {
   return map[status] || 'bg-slate-100 text-slate-600';
 };
 
+const energyCharge = bill => Number((Number(bill?.units_consumed || 0) * Number(bill?.rate_per_unit || 0)).toFixed(2));
+
 export default function CustomerBills() {
   const [bills, setBills] = useState([]);
   const [selectedBillIds, setSelectedBillIds] = useState([]);
@@ -98,6 +100,9 @@ export default function CustomerBills() {
               <th className="pb-3 pr-4 font-medium text-slate-500"></th>
               <th className="pb-3 pr-4 font-medium text-slate-500">Bill Number</th>
               <th className="pb-3 pr-4 font-medium text-slate-500">Period</th>
+              <th className="pb-3 pr-4 font-medium text-slate-500">Units</th>
+              <th className="pb-3 pr-4 font-medium text-slate-500">Rate</th>
+              <th className="pb-3 pr-4 font-medium text-slate-500">Energy Charge</th>
               <th className="pb-3 pr-4 font-medium text-slate-500">Total</th>
               <th className="pb-3 pr-4 font-medium text-slate-500">Balance</th>
               <th className="pb-3 pr-4 font-medium text-slate-500">Status</th>
@@ -108,7 +113,7 @@ export default function CustomerBills() {
           <tbody>
             {bills.length === 0 && (
               <tr>
-                <td colSpan={8} className="py-6 text-slate-400">No bills found.</td>
+                <td colSpan={11} className="py-6 text-slate-400">No bills found.</td>
               </tr>
             )}
             {bills.map(bill => (
@@ -126,6 +131,9 @@ export default function CustomerBills() {
                 </td>
                 <td className="py-3 pr-4 font-medium text-slate-900">{bill.bill_number}</td>
                 <td className="py-3 pr-4 text-slate-600">{bill.billing_month}/{bill.billing_year}</td>
+                <td className="py-3 pr-4 text-slate-600">{Number(bill.units_consumed || 0).toLocaleString()} kWh</td>
+                <td className="py-3 pr-4 text-slate-600">UGX {Number(bill.rate_per_unit || 0).toLocaleString()}</td>
+                <td className="py-3 pr-4 text-slate-600">UGX {energyCharge(bill).toLocaleString()}</td>
                 <td className="py-3 pr-4 text-slate-600">UGX {Number(bill.total_amount).toLocaleString()}</td>
                 <td className="py-3 pr-4 font-medium text-slate-900">UGX {Number(bill.balance_due).toLocaleString()}</td>
                 <td className="py-3 pr-4">

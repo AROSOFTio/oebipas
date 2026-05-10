@@ -14,6 +14,7 @@ const RECEIPT_WAIT_INTERVAL_MS = 2500;
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const formatCurrency = amount => `UGX ${Number(amount || 0).toLocaleString()}`;
 const formatReceiptDate = value => new Date(value || Date.now()).toLocaleString('en-UG', { hour12: true });
+const energyCharge = bill => Number((Number(bill?.units_consumed || 0) * Number(bill?.rate_per_unit || 0)).toFixed(2));
 
 const getStatusDescription = payload =>
   String(
@@ -79,7 +80,7 @@ const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus
     ? receiptBills
         .map(
           bill =>
-            `Bill number: ${bill.bill_number}\nAmount applied: ${formatCurrency(bill.appliedAmount)}\nOutstanding balance: ${formatCurrency(bill.newBalance)}\nBill status: ${statusLabel(bill.newBillStatus)}`
+            `Bill number: ${bill.bill_number}\nUnits consumed: ${Number(bill.units_consumed || 0).toLocaleString()} kWh\nCost per unit: ${formatCurrency(bill.rate_per_unit)}\nEnergy charge: ${formatCurrency(energyCharge(bill))}\nAmount applied: ${formatCurrency(bill.appliedAmount)}\nOutstanding balance: ${formatCurrency(bill.newBalance)}\nBill status: ${statusLabel(bill.newBillStatus)}`
         )
         .join('\n\n')
     : `Bill number: ${payment.bill_number}`;
@@ -89,6 +90,9 @@ const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus
           bill => `
           <tr>
             <td style="padding: 8px; border: 1px solid #e2e8f0;">${bill.bill_number}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0;">${Number(bill.units_consumed || 0).toLocaleString()} kWh</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(bill.rate_per_unit)}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(energyCharge(bill))}</td>
             <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(bill.appliedAmount)}</td>
             <td style="padding: 8px; border: 1px solid #e2e8f0;">${formatCurrency(bill.newBalance)}</td>
             <td style="padding: 8px; border: 1px solid #e2e8f0; text-transform: capitalize;">${statusLabel(bill.newBillStatus)}</td>
@@ -132,6 +136,9 @@ const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus
               <thead>
                 <tr>
                   <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Bill number</th>
+                  <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Units</th>
+                  <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Rate</th>
+                  <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Energy charge</th>
                   <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Amount applied</th>
                   <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Outstanding balance</th>
                   <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Status</th>
@@ -152,7 +159,8 @@ const buildReceiptDetails = ({ payment, appliedAmount, newBalance, newBillStatus
 const loadPaymentForSettlement = async (conn, paymentId) => {
   const [rows] = await conn.query(
     `SELECT p.*, c.user_id, c.email, c.phone, b.bill_number, b.balance_due, b.amount_paid, b.total_amount,
-            b.due_date, b.customer_id AS bill_customer_id, b.status AS bill_status
+            b.due_date, b.units_consumed, b.rate_per_unit, b.fixed_charge, b.bill_amount,
+            b.customer_id AS bill_customer_id, b.status AS bill_status
      FROM payments p
      INNER JOIN customers c ON c.id = p.customer_id
      LEFT JOIN bills b ON b.id = p.bill_id
@@ -172,7 +180,8 @@ const loadPaymentForSettlement = async (conn, paymentId) => {
 const loadPaymentAllocations = async (conn, payment) => {
   const [allocationRows] = await conn.query(
     `SELECT pba.bill_id, pba.allocated_amount, b.bill_number, b.balance_due, b.amount_paid,
-            b.total_amount, b.due_date, b.customer_id, b.status AS bill_status
+            b.total_amount, b.due_date, b.units_consumed, b.rate_per_unit, b.fixed_charge,
+            b.bill_amount, b.customer_id, b.status AS bill_status
      FROM payment_bill_allocations pba
      INNER JOIN bills b ON b.id = pba.bill_id
      WHERE pba.payment_id = ?
@@ -191,7 +200,8 @@ const loadPaymentAllocations = async (conn, payment) => {
 
   const [fallbackRows] = await conn.query(
     `SELECT b.id AS bill_id, ? AS allocated_amount, b.bill_number, b.balance_due, b.amount_paid,
-            b.total_amount, b.due_date, b.customer_id, b.status AS bill_status
+            b.total_amount, b.due_date, b.units_consumed, b.rate_per_unit, b.fixed_charge,
+            b.bill_amount, b.customer_id, b.status AS bill_status
      FROM bills b
      WHERE b.id = ?
      LIMIT 1
@@ -293,6 +303,10 @@ const settlePayment = async ({ paymentId, status, orderTrackingId = null, confir
         receiptBills.push({
           bill_id: allocation.bill_id,
           bill_number: allocation.bill_number,
+          units_consumed: allocation.units_consumed,
+          rate_per_unit: allocation.rate_per_unit,
+          fixed_charge: allocation.fixed_charge,
+          bill_amount: allocation.bill_amount,
           appliedAmount: billAppliedAmount,
           newBalance,
           newBillStatus,

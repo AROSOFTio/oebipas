@@ -28,6 +28,9 @@ const REPORTS = {
     columns: [
       { key: 'billing_period', label: 'Period' },
       { key: 'bills_generated', label: 'Bills' },
+      { key: 'total_units', label: 'Units (kWh)' },
+      { key: 'energy_charge', label: 'Energy Charge' },
+      { key: 'fixed_charges', label: 'Fixed Charges' },
       { key: 'total_billed', label: 'Total Billed' },
       { key: 'total_paid', label: 'Total Paid' },
     ],
@@ -35,6 +38,9 @@ const REPORTS = {
       const [rows] = await pool.query(
         `SELECT billing_year, billing_month,
                 COUNT(*) AS bills_generated,
+                COALESCE(SUM(units_consumed), 0) AS total_units,
+                COALESCE(SUM(units_consumed * rate_per_unit), 0) AS energy_charge,
+                COALESCE(SUM(fixed_charge), 0) AS fixed_charges,
                 COALESCE(SUM(total_amount), 0) AS total_billed,
                 COALESCE(SUM(amount_paid), 0) AS total_paid
          FROM bills
@@ -53,6 +59,9 @@ const REPORTS = {
       { key: 'customer_number', label: 'Customer Number' },
       { key: 'customer_name', label: 'Customer' },
       { key: 'bill_number', label: 'Bill' },
+      { key: 'units_consumed', label: 'Units (kWh)' },
+      { key: 'rate_per_unit', label: 'Rate / kWh' },
+      { key: 'energy_charge', label: 'Energy Charge' },
       { key: 'balance_due', label: 'Balance' },
       { key: 'status', label: 'Status' },
       { key: 'due_date', label: 'Due Date' },
@@ -60,7 +69,9 @@ const REPORTS = {
     load: async () => {
       await applyAutomaticPenalties();
       const [rows] = await pool.query(
-        `SELECT c.customer_number, c.full_name AS customer_name, b.bill_number, b.balance_due, b.status, b.due_date
+        `SELECT c.customer_number, c.full_name AS customer_name, b.bill_number,
+                b.units_consumed, b.rate_per_unit, (b.units_consumed * b.rate_per_unit) AS energy_charge,
+                b.balance_due, b.status, b.due_date
          FROM bills b
          INNER JOIN customers c ON c.id = b.customer_id
          WHERE b.balance_due > 0

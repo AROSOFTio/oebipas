@@ -8,6 +8,7 @@ const formatCurrency = amount => `UGX ${Number(amount || 0).toLocaleString()}`;
 const formatDate = value => (value ? new Date(value).toLocaleDateString('en-UG') : 'N/A');
 const formatPeriod = (month, year) => `${String(month).padStart(2, '0')}/${year}`;
 const statusLabel = value => String(value || 'N/A').replace(/_/g, ' ');
+const energyCharge = bill => Number((Number(bill?.units_consumed || 0) * Number(bill?.rate_per_unit || 0)).toFixed(2));
 
 const collectPdf = build => new Promise((resolve, reject) => {
   const doc = new PDFDocument({ margin: 50, size: 'A4' });
@@ -108,9 +109,11 @@ const createInvoicePdfBuffer = ({ bill, customer }) => collectPdf(doc => {
     ['Customer number', customer.customer_number],
     ['Meter number', customer.meter_number],
     ['Billing period', formatPeriod(bill.billing_month, bill.billing_year)],
-    ['Units consumed', Number(bill.units_consumed || 0).toLocaleString()],
-    ['Tariff rate', formatCurrency(bill.rate_per_unit)],
+    ['Units consumed', `${Number(bill.units_consumed || 0).toLocaleString()} kWh`],
+    ['Cost per unit', `${formatCurrency(bill.rate_per_unit)} / kWh`],
+    ['Energy charge', formatCurrency(energyCharge(bill))],
     ['Fixed charge', formatCurrency(bill.fixed_charge)],
+    ['Bill amount', formatCurrency(bill.bill_amount)],
     ['Previous balance', formatCurrency(bill.previous_balance)],
     ['Total amount', formatCurrency(bill.total_amount)],
     ['Balance due', formatCurrency(bill.balance_due)],
@@ -147,12 +150,18 @@ const createReceiptPdfBuffer = ({
       doc,
       [
         { key: 'bill_number', label: 'Bill' },
+        { key: 'units', label: 'Units' },
+        { key: 'rate', label: 'Rate' },
+        { key: 'energyCharge', label: 'Energy' },
         { key: 'appliedAmount', label: 'Amount applied' },
         { key: 'newBalance', label: 'Outstanding' },
         { key: 'newBillStatus', label: 'Status' },
       ],
       allocations.map(allocation => ({
         bill_number: allocation.bill_number,
+        units: `${Number(allocation.units_consumed || 0).toLocaleString()} kWh`,
+        rate: formatCurrency(allocation.rate_per_unit),
+        energyCharge: formatCurrency(energyCharge(allocation)),
         appliedAmount: formatCurrency(allocation.appliedAmount),
         newBalance: formatCurrency(allocation.newBalance),
         newBillStatus: statusLabel(allocation.newBillStatus),
