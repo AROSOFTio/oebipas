@@ -4,9 +4,11 @@ const CATEGORY_VALUES = new Set(['complaint', 'feedback', 'billing', 'payment', 
 const STATUS_VALUES = new Set(['open', 'in_progress', 'resolved', 'closed']);
 
 const baseTicketQuery = `
-  SELECT st.*, c.customer_number, c.full_name AS customer_name, c.email AS customer_email
+  SELECT st.*, c.customer_number, c.full_name AS customer_name, c.email AS customer_email,
+         responder.full_name AS responded_by_name
   FROM support_tickets st
   INNER JOIN customers c ON c.id = st.customer_id
+  LEFT JOIN users responder ON responder.id = st.responded_by
 `;
 
 exports.createTicket = async (req, res) => {
@@ -112,17 +114,28 @@ exports.updateTicket = async (req, res) => {
 
     const nextStatus = status || rows[0].status;
     const nextResponse = staffResponse === null ? rows[0].staff_response : staffResponse;
+    const responseChanged = staffResponse !== null && staffResponse !== rows[0].staff_response;
 
     await pool.query(
       `UPDATE support_tickets
        SET status = COALESCE(?, status),
            staff_response = ?,
+           responded_by = CASE WHEN ? THEN ? ELSE responded_by END,
+           responded_at = CASE WHEN ? THEN NOW() ELSE responded_at END,
            resolved_at = CASE
              WHEN ? IN ('resolved', 'closed') THEN COALESCE(resolved_at, NOW())
              ELSE NULL
            END
        WHERE id = ?`,
-      [status || null, nextResponse || null, nextStatus, req.params.id]
+      [
+        status || null,
+        nextResponse || null,
+        responseChanged,
+        req.user.id,
+        responseChanged,
+        nextStatus,
+        req.params.id,
+      ]
     );
 
     return res.status(200).json({ success: true, message: 'Support ticket updated successfully.' });

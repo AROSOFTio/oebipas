@@ -4,6 +4,7 @@ const pool = require('./config/db');
 const { ensureDemoAccounts } = require('./services/demoAccountService');
 const { verifyEmailTransporter } = require('./services/notificationService');
 const { repairRoleLabels } = require('./services/roleRepairService');
+const { ensureSupportTicketResponseAudit } = require('./services/supportSchemaService');
 
 const PORT = process.env.PORT || 5000;
 
@@ -14,6 +15,7 @@ pool.getConnection()
     connection.release();
 
     await repairRoleLabels();
+    await ensureSupportTicketResponseAudit();
     await ensureDemoAccounts();
     verifyEmailTransporter().catch(error => {
       console.error('[Notifications] SMTP startup verification failed:', error.message);

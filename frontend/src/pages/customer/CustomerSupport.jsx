@@ -3,6 +3,9 @@ import axiosInstance from '../../utils/axiosInstance';
 import SectionCard from '../../components/SectionCard';
 
 const categories = ['complaint', 'feedback', 'billing', 'payment', 'technical', 'other'];
+const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'support@oebipas.arosoft.io';
+const supportPhone = import.meta.env.VITE_SUPPORT_PHONE || '+256700000000';
+const supportAddress = import.meta.env.VITE_SUPPORT_ADDRESS || 'Kampala, Uganda';
 
 const statusBadge = status => {
   const map = {
@@ -13,6 +16,8 @@ const statusBadge = status => {
   };
   return map[status] || 'bg-slate-100 text-slate-600';
 };
+
+const formatDateTime = value => (value ? new Date(value).toLocaleString('en-UG', { hour12: true }) : '');
 
 export default function CustomerSupport() {
   const [tickets, setTickets] = useState([]);
@@ -50,6 +55,23 @@ export default function CustomerSupport() {
 
   return (
     <div className="space-y-6">
+      <SectionCard title="Contact Support" subtitle="Use these contacts for urgent assistance">
+        <div className="grid gap-3 text-sm text-slate-600 md:grid-cols-3">
+          <div>
+            <p className="font-semibold text-slate-900">Email</p>
+            <a href={`mailto:${supportEmail}`} className="text-[var(--panel-strong)]">{supportEmail}</a>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-900">Phone</p>
+            <a href={`tel:${supportPhone}`} className="text-[var(--panel-strong)]">{supportPhone}</a>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-900">Office</p>
+            <p>{supportAddress}</p>
+          </div>
+        </div>
+      </SectionCard>
+
       <SectionCard title="Support" subtitle="Submit questions, complaints or billing concerns">
         {message ? <div className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
         {error ? <div className="mb-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
@@ -104,13 +126,14 @@ export default function CustomerSupport() {
                 <th className="pb-3 pr-4 font-medium text-slate-500">Subject</th>
                 <th className="pb-3 pr-4 font-medium text-slate-500">Category</th>
                 <th className="pb-3 pr-4 font-medium text-slate-500">Status</th>
+                <th className="pb-3 pr-4 font-medium text-slate-500">Responded By</th>
                 <th className="pb-3 pr-4 font-medium text-slate-500">Response</th>
               </tr>
             </thead>
             <tbody>
               {tickets.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-6 text-slate-400">No support tickets yet.</td>
+                  <td colSpan={5} className="py-6 text-slate-400">No support tickets yet.</td>
                 </tr>
               )}
               {tickets.map(ticket => (
@@ -121,6 +144,14 @@ export default function CustomerSupport() {
                     <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${statusBadge(ticket.status)}`}>
                       {ticket.status.replace('_', ' ')}
                     </span>
+                  </td>
+                  <td className="py-3 pr-4 text-slate-600">
+                    {ticket.responded_by_name ? (
+                      <>
+                        <p className="font-medium text-slate-900">{ticket.responded_by_name}</p>
+                        <p className="text-xs text-slate-400">{formatDateTime(ticket.responded_at)}</p>
+                      </>
+                    ) : 'Pending'}
                   </td>
                   <td className="py-3 pr-4 text-slate-600">{ticket.staff_response || 'Pending response'}</td>
                 </tr>

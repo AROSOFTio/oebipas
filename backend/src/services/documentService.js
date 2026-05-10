@@ -10,8 +10,38 @@ const formatPeriod = (month, year) => `${String(month).padStart(2, '0')}/${year}
 const statusLabel = value => String(value || 'N/A').replace(/_/g, ' ');
 const energyCharge = bill => Number((Number(bill?.units_consumed || 0) * Number(bill?.rate_per_unit || 0)).toFixed(2));
 
+const supportContact = () => ({
+  company: process.env.COMPANY_NAME || 'Uganda Electricity Distribution Company Limited',
+  email: process.env.SUPPORT_EMAIL || process.env.SMTP_FROM_EMAIL || 'support@oebipas.local',
+  phone: process.env.SUPPORT_PHONE || 'Support phone not configured',
+  address: process.env.SUPPORT_ADDRESS || process.env.COMPANY_ADDRESS || 'OEBIPAS Support Desk',
+  website: process.env.FRONTEND_URL || process.env.BACKEND_PUBLIC_URL || '',
+});
+
+const addFooter = doc => {
+  const contact = supportContact();
+  const bottom = doc.page.height - 54;
+
+  doc
+    .moveTo(50, bottom - 12)
+    .lineTo(545, bottom - 12)
+    .strokeColor('#e5e7eb')
+    .stroke()
+    .fontSize(7)
+    .fillColor('#6b7280')
+    .text(contact.company, 50, bottom, { width: 495, align: 'center' })
+    .text(`Support: ${contact.email} | ${contact.phone}`, 50, bottom + 10, { width: 495, align: 'center' });
+
+  if (contact.website || contact.address) {
+    doc.text([contact.address, contact.website].filter(Boolean).join(' | '), 50, bottom + 20, {
+      width: 495,
+      align: 'center',
+    });
+  }
+};
+
 const collectPdf = build => new Promise((resolve, reject) => {
-  const doc = new PDFDocument({ margin: 50, size: 'A4' });
+  const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true });
   const chunks = [];
 
   doc.on('data', chunk => chunks.push(chunk));
@@ -19,6 +49,11 @@ const collectPdf = build => new Promise((resolve, reject) => {
   doc.on('error', reject);
 
   build(doc);
+  const range = doc.bufferedPageRange();
+  for (let index = range.start; index < range.start + range.count; index += 1) {
+    doc.switchToPage(index);
+    addFooter(doc);
+  }
   doc.end();
 });
 

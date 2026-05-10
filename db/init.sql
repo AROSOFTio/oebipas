@@ -169,11 +169,14 @@ CREATE TABLE support_tickets (
   message TEXT NOT NULL,
   status ENUM('open', 'in_progress', 'resolved', 'closed') NOT NULL DEFAULT 'open',
   staff_response TEXT NULL,
+  responded_by INT NULL,
+  responded_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   resolved_at DATETIME NULL,
   CONSTRAINT fk_support_tickets_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  CONSTRAINT fk_support_tickets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  CONSTRAINT fk_support_tickets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_support_tickets_responder FOREIGN KEY (responded_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE notifications (
